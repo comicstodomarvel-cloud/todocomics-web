@@ -7,12 +7,29 @@ interface TelegramUpdate {
   message?: TelegramMessage
 }
 
+interface TelegramPhoto {
+  file_id: string
+  file_unique_id: string
+  file_size?: number
+  width?: number
+  height?: number
+}
+
+interface TelegramDocument {
+  file_id: string
+  file_unique_id: string
+  file_name?: string
+  mime_type?: string
+  file_size?: number
+}
+
 interface TelegramMessage {
   message_id: number
   chat: { id: number; type: string }
   text?: string
   caption?: string
-  photo?: { file_id: string; file_unique_id: string; file_size?: number; width?: number; height?: number }[]
+  photo?: TelegramPhoto[]
+  document?: TelegramDocument
   date: number
 }
 
@@ -38,7 +55,7 @@ const HASHTAG_CATEGORIA: Record<string, (typeof CATEGORIAS)[number]> = {
 const PREFIJOS_DESCARGA = /^(descarga\s*(directa|gratis)|link|enlace|mega|mediafire)[:\s]*$/i
 
 const PATRON_LINK =
-  /https?:\/\/(?:www\.)?(?:terabox|bit\.ly|mega\.nz|drive\.google|mediafire|mega)[^\s)]+/i
+  /https?:\/\/(?:www\.)?(?:[0-9]+terabox|terabox|teraboxapp|teraboxurl|freeterabox|videy|videyyy|freevidey|videynow|bit\.ly|bitly|mega\.nz|mega|drive\.google|mediafire|short\.url|tinyurl|ow\.ly|is\.gd)[^\s)"'\]]+/i
 
 /**
  * Extrae el texto del mensaje.
@@ -78,6 +95,37 @@ function deducirCategoria(hashtags: string[]): string {
 }
 
 /**
+ * Busca un file_id de imagen en el mensaje, primero en photo y luego en document.
+ * - photo: array de tamaños, usar el último (mayor resolución)
+ * - document: solo si mime_type empieza con image/
+ *
+ * @returns file_id de la imagen, o null si no hay ninguna.
+ */
+function obtenerFileId(msg: TelegramMessage): string | null {
+  if (msg.photo && msg.photo.length > 0) {
+    const mejor = msg.photo[msg.photo.length - 1]
+    console.log('[Telegram Webhook] File ID desde photo:', mejor.file_id)
+    return mejor.file_id
+  }
+
+  if (msg.document) {
+    console.log(
+      '[Telegram Webhook] Document encontrado, mime_type:',
+      msg.document.mime_type ?? 'sin mime_type'
+    )
+    if (msg.document.mime_type?.startsWith('image/')) {
+      console.log('[Telegram Webhook] File ID desde document:', msg.document.file_id)
+      return msg.document.file_id
+    }
+    console.log('[Telegram Webhook] Document ignorado (no es imagen):', msg.document.mime_type)
+    return null
+  }
+
+  console.log('[Telegram Webhook] No hay photo ni document en el mensaje')
+  return null
+}
+
+/**
  * Obtiene la URL pública de una foto de Telegram.
  * Telegram no envía URLs directas; hay que resolver el file_path.
  */
@@ -98,6 +146,8 @@ async function obtenerUrlPortada(fileId: string): Promise<string> {
     }
 
     const json = await res.json()
+    console.log('[Telegram Webhook] getFile respuesta completa:', JSON.stringify(json, null, 2))
+
     if (!json.ok) {
       console.error('[Telegram Webhook] getFile error:', json.description)
       return ''
@@ -114,6 +164,9 @@ async function obtenerUrlPortada(fileId: string): Promise<string> {
     return url
   } catch (err) {
     console.error('[Telegram Webhook] Error al obtener portada:', err)
+    if (err instanceof Error) {
+      console.error('[Telegram Webhook] Stack:', err.stack)
+    }
     return ''
   }
 }
@@ -186,12 +239,12 @@ async function parseTelegramContent(
 
   // --- Portada ---
   let url_portada = ''
-  if (msg.photo && msg.photo.length > 0) {
-    const mejorFoto = msg.photo[msg.photo.length - 1]
-    console.log('[Telegram Webhook] Foto encontrada, file_id:', mejorFoto.file_id)
-    url_portada = await obtenerUrlPortada(mejorFoto.file_id)
+  const fileId = obtenerFileId(msg)
+  if (fileId) {
+    console.log('[Telegram Webhook] Resolviendo URL para file_id:', fileId)
+    url_portada = await obtenerUrlPortada(fileId)
   } else {
-    console.log('[Telegram Webhook] No hay foto adjunta en el mensaje')
+    console.log('[Telegram Webhook] No se encontró portada (ni photo ni document)')
   }
 
   const parsed: ParsedContent = {
@@ -233,9 +286,16 @@ export async function POST(request: Request) {
     }
 
     const update: TelegramUpdate = await request.json()
-    console.log('[Telegram Webhook] Payload recibido:', JSON.stringify(update, null, 2))
+    console.log('[Telegram Webhook] === NUEVO UPDATE ===')
+    console.log('[Telegram Webhook] Keys del update:', Object.keys(update))
 
     const msg = update.channel_post || update.message
+
+    console.log('[Telegram Webhook] Tipo de mensaje:', update.channel_post ? 'channel_post' : update.message ? 'message' : 'ninguno')
+    console.log('[Telegram Webhook] Keys del msg:', msg ? Object.keys(msg) : 'no msg')
+    console.log('[Telegram Webhook] msg.photo existe:', !!msg?.photo, '| length:', msg?.photo?.length ?? 0)
+    console.log('[Telegram Webhook] msg.document existe:', !!msg?.document, '| mime_type:', msg?.document?.mime_type ?? 'N/A')
+    console.log('[Telegram Webhook] Payload completo:', JSON.stringify(update, null, 2))
 
     if (!msg) {
       return NextResponse.json(
