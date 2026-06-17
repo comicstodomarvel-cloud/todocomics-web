@@ -8,7 +8,7 @@ export default function UpdateBadge({ updateDate }: { updateDate: string }) {
 
   return (
     <div
-      className={`absolute top-2 right-2 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded ${
+      className={`absolute top-2 left-2 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded ${
         isVeryRecent ? 'animate-pulse' : ''
       }`}
     >

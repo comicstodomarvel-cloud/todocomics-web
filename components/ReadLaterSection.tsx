@@ -77,7 +77,7 @@ export default function ReadLaterSection() {
             <div key={item.id} className="relative shrink-0 group">
               <Link
                 href={`/item/${item.id}`}
-                className="block w-24 h-36 overflow-hidden rounded-lg bg-zinc-800"
+                className="block w-24 h-36 overflow-hidden rounded-lg bg-zinc-800 relative"
               >
                 <ImageWithFallback
                   src={item.url_portada}
