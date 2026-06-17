@@ -1,5 +1,3 @@
-import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 import { getLatestContent, searchContent, getContentByCategoria, getLatestUpdateDates } from '@/lib/data';
 import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
@@ -7,6 +5,7 @@ import SearchBar from '@/components/SearchBar';
 import CategoryFilter from '@/components/CategoryFilter';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import UpdatesWidget from '@/components/updates/UpdatesWidget';
+import UpdatesDropdownButton from '@/components/updates/UpdatesDropdownButton';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -57,34 +56,10 @@ export default async function HomePage({
   // Fechas de última actualización para badges
   const updateDates = !busqueda && !categoria ? await getLatestUpdateDates() : {};
 
-  // Contador de updates recientes
-  let recentUpdatesCount = 0
-  try {
-    const { count } = await supabase
-      .from('actualizaciones')
-      .select('*', { count: 'exact', head: true })
-    recentUpdatesCount = count ?? 0
-  } catch {
-    // Ignorar error, el botón se muestra sin contador
-  }
-
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* Botón flotante de Updates */}
-      <Link
-        href="/updates"
-        className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 hover:scale-105"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        <span>Updates</span>
-        {recentUpdatesCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
-            {recentUpdatesCount}
-          </span>
-        )}
-      </Link>
+      {/* Botón dropdown de Updates */}
+      <UpdatesDropdownButton />
 
       {/* Hero Section */}
       <section className="relative h-[70vh] w-full overflow-hidden">
