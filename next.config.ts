@@ -25,8 +25,8 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'api.telegram.org',
-        pathname: '/file/**',
+        hostname: 'axfugtisjsjbkqlkixla.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },
