@@ -242,14 +242,11 @@ async function uploadImageToSupabase(
   telegramFileUrl: string,
   filename: string
 ): Promise<string> {
-  const supabase = getSupabaseAdmin()
   const MAX_INTENTOS = 3
 
   for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
     try {
       console.log(`[uploadImageToSupabase] Intento ${intento}/${MAX_INTENTOS}`)
-
-      // 1. Descargar la imagen de Telegram
       console.log('[uploadImageToSupabase] Descargando desde:', telegramFileUrl)
       const imageRes = await fetch(telegramFileUrl)
       if (!imageRes.ok) {
@@ -261,32 +258,8 @@ async function uploadImageToSupabase(
       const imageBuffer = await imageRes.arrayBuffer()
       console.log('[uploadImageToSupabase] Imagen descargada, tamaño:', imageBuffer.byteLength)
 
-      // 2. Subir a Supabase Storage
-      const filePath = `${Date.now()}-${filename}`
-      const { data, error } = await supabase.storage
-        .from('portadas')
-        .upload(filePath, imageBuffer, {
-          contentType: 'image/jpeg',
-          upsert: false,
-        })
-
-      if (error) {
-        console.error('[uploadImageToSupabase] Error de Supabase:', error.message)
-        if (intento < MAX_INTENTOS) {
-          console.log('[uploadImageToSupabase] Reintentando en 1s...')
-          await new Promise((r) => setTimeout(r, 1000))
-          continue
-        }
-        return ''
-      }
-
-      // 3. Obtener URL pública
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('portadas').getPublicUrl(data.path)
-
-      console.log('[uploadImageToSupabase] Subida exitosa, URL permanente:', publicUrl)
-      return publicUrl
+      const { uploadImageBytesToSupabase } = await import('@/lib/upload-image')
+      return await uploadImageBytesToSupabase(imageBuffer, filename)
     } catch (err) {
       console.error(`[uploadImageToSupabase] Error en intento ${intento}:`, err)
       if (intento < MAX_INTENTOS) {
@@ -489,11 +462,13 @@ async function sendHelpMessage(chatId: number) {
 /importar <url> - Importar un post antiguo de Telegram
   Ejemplo: /importar https://t.me/marveltodocomics/11327
 
-/importar_lote [N|--todo|--check] - Importar lotes desde historial
-  /importar_lote         → últimos 50 posts
-  /importar_lote 100     → últimos 100
-  /importar_lote --todo  → todo el historial
-  /importar_lote --check → dry run (simular sin guardar)
+/importar_lote [N|--todo|--check|<url>] - Importar lotes desde historial
+  /importar_lote                  → últimos 50 posts
+  /importar_lote 100              → últimos 100
+  /importar_lote --todo           → todo el historial
+  /importar_lote --check          → dry run (simular sin guardar)
+  /importar_lote <url>             → desde ese post hacia adelante
+  Ej: /importar_lote https://t.me/marveltodocomics/11327
 
 /help - Mostrar esta ayuda`)
 }
@@ -530,19 +505,70 @@ async function handleImportLoteCommand(msg: TelegramMessage, command: string, ch
 
   try {
     const parts = command.split(/\s+/)
-    const flag = parts[1]
+    const arg = parts[1]
     let limit = 50
     let dryRun = false
+    let startFromUrl: string | null = null
 
-    if (flag === '--check' || flag === '--dry-run') {
+    // Detectar flags
+    if (arg === '--check' || arg === '--dry-run') {
       dryRun = true
       limit = parts[2] ? parseInt(parts[2]) : 50
-    } else if (flag === '--todo') {
+    } else if (arg === '--todo') {
       limit = -1
-    } else if (flag && !isNaN(parseInt(flag))) {
-      limit = parseInt(flag)
+    } else if (arg && !isNaN(parseInt(arg))) {
+      limit = parseInt(arg)
+    } else if (arg && arg.startsWith('http')) {
+      // URL de Telegram: https://t.me/marveltodocomics/XXXXX
+      startFromUrl = arg
     }
 
+    if (startFromUrl) {
+      const urlMatch = startFromUrl.match(/\/(\d+)$/)
+      if (!urlMatch) {
+        await updateMsg('❌ URL inválida. Debe ser: https://t.me/marveltodocomics/12345')
+        return NextResponse.json({ ok: true })
+      }
+
+      const startMessageId = parseInt(urlMatch[1])
+      await updateMsg(`🔍 Escaneando desde el mensaje ${startMessageId} hacia adelante...`)
+
+      const { scanFromMessage } = await import('@/lib/channel-scanner')
+      const scanResult = await scanFromMessage(startMessageId)
+
+      if (scanResult.totalFetched === 0) {
+        await updateMsg('❌ No se encontraron mensajes a partir de ese ID.')
+        return NextResponse.json({ ok: true })
+      }
+
+      await updateMsg(`📦 Procesando ${scanResult.totalFetched} mensajes desde el ID ${startMessageId}...`)
+
+      const { batchImport } = await import('@/lib/batch-importer')
+      const result = await batchImport(scanResult.messages, dryRun)
+
+      const resumen = [
+        dryRun ? '🔍 **DRY RUN - Sin cambios**' : '✅ **Importación completada**',
+        '',
+        `📥 Mensajes escaneados: ${scanResult.totalFetched}`,
+        `✅ Importados: ${result.imported}`,
+        `⏭️  Saltados (#update): ${result.skipped.update}`,
+        `⏭️  Saltados (sin categoría): ${result.skipped.sinCategoria}`,
+        `⏭️  Saltados (duplicados): ${result.skipped.duplicado}`,
+        `🔗 Updates vinculados: ${result.updatesVinculados}`,
+        result.errores > 0 ? `❌ Errores: ${result.errores}` : '',
+      ].filter(Boolean).join('\n')
+
+      await updateMsg(resumen)
+
+      if (result.detalles.length > 0) {
+        const detallesStr = result.detalles.slice(0, 20).join('\n')
+        await updateMsg(`📋 Detalles:\n${detallesStr}${result.detalles.length > 20 ? `\n... y ${result.detalles.length - 20} más` : ''}`)
+      }
+
+      return NextResponse.json({ ok: true, ...result })
+    }
+
+    // Modo normal: escanear últimos N mensajes
     await updateMsg(`🔍 Escaneando historial del canal (límite: ${limit === -1 ? 'todos' : limit})...`)
 
     const { scanChannelHistory } = await import('@/lib/channel-scanner')

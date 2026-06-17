@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from './supabase-admin'
 import { esCategoriaValida } from './hashtags'
 import { parseTelegramContent, sanitizarTexto } from '@/app/api/telegram/route'
+import { uploadImageBytesToSupabase } from './upload-image'
 import type { ScannedMessage } from './channel-scanner'
 
 export interface BatchImportResult {
@@ -64,20 +65,7 @@ export async function batchImport(
       continue
     }
 
-    // 3. Verificar duplicado por telegram_message_id
-    const { data: existing } = await admin
-      .from('contenido')
-      .select('id')
-      .eq('telegram_message_id', msg.id)
-      .maybeSingle()
-
-    if (existing) {
-      result.skipped.duplicado++
-      result.detalles.push(`[${msg.id}] Saltado: ya importado (ID ${existing.id})`)
-      continue
-    }
-
-    // 4. Importar
+    // 3. Importar
     if (!dryRun) {
       try {
         // Reconstruir un objeto compatible con parseTelegramContent
@@ -101,12 +89,53 @@ export async function batchImport(
           continue
         }
 
+        // Subir portada desde bytes (MTProto) si existe
+        let urlPortadaFinal = parsed.url_portada
+        if (msg.photoBytes && !urlPortadaFinal) {
+          try {
+            const filename = `portada-${msg.id}-${Date.now()}.jpg`
+            urlPortadaFinal = await uploadImageBytesToSupabase(msg.photoBytes, filename)
+            if (urlPortadaFinal) {
+              console.log(`[batchImport] Portada subida desde bytes para msg ${msg.id}:`, urlPortadaFinal)
+            }
+          } catch (uploadErr) {
+            console.error(`[batchImport] Error subiendo portada para msg ${msg.id}:`, uploadErr)
+          }
+        }
+
+        // 4. Verificar duplicado por telegram_message_id + link_descarga
+        const existingById = await admin
+          .from('contenido')
+          .select('id')
+          .eq('telegram_message_id', msg.id)
+          .maybeSingle()
+
+        if (existingById?.data) {
+          result.skipped.duplicado++
+          result.detalles.push(`[${msg.id}] Saltado: ya importado (ID ${existingById.data.id})`)
+          continue
+        }
+
+        if (parsed.link_descarga) {
+          const existingByLink = await admin
+            .from('contenido')
+            .select('id')
+            .eq('link_descarga', parsed.link_descarga)
+            .maybeSingle()
+
+          if (existingByLink?.data) {
+            result.skipped.duplicado++
+            result.detalles.push(`[${msg.id}] Saltado: ya importado por link_descarga (ID ${existingByLink.data.id})`)
+            continue
+          }
+        }
+
         const { data: nuevoContenido, error: insertError } = await admin
           .from('contenido')
           .insert({
             titulo: sanitizarTexto(parsed.titulo),
             descripcion: sanitizarTexto(parsed.descripcion),
-            url_portada: parsed.url_portada,
+            url_portada: urlPortadaFinal,
             categoria: parsed.categoria,
             hashtags: parsed.hashtags,
             link_descarga: sanitizarTexto(parsed.link_descarga),
