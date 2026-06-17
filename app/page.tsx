@@ -6,6 +6,7 @@ import CategoryFilter from '@/components/CategoryFilter';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import UpdatesWidget from '@/components/updates/UpdatesWidget';
 import UpdatesDropdownButton from '@/components/updates/UpdatesDropdownButton';
+import RandomRecommendation from '@/components/RandomRecommendation';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -123,6 +124,11 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* Recomendación aleatoria */}
+      <section className="container mx-auto px-4 py-8">
+        <RandomRecommendation />
+      </section>
+
       {/* Buscador y Filtros */}
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -134,7 +140,7 @@ export default async function HomePage({
       {/* Grid de contenido */}
       <section className="container mx-auto px-4 py-8">
         <h2 className="mb-6 text-2xl font-bold">Continúa explorando</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
           {gridItems.map((item) => (
             <ContentCard key={item.id} item={item} lastUpdateDate={updateDates[item.id]} />
           ))}

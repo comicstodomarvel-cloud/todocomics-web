@@ -40,6 +40,32 @@ export default function UpdatesDropdownButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [updates, setUpdates] = useState<Update[]>([])
   const [loading, setLoading] = useState(false)
+  const [hasUnread, setHasUnread] = useState(false)
+
+  const checkUnreadUpdates = useCallback(async () => {
+    try {
+      const res = await fetch('/api/updates/latest?limit=10')
+      const data = await res.json()
+
+      const lastCheck = localStorage.getItem('lastUpdatesCheck')
+
+      if (data.updates && data.updates.length > 0) {
+        const hasNew = data.updates.some((update: Update) => {
+          const updateDate = new Date(update.fecha).getTime()
+          const lastCheckTime = lastCheck ? parseInt(lastCheck) : 0
+          return updateDate > lastCheckTime
+        })
+
+        setHasUnread(hasNew)
+      }
+    } catch (error) {
+      console.error('Error checking updates:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    checkUnreadUpdates()
+  }, [checkUnreadUpdates])
 
   const fetchUpdates = useCallback(async () => {
     setLoading(true)
@@ -54,6 +80,20 @@ export default function UpdatesDropdownButton() {
     }
   }, [])
 
+  const handleToggle = useCallback(() => {
+    const newState = !isOpen
+    setIsOpen(newState)
+
+    if (newState) {
+      localStorage.setItem('lastUpdatesCheck', Date.now().toString())
+      setHasUnread(false)
+
+      if (updates.length === 0) {
+        fetchUpdates()
+      }
+    }
+  }, [isOpen, updates.length, fetchUpdates])
+
   useEffect(() => {
     if (isOpen && updates.length === 0) {
       fetchUpdates()
@@ -63,18 +103,20 @@ export default function UpdatesDropdownButton() {
   return (
     <div className="fixed top-4 right-4 z-50">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 hover:scale-105"
+        onClick={handleToggle}
+        className="relative flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 hover:scale-105"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
         <span>Updates</span>
-        {updates.length > 0 && (
-          <span className="bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-            {updates.length}
+
+        {hasUnread && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
+            !
           </span>
         )}
+
         <svg
           className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
