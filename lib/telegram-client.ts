@@ -2,10 +2,6 @@ import { TelegramClient } from 'telegram'
 import { StringSession } from 'telegram/sessions'
 import { Logger } from 'telegram/extensions'
 
-const apiId = parseInt(process.env.TELEGRAM_API_ID || '0')
-const apiHash = process.env.TELEGRAM_API_HASH || ''
-const sessionString = process.env.TELEGRAM_SESSION || ''
-
 let client: TelegramClient | null = null
 
 export async function getClient(): Promise<TelegramClient> {
@@ -13,6 +9,9 @@ export async function getClient(): Promise<TelegramClient> {
     return client
   }
 
+  const apiId = parseInt(process.env.TELEGRAM_API_ID || '0')
+  const apiHash = process.env.TELEGRAM_API_HASH || ''
+  const sessionString = process.env.TELEGRAM_SESSION || ''
   const botToken = process.env.TELEGRAM_BOT_TOKEN
 
   if (!apiId || !apiHash) {
@@ -20,6 +19,9 @@ export async function getClient(): Promise<TelegramClient> {
   }
   if (!botToken) {
     throw new Error('TELEGRAM_BOT_TOKEN es requerido')
+  }
+  if (!sessionString) {
+    throw new Error('TELEGRAM_SESSION es requerida')
   }
 
   const session = new StringSession(sessionString)
