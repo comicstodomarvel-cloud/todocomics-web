@@ -464,14 +464,20 @@ export function sanitizarTexto(texto: string): string {
 
 async function sendMessage(chatId: number, text: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN
-  if (!token) return
+  console.log('[sendMessage] token existe:', !!token, 'chatId:', chatId)
+  if (!token) {
+    console.error('[sendMessage] Token no disponible')
+    return
+  }
 
   try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
     })
+    const body = await resp.text()
+    console.log('[sendMessage] status:', resp.status, 'body:', body)
   } catch (e) {
     console.error('[sendMessage] Error:', e)
   }
@@ -496,19 +502,25 @@ async function handlePrivateMessage(msg: TelegramMessage) {
   const texto = (msg.text || msg.caption || '').trim()
   const chatId = msg.chat.id
 
+  console.log('[handlePrivateMessage] texto:', JSON.stringify(texto))
+
   if (texto === '/start' || texto === '/help' || texto === '/ayuda') {
+    console.log('[handlePrivateMessage] Match: /start /help /ayuda')
     await sendHelpMessage(chatId)
     return NextResponse.json({ ok: true })
   }
 
   if (texto.startsWith('/importar_lote')) {
+    console.log('[handlePrivateMessage] Match: /importar_lote')
     return await handleImportLoteCommand(msg, texto, chatId)
   }
 
   if (texto.startsWith('/importar')) {
+    console.log('[handlePrivateMessage] Match: /importar')
     return await handleImportCommandPrivate(msg, texto, chatId)
   }
 
+  console.log('[handlePrivateMessage] Sin match, enviando comando no reconocido')
   await sendMessage(chatId, `Comando no reconocido. Usa /help para ver los comandos disponibles.`)
   return NextResponse.json({ ok: true })
 }
