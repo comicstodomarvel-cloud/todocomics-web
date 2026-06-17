@@ -197,6 +197,76 @@ async function obtenerUrlPortada(fileId: string): Promise<string> {
 }
 
 /**
+ * Sube una imagen desde una URL temporal de Telegram a Supabase Storage.
+ * Supabase Storage provee URLs permanentes que nunca expiran.
+ *
+ * @param telegramFileUrl - URL temporal de Telegram (api.telegram.org/file/...)
+ * @param filename - Nombre base para el archivo (ej: "portada-1234567890.jpg")
+ * @returns URL pública permanente en Supabase Storage, o cadena vacía si falla.
+ */
+async function uploadImageToSupabase(
+  telegramFileUrl: string,
+  filename: string
+): Promise<string> {
+  const supabase = getSupabaseAdmin()
+  const MAX_INTENTOS = 3
+
+  for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
+    try {
+      console.log(`[uploadImageToSupabase] Intento ${intento}/${MAX_INTENTOS}`)
+
+      // 1. Descargar la imagen de Telegram
+      console.log('[uploadImageToSupabase] Descargando desde:', telegramFileUrl)
+      const imageRes = await fetch(telegramFileUrl)
+      if (!imageRes.ok) {
+        console.error('[uploadImageToSupabase] Error descargando:', imageRes.status)
+        if (intento < MAX_INTENTOS) continue
+        return ''
+      }
+
+      const imageBuffer = await imageRes.arrayBuffer()
+      console.log('[uploadImageToSupabase] Imagen descargada, tamaño:', imageBuffer.byteLength)
+
+      // 2. Subir a Supabase Storage
+      const filePath = `${Date.now()}-${filename}`
+      const { data, error } = await supabase.storage
+        .from('portadas')
+        .upload(filePath, imageBuffer, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        })
+
+      if (error) {
+        console.error('[uploadImageToSupabase] Error de Supabase:', error.message)
+        if (intento < MAX_INTENTOS) {
+          console.log('[uploadImageToSupabase] Reintentando en 1s...')
+          await new Promise((r) => setTimeout(r, 1000))
+          continue
+        }
+        return ''
+      }
+
+      // 3. Obtener URL pública
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('portadas').getPublicUrl(data.path)
+
+      console.log('[uploadImageToSupabase] Subida exitosa, URL permanente:', publicUrl)
+      return publicUrl
+    } catch (err) {
+      console.error(`[uploadImageToSupabase] Error en intento ${intento}:`, err)
+      if (intento < MAX_INTENTOS) {
+        console.log('[uploadImageToSupabase] Reintentando en 1s...')
+        await new Promise((r) => setTimeout(r, 1000))
+        continue
+      }
+    }
+  }
+
+  return ''
+}
+
+/**
  * Remueve hashtags del final de una línea de título.
  * Ej: "BLADE AND BASTARD #Manga" → "BLADE AND BASTARD"
  */
@@ -262,7 +332,7 @@ async function parseTelegramContent(
 
   const descripcion = lineasDesc.join('\n').trim() || 'Sin descripción'
 
-  // --- Portada ---
+  // --- Portada (subida automática a Supabase Storage para URLs permanentes) ---
   console.log('[parseTelegramContent] === INICIO ===')
   console.log('[parseTelegramContent] msg.photo?.length:', msg.photo?.length)
 
@@ -271,9 +341,15 @@ async function parseTelegramContent(
 
   let url_portada = ''
   if (fileId) {
-    console.log('[parseTelegramContent] Llamando a obtenerUrlPortada...')
-    url_portada = await obtenerUrlPortada(fileId)
-    console.log('[parseTelegramContent] url_portada obtenida:', url_portada)
+    const telegramFileUrl = await obtenerUrlPortada(fileId)
+    console.log('[parseTelegramContent] URL temporal de Telegram:', telegramFileUrl)
+
+    if (telegramFileUrl) {
+      console.log('[parseTelegramContent] Subiendo a Supabase Storage...')
+      const filename = `portada-${Date.now()}.jpg`
+      url_portada = await uploadImageToSupabase(telegramFileUrl, filename)
+      console.log('[parseTelegramContent] URL permanente en Supabase:', url_portada)
+    }
   } else {
     console.log('[parseTelegramContent] No hay fileId, url_portada vacía')
   }

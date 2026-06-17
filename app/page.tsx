@@ -3,7 +3,7 @@ import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
 import SearchBar from '@/components/SearchBar';
 import CategoryFilter from '@/components/CategoryFilter';
-import Image from 'next/image';
+import ImageWithFallback from '@/components/ImageWithFallback';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -57,7 +57,7 @@ export default async function HomePage({
       <section className="relative h-[70vh] w-full overflow-hidden">
         {/* Imagen de fondo con gradiente */}
         <div className="absolute inset-0">
-          <Image
+          <ImageWithFallback
             src={heroItem.url_portada}
             alt={heroItem.titulo}
             fill

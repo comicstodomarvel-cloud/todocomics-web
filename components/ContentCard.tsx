@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import Link from 'next/link'
+import ImageWithFallback from './ImageWithFallback'
 import type { ContentItem } from '@/lib/data'
 
 interface ContentCardProps {
@@ -10,7 +10,7 @@ export default function ContentCard({ item }: ContentCardProps) {
   return (
     <div className="group relative overflow-hidden rounded-lg bg-zinc-800 transition-transform duration-300 hover:scale-105">
       <div className="relative aspect-[2/3] w-full">
-        <Image
+        <ImageWithFallback
           src={item.url_portada}
           alt={item.titulo}
           fill
