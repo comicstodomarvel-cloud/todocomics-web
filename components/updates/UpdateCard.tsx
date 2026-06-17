@@ -2,6 +2,16 @@ import Link from 'next/link'
 import { formatDateRelative } from '@/lib/dateUtils'
 import type { Update } from '@/lib/types'
 
+function limpiarDescripcion(descripcion: string | null): string {
+  if (!descripcion) return ''
+  return descripcion
+    .replace(/LINK DIRECTO AL POST\s*\(?\s*https?:\/\/[^\s)]+\s*\)?/gi, '')
+    .replace(/LINK DIRECTO\s*AL\s*POST/gi, '')
+    .replace(/https?:\/\/t\.me\/[^\s)]+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 const ICONS: Record<string, string> = {
   volumen: '📚',
   correccion: '🔧',
@@ -38,7 +48,7 @@ export default function UpdateCard({ update }: { update: Update }) {
             <>
               <h3 className="font-bold text-lg text-zinc-100">{update.titulo}</h3>
               {update.descripcion && (
-                <p className="text-zinc-400 text-sm mt-1">{update.descripcion}</p>
+                <p className="text-zinc-400 text-sm mt-1">{limpiarDescripcion(update.descripcion)}</p>
               )}
               <div className="bg-amber-500/10 text-amber-500 text-xs px-2 py-1 rounded mt-2 inline-block">
                 Contenido no disponible en la web
@@ -64,7 +74,7 @@ export default function UpdateCard({ update }: { update: Update }) {
               </p>
               {update.descripcion && (
                 <p className="text-zinc-500 text-xs mt-1 line-clamp-1">
-                  {update.descripcion}
+                  {limpiarDescripcion(update.descripcion)}
                 </p>
               )}
               <Link

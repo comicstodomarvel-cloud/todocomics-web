@@ -4,6 +4,16 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import type { Update } from '@/lib/types'
 
+function limpiarDescripcion(descripcion: string | null): string {
+  if (!descripcion) return ''
+  return descripcion
+    .replace(/LINK DIRECTO AL POST\s*\(?\s*https?:\/\/[^\s)]+\s*\)?/gi, '')
+    .replace(/LINK DIRECTO\s*AL\s*POST/gi, '')
+    .replace(/https?:\/\/t\.me\/[^\s)]+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function formatDateRelative(date: string): string {
   const d = new Date(date)
   const now = new Date()
@@ -76,7 +86,7 @@ export default function UpdatesDropdownButton() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+        <div className="absolute right-0 mt-2 w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in relative z-50">
           <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-black px-4 py-3">
             <h3 className="font-bold text-lg">Últimas Actualizaciones</h3>
           </div>
@@ -117,7 +127,7 @@ export default function UpdatesDropdownButton() {
                             {update.titulo}
                           </h4>
                           <p className="text-zinc-400 text-xs mt-1 line-clamp-2">
-                            {update.descripcion}
+                            {limpiarDescripcion(update.descripcion)}
                           </p>
                           <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
                             <span>{formatDateRelative(update.fecha)}</span>
