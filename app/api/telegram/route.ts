@@ -27,13 +27,14 @@ interface TelegramDocument {
 
 interface TelegramMessage {
   message_id: number
-  chat: { id: number; type: string }
+  chat: { id: number; type: string; username?: string; title?: string }
   text?: string
   caption?: string
   photo?: TelegramPhoto[]
   document?: TelegramDocument
   date: number
   edit_date?: number
+  from?: { id: number; is_bot: boolean; username?: string; first_name?: string }
 }
 
 interface ParsedContent {
@@ -427,54 +428,89 @@ function sanitizarTexto(texto: string): string {
     .trim()
 }
 
-async function handleImportCommand(msg: TelegramMessage, command: string) {
+async function sendMessage(chatId: number, text: string) {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  if (!token) return
+
   try {
-    console.log('[Import Command] Iniciando importación...')
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
+    })
+  } catch (e) {
+    console.error('[sendMessage] Error:', e)
+  }
+}
+
+async function sendHelpMessage(chatId: number) {
+  await sendMessage(chatId, `📖 Comandos disponibles:
+
+/importar <url> - Importar un post antiguo de Telegram
+Ejemplo: /importar https://t.me/marveltodocomics/11327
+
+/help - Mostrar esta ayuda`)
+}
+
+async function handlePrivateMessage(msg: TelegramMessage) {
+  const texto = (msg.text || msg.caption || '').trim()
+  const chatId = msg.chat.id
+
+  if (texto === '/start' || texto === '/help' || texto === '/ayuda') {
+    await sendHelpMessage(chatId)
+    return NextResponse.json({ ok: true })
+  }
+
+  if (texto.startsWith('/importar')) {
+    return await handleImportCommandPrivate(msg, texto, chatId)
+  }
+
+  await sendMessage(chatId, `Comando no reconocido. Usa /help para ver los comandos disponibles.`)
+  return NextResponse.json({ ok: true })
+}
+
+async function handleImportCommandPrivate(msg: TelegramMessage, command: string, chatId: number) {
+  const updateMsg = async (text: string) => sendMessage(chatId, text)
+
+  try {
+    await updateMsg('🔄 Iniciando importación...')
 
     const parts = command.split(/\s+/)
     const url = parts[1]
 
     if (!url) {
-      return NextResponse.json({
-        error: 'Uso: /importar https://t.me/marveltodocomics/12345',
-      }, { status: 400 })
+      await updateMsg('❌ Uso: /importar https://t.me/marveltodocomics/12345')
+      return NextResponse.json({ ok: true })
     }
 
     const match = url.match(/\/(\d+)$/)
     if (!match) {
-      return NextResponse.json({
-        error: 'URL inválida. Debe ser: https://t.me/marveltodocomics/12345',
-      }, { status: 400 })
+      await updateMsg('❌ URL inválida. Debe ser: https://t.me/marveltodocomics/12345')
+      return NextResponse.json({ ok: true })
     }
 
     const messageId = parseInt(match[1])
-    console.log('[Import Command] Message ID:', messageId)
+    await updateMsg(`🔍 Obteniendo mensaje ${messageId}...`)
 
     const token = process.env.TELEGRAM_BOT_TOKEN
-    const chatId = '-1001406494973'
+    const chatOrigen = '-1001406494973'
 
     const forwardRes = await fetch(`https://api.telegram.org/bot${token}/forwardMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: msg.chat.id,
-        from_chat_id: chatId,
-        message_id: messageId,
-      }),
+      body: JSON.stringify({ chat_id: chatId, from_chat_id: chatOrigen, message_id: messageId }),
     })
 
     const forwardData = await forwardRes.json()
 
     if (!forwardData.ok) {
-      console.error('[Import Command] Error al forward:', forwardData)
-      return NextResponse.json({
-        error: `No se pudo obtener el mensaje: ${forwardData.description}`,
-      }, { status: 400 })
+      await updateMsg(`❌ No se pudo obtener el mensaje: ${forwardData.description}`)
+      return NextResponse.json({ ok: true })
     }
 
-    console.log('[Import Command] Mensaje obtenido exitosamente')
-
     const forwardedMsg = forwardData.result
+    await updateMsg('📝 Parseando contenido...')
+
     const parsed = await parseTelegramContent(forwardedMsg)
 
     const admin = getSupabaseAdmin()
@@ -486,10 +522,8 @@ async function handleImportCommand(msg: TelegramMessage, command: string) {
       .maybeSingle()
 
     if (existing) {
-      return NextResponse.json({
-        error: 'Este post ya existe en la web',
-        existingId: existing.id,
-      }, { status: 400 })
+      await updateMsg(`⚠️ Este post ya existe en la web (ID: ${existing.id})`)
+      return NextResponse.json({ ok: true })
     }
 
     const { data: nuevoContenido, error: insertError } = await admin
@@ -507,79 +541,37 @@ async function handleImportCommand(msg: TelegramMessage, command: string) {
       .single()
 
     if (insertError) {
-      console.error('[Import Command] Error al insertar:', insertError)
-      return NextResponse.json({
-        error: `Error al guardar: ${insertError.message}`,
-      }, { status: 500 })
+      await updateMsg(`❌ Error al guardar: ${insertError.message}`)
+      return NextResponse.json({ ok: true })
     }
 
-    console.log('[Import Command] Contenido insertado, id:', nuevoContenido.id)
+    await updateMsg(`✅ Post importado correctamente (ID: ${nuevoContenido.id})`)
 
     let updatesVinculados = 0
 
     try {
       const { data: orphanUpdates } = await admin
         .from('actualizaciones')
-        .select('id')
+        .update({ contenido_id: nuevoContenido.id })
         .eq('contenido_id', null)
-        .filter('metadata->>link_post_original', 'like', `%/${messageId}`)
+        .filter('metadata->>link_post_original', 'like', `%${messageId}`)
+        .select('id')
 
       if (orphanUpdates && orphanUpdates.length > 0) {
-        const { error: linkError } = await admin
-          .from('actualizaciones')
-          .update({
-            contenido_id: nuevoContenido.id,
-            metadata: {
-              es_huerfano: false,
-              vinculado_en: new Date().toISOString(),
-            },
-          })
-          .in('id', orphanUpdates.map((u) => u.id))
-
-        if (!linkError) {
-          updatesVinculados = orphanUpdates.length
-          console.log('[Import Command] Updates vinculados:', updatesVinculados)
+        updatesVinculados = orphanUpdates.length
+        if (updatesVinculados > 0) {
+          await updateMsg(`🔗 ${updatesVinculados} actualización(es) huérfana(s) vinculada(s)`)
         }
       }
     } catch (err) {
-      console.warn('[Import Command] Error al vincular updates:', err)
+      console.error('[handleImportCommandPrivate] Error vinculando updates:', err)
     }
 
-    try {
-      const confirmMsg = `✅ POST IMPORTADO
-
-📚 Título: ${parsed.titulo}
-📁 Categoría: ${parsed.categoria}
-🔗 Updates vinculados: ${updatesVinculados}
-
-El post ya está disponible en la web.`
-
-      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: msg.chat.id,
-          text: confirmMsg,
-          parse_mode: 'Markdown',
-        }),
-      })
-    } catch (err) {
-      console.warn('[Import Command] Error al enviar confirmación:', err)
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: `✅ Post importado exitosamente\n\n📚 Título: ${parsed.titulo}\n📁 Categoría: ${parsed.categoria}\n🔗 Updates vinculados: ${updatesVinculados}`,
-      contenidoId: nuevoContenido.id,
-      titulo: parsed.titulo,
-      categoria: parsed.categoria,
-      updatesVinculados,
-    })
+    return NextResponse.json({ ok: true, id: nuevoContenido.id, updatesVinculados })
   } catch (error) {
-    console.error('[Import Command] Error:', error)
-    return NextResponse.json({
-      error: `Error interno: ${error instanceof Error ? error.message : 'Unknown'}`,
-    }, { status: 500 })
+    console.error('[handleImportCommandPrivate] Error:', error)
+    await updateMsg(`❌ Error: ${error instanceof Error ? error.message : 'Unknown'}`)
+    return NextResponse.json({ ok: true })
   }
 }
 
@@ -597,15 +589,29 @@ El post ya está disponible en la web.`
  */
 export async function POST(request: Request) {
   try {
-    if (!validarToken(request)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     const update: TelegramUpdate = await request.json()
     console.log('[Telegram Webhook] === NUEVO UPDATE ===')
     console.log('[Telegram Webhook] Keys del update:', Object.keys(update))
 
     const msg = update.channel_post || update.edited_channel_post || update.message || update.edited_message
+
+    if (!msg) {
+      return NextResponse.json(
+        { error: 'El payload no contiene channel_post ni message' },
+        { status: 400 }
+      )
+    }
+
+    // Mensaje privado → procesar comandos sin validar token
+    if (msg.chat.type === 'private') {
+      console.log('[Webhook] Mensaje privado detectado, chat:', msg.chat.id)
+      return await handlePrivateMessage(msg)
+    }
+
+    // Channel post → validar token
+    if (!validarToken(request)) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
 
     let messageType = 'ninguno'
     if (update.channel_post) messageType = 'channel_post'
@@ -622,25 +628,6 @@ export async function POST(request: Request) {
     console.log('[Telegram Webhook] msg.photo existe:', !!msg?.photo, '| length:', msg?.photo?.length ?? 0)
     console.log('[Telegram Webhook] msg.document existe:', !!msg?.document, '| mime_type:', msg?.document?.mime_type ?? 'N/A')
     console.log('[Telegram Webhook] Payload completo:', JSON.stringify(update, null, 2))
-
-    if (!msg) {
-      return NextResponse.json(
-        { error: 'El payload no contiene channel_post, edited_channel_post ni message' },
-        { status: 400 }
-      )
-    }
-
-    const textoComando = (msg.text || msg.caption || '').trim()
-
-    if (textoComando === '/help' || textoComando === '/ayuda') {
-      return NextResponse.json({
-        message: `📖 Comandos disponibles:\n\n/importar <url> - Importar un post antiguo de Telegram\nEjemplo: /importar https://t.me/marveltodocomics/11327\n\n/help - Mostrar esta ayuda`,
-      })
-    }
-
-    if (textoComando.startsWith('/importar')) {
-      return await handleImportCommand(msg, textoComando)
-    }
 
     if (msg.chat.id !== -1001406494973) {
       return NextResponse.json(
