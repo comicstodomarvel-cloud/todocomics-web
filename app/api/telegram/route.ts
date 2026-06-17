@@ -370,7 +370,28 @@ async function parseTelegramContent(
 function validarToken(request: Request): boolean {
   const authHeader = request.headers.get('x-telegram-bot-api-secret-token')
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET
-  if (expected) return authHeader === expected
+
+  console.log('[Webhook Security] === VALIDANDO TOKEN ===')
+  console.log('[Webhook Security] Header recibido:', authHeader ? '***' + authHeader.slice(-10) : 'NO DEFINIDO')
+  console.log('[Webhook Security] Variable de entorno:', expected ? '***' + expected.slice(-10) : 'NO DEFINIDA')
+  console.log('[Webhook Security] Coinciden:', authHeader === expected)
+
+  if (!expected) {
+    console.error('[Webhook Security] ERROR: TELEGRAM_WEBHOOK_SECRET no está definida')
+    return false
+  }
+
+  if (!authHeader) {
+    console.error('[Webhook Security] ERROR: Telegram no envió el secret_token')
+    return false
+  }
+
+  if (authHeader !== expected) {
+    console.error('[Webhook Security] ERROR: Los tokens no coinciden')
+    return false
+  }
+
+  console.log('[Webhook Security] ✅ Token válido')
   return true
 }
 
