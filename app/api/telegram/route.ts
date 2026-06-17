@@ -810,25 +810,36 @@ export async function POST(request: Request) {
         if (contenidoOriginal) {
           console.log('[Webhook] Contenido original encontrado:', contenidoOriginal.id)
 
-          const { error: insertError } = await admin
+          // Evitar duplicados por telegram_message_id
+          const { data: existingUpdate } = await admin
             .from('actualizaciones')
-            .insert({
-              contenido_id: contenidoOriginal.id,
-              titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
-              descripcion: limpiarDescripcionUpdate(sanitizarTexto(parsed.descripcion)),
-              tipo: 'volumen',
-              fecha: new Date().toISOString(),
-              telegram_message_id: msg.message_id,
-              metadata: {
-                link_post_original: linkOriginal,
-                telegram_message_id_original: messageIdOriginal,
-                portada_url: parsed.url_portada,
-              },
-            })
+            .select('id')
+            .eq('telegram_message_id', msg.message_id)
+            .maybeSingle()
 
-          if (insertError) {
-            console.error('[Webhook] Error al crear update:', insertError)
-            return NextResponse.json({ error: 'Error al guardar update' }, { status: 500 })
+          if (!existingUpdate) {
+            const { error: insertError } = await admin
+              .from('actualizaciones')
+              .insert({
+                contenido_id: contenidoOriginal.id,
+                titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
+                descripcion: limpiarDescripcionUpdate(sanitizarTexto(parsed.descripcion)),
+                tipo: 'volumen',
+                fecha: new Date().toISOString(),
+                telegram_message_id: msg.message_id,
+                metadata: {
+                  link_post_original: linkOriginal,
+                  telegram_message_id_original: messageIdOriginal,
+                  portada_url: parsed.url_portada,
+                },
+              })
+
+            if (insertError) {
+              console.error('[Webhook] Error al crear update:', insertError)
+              return NextResponse.json({ error: 'Error al guardar update' }, { status: 500 })
+            }
+          } else {
+            console.log('[Webhook] Update ya existente (saltado)')
           }
 
           console.log('[Webhook] Update registrado correctamente')
@@ -845,26 +856,38 @@ export async function POST(request: Request) {
       }
 
       const admin = getSupabaseAdmin()
-      const { error: orphanError } = await admin
-        .from('actualizaciones')
-        .insert({
-          contenido_id: null,
-          titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
-          descripcion: limpiarDescripcionUpdate(sanitizarTexto(parsed.descripcion)),
-          tipo: 'volumen',
-          fecha: new Date().toISOString(),
-          telegram_message_id: msg.message_id,
-          metadata: {
-            link_post_original: linkOriginal,
-            telegram_message_id_original: messageIdOriginal,
-            portada_url: parsed.url_portada,
-            es_huerfano: true,
-          },
-        })
 
-      if (orphanError) {
-        console.error('[Webhook] Error al crear update huérfano:', orphanError)
-        return NextResponse.json({ error: 'Error al guardar update huérfano' }, { status: 500 })
+      // Evitar duplicados por telegram_message_id (ej: edit dispara dos veces)
+      const { data: existingOrphan } = await admin
+        .from('actualizaciones')
+        .select('id')
+        .eq('telegram_message_id', msg.message_id)
+        .maybeSingle()
+
+      if (!existingOrphan) {
+        const { error: orphanError } = await admin
+          .from('actualizaciones')
+          .insert({
+            contenido_id: null,
+            titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
+            descripcion: limpiarDescripcionUpdate(sanitizarTexto(parsed.descripcion)),
+            tipo: 'volumen',
+            fecha: new Date().toISOString(),
+            telegram_message_id: msg.message_id,
+            metadata: {
+              link_post_original: linkOriginal,
+              telegram_message_id_original: messageIdOriginal,
+              portada_url: parsed.url_portada,
+              es_huerfano: true,
+            },
+          })
+
+        if (orphanError) {
+          console.error('[Webhook] Error al crear update huérfano:', orphanError)
+          return NextResponse.json({ error: 'Error al guardar update huérfano' }, { status: 500 })
+        }
+      } else {
+        console.log('[Webhook] Update huérfano ya existente (saltado)')
       }
 
       console.log('[Webhook] Update huérfano registrado correctamente')
