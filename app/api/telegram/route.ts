@@ -369,9 +369,20 @@ async function parseTelegramContent(
 
 function validarToken(request: Request): boolean {
   const authHeader = request.headers.get('x-telegram-bot-api-secret-token')
-  const expected = process.env.TELEGRAM_SECRET_TOKEN
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET
   if (expected) return authHeader === expected
   return true
+}
+
+function sanitizarTexto(texto: string): string {
+  return texto
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<object[^>]*>[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed[^>]*>[\s\S]*?<\/embed>/gi, '')
+    .replace(/javascript\s*:/gi, '')
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .trim()
 }
 
 /**
@@ -411,6 +422,13 @@ export async function POST(request: Request) {
       )
     }
 
+    if (msg.chat.id !== -1001406494973) {
+      return NextResponse.json(
+        { error: 'Canal no autorizado' },
+        { status: 403 }
+      )
+    }
+
     const parsed = await parseTelegramContent(msg)
 
     if (!parsed.titulo || parsed.titulo === 'Sin título') {
@@ -425,12 +443,12 @@ export async function POST(request: Request) {
     const { data, error } = await admin
       .from('contenido')
       .insert({
-        titulo: parsed.titulo,
-        descripcion: parsed.descripcion,
+        titulo: sanitizarTexto(parsed.titulo),
+        descripcion: sanitizarTexto(parsed.descripcion),
         url_portada: parsed.url_portada,
         categoria: parsed.categoria,
         hashtags: parsed.hashtags,
-        link_descarga: parsed.link_descarga,
+        link_descarga: sanitizarTexto(parsed.link_descarga),
       })
       .select('id')
       .single()

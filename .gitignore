@@ -27,3 +27,9 @@ Thumbs.db
 # Archivos de IA
 AGENTS.md
 CLAUDE.md
+
+# Build artifacts
+*.tsbuildinfo
+
+# Archivos sensibles
+*contraseña*.txt
