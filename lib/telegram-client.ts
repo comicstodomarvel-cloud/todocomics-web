@@ -12,13 +12,9 @@ export async function getClient(): Promise<TelegramClient> {
   const apiId = parseInt(process.env.TELEGRAM_API_ID || '0')
   const apiHash = process.env.TELEGRAM_API_HASH || ''
   const sessionString = process.env.TELEGRAM_SESSION || ''
-  const botToken = process.env.TELEGRAM_BOT_TOKEN
 
   if (!apiId || !apiHash) {
     throw new Error('TELEGRAM_API_ID y TELEGRAM_API_HASH son requeridos')
-  }
-  if (!botToken) {
-    throw new Error('TELEGRAM_BOT_TOKEN es requerido')
   }
   if (!sessionString) {
     throw new Error('TELEGRAM_SESSION es requerida')
@@ -34,11 +30,10 @@ export async function getClient(): Promise<TelegramClient> {
 
   Logger.setLevel('errors')
 
-  await client.start({
-    botAuthToken: botToken,
-  })
+  // La sesión guardada ya contiene la autenticación (bot o usuario)
+  await client.connect()
 
-  console.log('[TelegramClient] Conectado como bot')
+  console.log('[TelegramClient] Conectado')
   return client
 }
 
