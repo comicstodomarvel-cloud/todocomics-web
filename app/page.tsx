@@ -26,8 +26,12 @@ export default async function Home({
     items = mockData
   }
 
-  const hero = items[0]
-  const grid = items.slice(1)
+// Seleccionar un item aleatorio para el Hero
+const randomIndex = Math.floor(Math.random() * content.length);
+const heroItem = content[randomIndex];
+
+// El grid muestra TODOS los items (incluyendo el del Hero)
+const gridItems = content;
 
   return (
     <>
