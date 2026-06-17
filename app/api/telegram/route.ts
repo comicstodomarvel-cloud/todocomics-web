@@ -370,6 +370,14 @@ async function parseTelegramContent(
   return parsed
 }
 
+function limpiarDescripcionUpdate(descripcion: string): string {
+  return descripcion
+    .replace(/LINK DIRECTO AL POST\s*\(?\s*https?:\/\/[^\s)]+\s*\)?/gi, '')
+    .replace(/LINK DIRECTO\s*AL\s*POST/gi, '')
+    .replace(/https?:\/\/t\.me\/[^\s)]+/gi, '')
+    .trim()
+}
+
 function extraerLinkPostOriginal(texto: string): string | null {
   const match = texto.match(/LINK DIRECTO AL POST \((https:\/\/t\.me\/[^)]+)\)/i)
   return match ? match[1] : null
@@ -511,7 +519,7 @@ export async function POST(request: Request) {
             .insert({
               contenido_id: contenidoOriginal.id,
               titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
-              descripcion: sanitizarTexto(parsed.descripcion),
+              descripcion: limpiarDescripcionUpdate(sanitizarTexto(parsed.descripcion)),
               tipo: 'volumen',
               fecha: new Date().toISOString(),
               telegram_message_id: msg.message_id,
@@ -545,7 +553,7 @@ export async function POST(request: Request) {
         .insert({
           contenido_id: null,
           titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
-          descripcion: sanitizarTexto(parsed.descripcion),
+          descripcion: limpiarDescripcionUpdate(sanitizarTexto(parsed.descripcion)),
           tipo: 'volumen',
           fecha: new Date().toISOString(),
           telegram_message_id: msg.message_id,
