@@ -163,6 +163,15 @@ export default async function HomePage({
       <footer className="bg-zinc-900 text-zinc-400 py-8 mt-16">
         <div className="container mx-auto px-4 text-center">
           <p>© 2026 TodoComics. Todos los derechos reservados.</p>
+          <p className="text-xs text-zinc-500 mt-3 max-w-2xl mx-auto leading-relaxed">
+            TodoComics es un sitio web que recopila y organiza enlaces de contenido
+            disponible en fuentes públicas de internet. No almacenamos, alojamos ni
+            distribuimos ningún archivo con derechos de autor en nuestros servidores.
+            Todo el material compartido se encuentra originalmente en plataformas de
+            terceros. Si eres titular de derechos y consideras que algún contenido
+            infringe tus derechos, contáctanos para que podamos eliminar el enlace
+            correspondiente.
+          </p>
         </div>
       </footer>
     </div>
