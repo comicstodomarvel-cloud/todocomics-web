@@ -25,6 +25,13 @@ interface TelegramDocument {
   file_size?: number
 }
 
+interface TelegramEntity {
+  offset: number
+  length: number
+  type: string
+  url?: string
+}
+
 interface TelegramMessage {
   message_id: number
   chat: { id: number; type: string; username?: string; title?: string }
@@ -32,6 +39,8 @@ interface TelegramMessage {
   caption?: string
   photo?: TelegramPhoto[]
   document?: TelegramDocument
+  caption_entities?: TelegramEntity[]
+  entities?: TelegramEntity[]
   date: number
   edit_date?: number
   from?: { id: number; is_bot: boolean; username?: string; first_name?: string }
@@ -80,9 +89,39 @@ function extraerHashtags(texto: string): string[] {
 }
 
 /**
- * Busca el primer link de descarga en el texto.
+ * Extrae URLs de las entidades del mensaje (hyperlinks de Telegram).
+ * Busca en caption_entities y entities.
  */
-function extraerLinkDescarga(texto: string): string {
+function extraerHyperlinks(msg: TelegramMessage): string[] {
+  const urls: string[] = []
+
+  const entities = msg.caption_entities || msg.entities || []
+
+  for (const entity of entities) {
+    if (entity.type === 'text_link' && entity.url) {
+      console.log('[Hyperlink] Encontrado:', entity.url)
+      urls.push(entity.url)
+    }
+  }
+
+  return urls
+}
+
+/**
+ * Extrae el link de descarga priorizando hyperlinks sobre texto plano.
+ */
+function extraerLinkDescargaMejorado(msg: TelegramMessage, texto: string): string {
+  // 1. Primero buscar hyperlinks en entidades
+  const hyperlinks = extraerHyperlinks(msg)
+
+  const downloadLinks = hyperlinks.filter((url) => PATRON_LINK.test(url))
+
+  if (downloadLinks.length > 0) {
+    console.log('[Link] Hyperlink encontrado:', downloadLinks[0])
+    return downloadLinks[0]
+  }
+
+  // 2. Fallback a texto plano
   const match = texto.match(PATRON_LINK)
   return match ? match[0].replace(/[.,;:)\]}>]+$/, '') : ''
 }
@@ -322,8 +361,8 @@ async function parseTelegramContent(
   const hashtags = extraerHashtags(texto)
   const categoria = deducirCategoria(hashtags)
 
-  // --- Link de descarga ---
-  const link_descarga = extraerLinkDescarga(texto)
+  // --- Link de descarga (prioriza hyperlinks, fallback a texto plano) ---
+  const link_descarga = extraerLinkDescargaMejorado(msg, texto)
 
   // --- Descripción (líneas que no son título, hashtags, links ni ruido) ---
   const lineasDesc = lineas.filter((l) => {
