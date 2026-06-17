@@ -370,6 +370,16 @@ async function parseTelegramContent(
   return parsed
 }
 
+function extraerLinkPostOriginal(texto: string): string | null {
+  const match = texto.match(/LINK DIRECTO AL POST \((https:\/\/t\.me\/[^)]+)\)/i)
+  return match ? match[1] : null
+}
+
+function extraerMessageIdFromTelegramUrl(url: string): number | null {
+  const match = url.match(/\/(\d+)$/)
+  return match ? parseInt(match[1]) : null
+}
+
 function validarToken(request: Request): boolean {
   const authHeader = request.headers.get('x-telegram-bot-api-secret-token')
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET
@@ -470,6 +480,64 @@ export async function POST(request: Request) {
         { error: 'No se pudo extraer un título válido' },
         { status: 400 }
       )
+    }
+
+    const esUpdate = parsed.hashtags.some((h) => h.toLowerCase() === 'update')
+
+    if (esUpdate) {
+      console.log('[Webhook] === POST DE UPDATE DETECTADO ===')
+      console.log('[Webhook] Título:', parsed.titulo)
+
+      const textoCompleto = extraerTexto(msg)
+      const linkOriginal = extraerLinkPostOriginal(textoCompleto)
+      const messageIdOriginal = linkOriginal ? extraerMessageIdFromTelegramUrl(linkOriginal) : null
+
+      console.log('[Webhook] Link original:', linkOriginal)
+      console.log('[Webhook] Message ID original:', messageIdOriginal)
+
+      if (messageIdOriginal) {
+        const admin = getSupabaseAdmin()
+        const { data: contenidoOriginal } = await admin
+          .from('contenido')
+          .select('id')
+          .eq('telegram_message_id', messageIdOriginal)
+          .maybeSingle()
+
+        if (contenidoOriginal) {
+          console.log('[Webhook] Contenido original encontrado:', contenidoOriginal.id)
+
+          const { error: insertError } = await admin
+            .from('actualizaciones')
+            .insert({
+              contenido_id: contenidoOriginal.id,
+              titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
+              descripcion: sanitizarTexto(parsed.descripcion),
+              tipo: 'volumen',
+              fecha: new Date().toISOString(),
+              telegram_message_id: msg.message_id,
+              metadata: {
+                link_post_original: linkOriginal,
+                portada_url: parsed.url_portada,
+              },
+            })
+
+          if (insertError) {
+            console.error('[Webhook] Error al crear update:', insertError)
+            return NextResponse.json({ error: 'Error al guardar update' }, { status: 500 })
+          }
+
+          console.log('[Webhook] Update registrado correctamente')
+          return NextResponse.json({
+            ok: true,
+            action: 'update_registered',
+            contenido_id: contenidoOriginal.id,
+          }, { status: 200 })
+        }
+
+        console.warn('[Webhook] No se encontró contenido original por message_id, insertando como contenido normal')
+      } else {
+        console.warn('[Webhook] No se pudo extraer message_id del link original, insertando como contenido normal')
+      }
     }
 
     const isEdit = !!update.edited_channel_post || !!update.edited_message

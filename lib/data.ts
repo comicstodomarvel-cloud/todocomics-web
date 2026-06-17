@@ -73,3 +73,38 @@ export async function searchContent(query: string): Promise<ContentItem[]> {
 
   return (data as ContentItem[]) ?? []
 }
+
+export async function getLatestUpdateDates(): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from('actualizaciones')
+    .select('contenido_id, fecha')
+    .order('fecha', { ascending: false })
+
+  if (error) {
+    console.error('Error al obtener fechas de actualización:', error.message)
+    return {}
+  }
+
+  const map: Record<string, string> = {}
+  for (const item of data) {
+    if (!map[item.contenido_id]) {
+      map[item.contenido_id] = item.fecha
+    }
+  }
+  return map
+}
+
+export async function getUpdatesForContent(contentId: string) {
+  const { data, error } = await supabase
+    .from('actualizaciones')
+    .select('*')
+    .eq('contenido_id', contentId)
+    .order('fecha', { ascending: false })
+
+  if (error) {
+    console.error('Error al obtener actualizaciones:', error.message)
+    return []
+  }
+
+  return data ?? []
+}

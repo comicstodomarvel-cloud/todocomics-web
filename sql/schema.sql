@@ -28,3 +28,26 @@ CREATE POLICY "Solo admins pueden actualizar contenido"
 CREATE POLICY "Solo admins pueden eliminar contenido"
   ON contenido FOR DELETE
   USING (auth.role() = 'authenticated');
+
+ALTER TABLE public.contenido ADD COLUMN telegram_message_id BIGINT UNIQUE;
+
+CREATE TABLE actualizaciones (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contenido_id UUID REFERENCES contenido(id) ON DELETE CASCADE,
+  titulo TEXT NOT NULL,
+  descripcion TEXT,
+  tipo TEXT CHECK (tipo IN ('volumen', 'correccion', 'enlace_nuevo', 'portada')),
+  fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  telegram_message_id BIGINT,
+  metadata JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX idx_actualizaciones_fecha ON actualizaciones(fecha DESC);
+CREATE INDEX idx_actualizaciones_contenido ON actualizaciones(contenido_id);
+
+ALTER TABLE public.actualizaciones ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Permitir lectura pública de actualizaciones"
+  ON public.actualizaciones
+  FOR SELECT
+  USING (true);

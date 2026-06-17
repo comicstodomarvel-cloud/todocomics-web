@@ -1,9 +1,10 @@
-import { getLatestContent, searchContent, getContentByCategoria } from '@/lib/data';
+import { getLatestContent, searchContent, getContentByCategoria, getLatestUpdateDates } from '@/lib/data';
 import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
 import SearchBar from '@/components/SearchBar';
 import CategoryFilter from '@/components/CategoryFilter';
 import ImageWithFallback from '@/components/ImageWithFallback';
+import UpdatesWidget from '@/components/updates/UpdatesWidget';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -47,9 +48,12 @@ export default async function HomePage({
   // 🎲 Hero aleatorio
   const randomIndex = Math.floor(Math.random() * content.length);
   const heroItem = content[randomIndex];
-  
+
   // Grid con TODOS los items (incluyendo el del Hero)
   const gridItems = content;
+
+  // Fechas de última actualización para badges
+  const updateDates = !busqueda && !categoria ? await getLatestUpdateDates() : {};
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -128,10 +132,13 @@ export default async function HomePage({
         <h2 className="mb-6 text-2xl font-bold">Continúa explorando</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {gridItems.map((item) => (
-            <ContentCard key={item.id} item={item} />
+            <ContentCard key={item.id} item={item} lastUpdateDate={updateDates[item.id]} />
           ))}
         </div>
       </section>
+
+      {/* Widget de actualizaciones */}
+      <UpdatesWidget />
 
       {/* Footer */}
       <footer className="bg-zinc-900 text-zinc-400 py-8 mt-16">
