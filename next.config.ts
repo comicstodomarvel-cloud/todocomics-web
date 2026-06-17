@@ -5,6 +5,16 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'upload.wikimedia.org',
         pathname: '/**',
       },
@@ -13,14 +23,7 @@ const nextConfig: NextConfig = {
         hostname: 'placehold.co',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        pathname: '/**',
-      },
     ],
-    // Desactivar optimización en desarrollo para evitar problemas
-    unoptimized: process.env.NODE_ENV === 'development',
   },
 };
 
