@@ -1,8 +1,8 @@
 import { getLatestContent, searchContent, getContentByCategoria } from '@/lib/data';
 import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
-import { SearchBar } from '@/components/SearchBar';
-import { CategoryFilter } from '@/components/CategoryFilter';
+import SearchBar from '@/components/SearchBar';
+import CategoryFilter from '@/components/CategoryFilter';
 import Image from 'next/image';
 
 // Revalidar cada 5 minutos (300 segundos)
