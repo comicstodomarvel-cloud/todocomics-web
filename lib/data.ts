@@ -110,6 +110,46 @@ export async function getUpdatesForContent(contentId: string) {
   return data ?? []
 }
 
+export async function getFavoriteOfMonth(): Promise<{ item: ContentItem; visits: number } | null> {
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const { data: visitData, error: visitError } = await supabase
+    .from('visitas')
+    .select('contenido_id')
+    .gte('fecha', startOfMonth.toISOString())
+
+  if (visitError) {
+    console.error('Error al obtener visitas:', visitError.message)
+    return null
+  }
+
+  if (!visitData || visitData.length === 0) {
+    return null
+  }
+
+  const counts = new Map<string, number>()
+  for (const v of visitData) {
+    counts.set(v.contenido_id, (counts.get(v.contenido_id) || 0) + 1)
+  }
+
+  let topId = ''
+  let topCount = 0
+  for (const [id, count] of counts) {
+    if (count > topCount) {
+      topCount = count
+      topId = id
+    }
+  }
+
+  if (!topId) return null
+
+  const item = await getContentById(topId)
+  if (!item) return null
+
+  return { item, visits: topCount }
+}
+
 export async function getContentByHashtag(hashtagId: string): Promise<ContentItem[]> {
   const filterDef = HASHTAG_FILTERS.find((f) => f.id === hashtagId)
   if (!filterDef) {

@@ -7,6 +7,7 @@ import ImageWithFallback from '@/components/ImageWithFallback';
 import UpdatesWidget from '@/components/updates/UpdatesWidget';
 import UpdatesDropdownButton from '@/components/updates/UpdatesDropdownButton';
 import RandomRecommendation from '@/components/RandomRecommendation';
+import FavoriteBadge from '@/components/FavoriteBadge';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -139,10 +140,11 @@ export default async function HomePage({
         <RandomRecommendation />
       </section>
 
-      {/* Buscador y Filtros */}
+      {/* Buscador y Favorito del Mes */}
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <SearchBar />
+          <FavoriteBadge />
         </div>
       </section>
 

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { ExternalLink, ArrowLeft } from 'lucide-react'
 import { getContentById } from '@/lib/data'
 import { mockData } from '@/data/mockData'
+import VisitTracker from '@/components/VisitTracker'
 
 export default async function ItemPage({
   params,
@@ -23,6 +24,7 @@ export default async function ItemPage({
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <VisitTracker contenidoId={item.id} />
       <div className="mx-auto flex flex-col px-6 py-8 md:flex-row md:gap-10 md:px-16 md:py-12">
         <div className="relative mb-6 w-full shrink-0 md:mb-0 md:w-1/3">
           <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg">
