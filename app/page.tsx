@@ -1,8 +1,8 @@
-import { getLatestContent, searchContent, getContentByCategoria, getLatestUpdateDates } from '@/lib/data';
+import { getLatestContent, searchContent, getContentByCategoria, getContentByHashtag, getLatestUpdateDates } from '@/lib/data';
 import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
 import SearchBar from '@/components/SearchBar';
-import CategoryFilter from '@/components/CategoryFilter';
+import HashtagFilter from '@/components/HashtagFilter';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import UpdatesWidget from '@/components/updates/UpdatesWidget';
 import UpdatesDropdownButton from '@/components/updates/UpdatesDropdownButton';
@@ -14,16 +14,18 @@ export const revalidate = 300;
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ busqueda?: string; categoria?: string }>;
+  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string }>;
 }) {
   const params = await searchParams;
-  const { busqueda, categoria } = params;
+  const { busqueda, categoria, hashtag } = params;
 
   // ✅ TIPO EXPLÍCITO para evitar error de TypeScript
   let content: ContentItem[] = [];
 
   // Obtener contenido según filtros
-  if (busqueda) {
+  if (hashtag) {
+    content = await getContentByHashtag(hashtag);
+  } else if (busqueda) {
     content = await searchContent(busqueda);
   } else if (categoria && categoria !== 'Todos') {
     content = await getContentByCategoria(categoria);
@@ -34,14 +36,20 @@ export default async function HomePage({
   // Manejar caso sin resultados
   if (content.length === 0) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">No hay contenido disponible</h1>
-          <p className="text-zinc-400">
-            {busqueda 
-              ? `No encontramos resultados para "${busqueda}"`
-              : 'Aún no hay contenido en esta categoría'}
-          </p>
+      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+        <UpdatesDropdownButton />
+        <HashtagFilter />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">No hay contenido disponible</h1>
+            <p className="text-zinc-400">
+              {busqueda
+                ? `No encontramos resultados para "${busqueda}"`
+                : hashtag
+                ? `No encontramos contenido con ese filtro`
+                : 'Aún no hay contenido en esta categoría'}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -55,12 +63,14 @@ export default async function HomePage({
   const gridItems = content;
 
   // Fechas de última actualización para badges
-  const updateDates = !busqueda && !categoria ? await getLatestUpdateDates() : {};
+  const updateDates = !busqueda && !categoria && !hashtag ? await getLatestUpdateDates() : {};
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       {/* Botón dropdown de Updates */}
       <UpdatesDropdownButton />
+      {/* Botón flotante de filtros por hashtag */}
+      <HashtagFilter />
 
       {/* Hero Section */}
       <section className="relative h-[70vh] w-full overflow-hidden">
@@ -133,7 +143,6 @@ export default async function HomePage({
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <SearchBar />
-          <CategoryFilter />
         </div>
       </section>
 

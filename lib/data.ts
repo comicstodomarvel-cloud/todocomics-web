@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { HASHTAG_FILTERS } from './hashtags'
 
 export interface ContentItem {
   id: string
@@ -107,4 +108,25 @@ export async function getUpdatesForContent(contentId: string) {
   }
 
   return data ?? []
+}
+
+export async function getContentByHashtag(hashtagId: string): Promise<ContentItem[]> {
+  const filterDef = HASHTAG_FILTERS.find((f) => f.id === hashtagId)
+  if (!filterDef) {
+    console.error('Hashtag filter not found:', hashtagId)
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from('contenido')
+    .select('*')
+    .overlaps('hashtags', filterDef.search)
+    .order('fecha_creacion', { ascending: false })
+
+  if (error) {
+    console.error('Error al filtrar por hashtag:', error.message)
+    throw new Error('Error al cargar contenido')
+  }
+
+  return (data as ContentItem[]) ?? []
 }
