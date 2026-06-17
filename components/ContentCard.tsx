@@ -21,13 +21,13 @@ export default function ContentCard({ item, lastUpdateDate }: ContentCardProps) 
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 card-overlay transition-opacity duration-300">
           <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
             <h3 className="text-sm sm:text-base font-bold text-white line-clamp-2 mb-1 sm:mb-2">
               {item.titulo}
             </h3>
             <div className="flex items-center gap-2 text-xs text-zinc-300">
-              <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-xs">
+              <span className="bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded text-xs min-h-[22px] flex items-center">
                 {item.categoria}
               </span>
             </div>

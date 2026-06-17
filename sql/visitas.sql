@@ -10,7 +10,7 @@ ALTER TABLE visitas ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Cualquiera puede insertar visitas"
   ON visitas FOR INSERT
-  USING (true);
+  WITH CHECK (true);
 
 CREATE POLICY "Cualquiera puede leer visitas"
   ON visitas FOR SELECT

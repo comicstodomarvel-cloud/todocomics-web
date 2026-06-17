@@ -101,15 +101,15 @@ export default function UpdatesDropdownButton() {
   }, [isOpen, updates.length, fetchUpdates])
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed top-4 right-4 z-50 safe-top safe-right">
       <button
         onClick={handleToggle}
-        className="relative flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 hover:scale-105"
+        className="relative flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold px-4 py-2.5 min-h-[44px] rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 hover:scale-105"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-        <span>Updates</span>
+        <span className="text-sm">Updates</span>
 
         {hasUnread && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
@@ -128,7 +128,7 @@ export default function UpdatesDropdownButton() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in relative z-50">
+        <div className="fixed sm:absolute right-4 sm:right-0 top-20 sm:top-full sm:mt-2 w-[90vw] sm:w-96 max-w-[384px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in relative z-50">
           <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-black px-4 py-3">
             <h3 className="font-bold text-lg">Últimas Actualizaciones</h3>
           </div>
@@ -191,7 +191,7 @@ export default function UpdatesDropdownButton() {
           <div className="border-t border-zinc-800 p-3 bg-zinc-900/50">
             <Link
               href="/updates"
-              className="block w-full text-center bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold py-2 px-4 rounded-lg transition-colors"
+              className="block w-full text-center bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold py-3 min-h-[44px] flex items-center justify-center rounded-lg transition-colors"
               onClick={() => setIsOpen(false)}
             >
               VER MÁS →

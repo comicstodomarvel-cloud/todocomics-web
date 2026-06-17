@@ -74,7 +74,7 @@ export default async function HomePage({
       <HashtagFilter />
 
       {/* Hero Section */}
-      <section className="relative h-[70vh] w-full overflow-hidden">
+      <section className="relative min-h-[50vh] md:h-[70vh] w-full overflow-hidden">
         {/* Imagen de fondo con gradiente */}
         <div className="absolute inset-0">
           <ImageWithFallback
