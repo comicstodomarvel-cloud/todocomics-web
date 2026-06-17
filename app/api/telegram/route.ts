@@ -420,7 +420,11 @@ function limpiarDescripcionUpdate(descripcion: string): string {
 
 function extraerLinkPostOriginal(texto: string): string | null {
   const match = texto.match(/LINK DIRECTO AL POST \((https:\/\/t\.me\/[^)]+)\)/i)
-  return match ? match[1] : null
+  if (match) return match[1]
+
+  // Fallback: cualquier link a t.me en el texto
+  const fallback = texto.match(/https:\/\/t\.me\/[^\s)]+/i)
+  return fallback ? fallback[0].replace(/[.,;:)\]}>]+$/, '') : null
 }
 
 function extraerMessageIdFromTelegramUrl(url: string): number | null {
@@ -589,17 +593,42 @@ async function handleImportCommandPrivate(msg: TelegramMessage, command: string,
     let updatesVinculados = 0
 
     try {
-      const { data: orphanUpdates } = await admin
+      // 1. Buscar orphans por link_post_original (con / antes del ID para precisión)
+      const { data: orphansPorLink } = await admin
         .from('actualizaciones')
-        .update({ contenido_id: nuevoContenido.id })
-        .eq('contenido_id', null)
-        .filter('metadata->>link_post_original', 'like', `%${messageId}`)
         .select('id')
+        .eq('contenido_id', null)
+        .filter('metadata->>link_post_original', 'like', `%/${messageId}`)
 
-      if (orphanUpdates && orphanUpdates.length > 0) {
-        updatesVinculados = orphanUpdates.length
-        if (updatesVinculados > 0) {
+      // 2. También buscar por telegram_message_id_original (más robusto)
+      const { data: orphansPorId } = await admin
+        .from('actualizaciones')
+        .select('id')
+        .eq('contenido_id', null)
+        .eq('metadata->>telegram_message_id_original', messageId.toString())
+
+      const idsToLink = new Set<string>()
+
+      for (const o of orphansPorLink || []) idsToLink.add(o.id)
+      for (const o of orphansPorId || []) idsToLink.add(o.id)
+
+      if (idsToLink.size > 0) {
+        const { error: linkError } = await admin
+          .from('actualizaciones')
+          .update({
+            contenido_id: nuevoContenido.id,
+            metadata: {
+              es_huerfano: false,
+              vinculado_en: new Date().toISOString(),
+            },
+          })
+          .in('id', [...idsToLink])
+
+        if (!linkError) {
+          updatesVinculados = idsToLink.size
           await updateMsg(`🔗 ${updatesVinculados} actualización(es) huérfana(s) vinculada(s)`)
+        } else {
+          console.error('[handleImportCommandPrivate] Error al vincular:', linkError)
         }
       }
     } catch (err) {
@@ -719,6 +748,7 @@ export async function POST(request: Request) {
               telegram_message_id: msg.message_id,
               metadata: {
                 link_post_original: linkOriginal,
+                telegram_message_id_original: messageIdOriginal,
                 portada_url: parsed.url_portada,
               },
             })
@@ -752,7 +782,8 @@ export async function POST(request: Request) {
           fecha: new Date().toISOString(),
           telegram_message_id: msg.message_id,
           metadata: {
-            link_post_original: linkOriginal ?? null,
+            link_post_original: linkOriginal,
+            telegram_message_id_original: messageIdOriginal,
             portada_url: parsed.url_portada,
             es_huerfano: true,
           },
