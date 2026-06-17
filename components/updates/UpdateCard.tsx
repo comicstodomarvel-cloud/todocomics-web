@@ -50,9 +50,6 @@ export default function UpdateCard({ update }: { update: Update }) {
               {update.descripcion && (
                 <p className="text-zinc-400 text-sm mt-1">{limpiarDescripcion(update.descripcion)}</p>
               )}
-              <div className="bg-amber-500/10 text-amber-500 text-xs px-2 py-1 rounded mt-2 inline-block">
-                Contenido no disponible en la web
-              </div>
               {update.metadata?.link_post_original && (
                 <a
                   href={update.metadata.link_post_original}

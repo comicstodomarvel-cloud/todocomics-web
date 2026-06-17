@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { CATEGORIAS, HASHTAG_CATEGORIA } from '@/lib/hashtags'
 
 interface TelegramUpdate {
   update_id: number
@@ -53,16 +54,6 @@ interface ParsedContent {
   categoria: string
   hashtags: string[]
   link_descarga: string
-}
-
-const CATEGORIAS = ['Comic', 'Manga', 'Pelicula', 'Serie', 'Libro'] as const
-
-const HASHTAG_CATEGORIA: Record<string, (typeof CATEGORIAS)[number]> = {
-  COMIC: 'Comic',
-  MANGA: 'Manga',
-  PELICULA: 'Pelicula',
-  SERIE: 'Serie',
-  LIBRO: 'Libro',
 }
 
 const PREFIJOS_DESCARGA = /^(descarga\s*(directa|gratis)|link|enlace|mega|mediafire)[:\s]*$/i
@@ -341,7 +332,7 @@ function esLineaRuido(linea: string, linkDescarga: string): boolean {
  *   DESCARGA DIRECTA
  *   https://terabox.com/s/...
  */
-async function parseTelegramContent(
+export async function parseTelegramContent(
   msg: TelegramMessage
 ): Promise<ParsedContent> {
   const texto = extraerTexto(msg)
@@ -460,7 +451,7 @@ function validarToken(request: Request): boolean {
   return true
 }
 
-function sanitizarTexto(texto: string): string {
+export function sanitizarTexto(texto: string): string {
   return texto
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
@@ -490,7 +481,13 @@ async function sendHelpMessage(chatId: number) {
   await sendMessage(chatId, `📖 Comandos disponibles:
 
 /importar <url> - Importar un post antiguo de Telegram
-Ejemplo: /importar https://t.me/marveltodocomics/11327
+  Ejemplo: /importar https://t.me/marveltodocomics/11327
+
+/importar_lote [N|--todo|--check] - Importar lotes desde historial
+  /importar_lote         → últimos 50 posts
+  /importar_lote 100     → últimos 100
+  /importar_lote --todo  → todo el historial
+  /importar_lote --check → dry run (simular sin guardar)
 
 /help - Mostrar esta ayuda`)
 }
@@ -504,12 +501,76 @@ async function handlePrivateMessage(msg: TelegramMessage) {
     return NextResponse.json({ ok: true })
   }
 
+  if (texto.startsWith('/importar_lote')) {
+    return await handleImportLoteCommand(msg, texto, chatId)
+  }
+
   if (texto.startsWith('/importar')) {
     return await handleImportCommandPrivate(msg, texto, chatId)
   }
 
   await sendMessage(chatId, `Comando no reconocido. Usa /help para ver los comandos disponibles.`)
   return NextResponse.json({ ok: true })
+}
+
+async function handleImportLoteCommand(msg: TelegramMessage, command: string, chatId: number) {
+  const updateMsg = async (text: string) => sendMessage(chatId, text)
+
+  try {
+    const parts = command.split(/\s+/)
+    const flag = parts[1]
+    let limit = 50
+    let dryRun = false
+
+    if (flag === '--check' || flag === '--dry-run') {
+      dryRun = true
+      limit = parts[2] ? parseInt(parts[2]) : 50
+    } else if (flag === '--todo') {
+      limit = -1
+    } else if (flag && !isNaN(parseInt(flag))) {
+      limit = parseInt(flag)
+    }
+
+    await updateMsg(`🔍 Escaneando historial del canal (límite: ${limit === -1 ? 'todos' : limit})...`)
+
+    const { scanChannelHistory } = await import('@/lib/channel-scanner')
+    const scanResult = await scanChannelHistory(limit)
+
+    if (scanResult.totalFetched === 0) {
+      await updateMsg('❌ No se encontraron mensajes en el canal.')
+      return NextResponse.json({ ok: true })
+    }
+
+    await updateMsg(`📦 Procesando ${scanResult.totalFetched} mensajes...`)
+
+    const { batchImport } = await import('@/lib/batch-importer')
+    const result = await batchImport(scanResult.messages, dryRun)
+
+    const resumen = [
+      dryRun ? '🔍 **DRY RUN - Sin cambios**' : '✅ **Importación completada**',
+      '',
+      `📥 Total mensajes escaneados: ${scanResult.totalFetched}`,
+      `✅ Importados: ${result.imported}`,
+      `⏭️  Saltados (#update): ${result.skipped.update}`,
+      `⏭️  Saltados (sin categoría): ${result.skipped.sinCategoria}`,
+      `⏭️  Saltados (duplicados): ${result.skipped.duplicado}`,
+      `🔗 Updates vinculados: ${result.updatesVinculados}`,
+      result.errores > 0 ? `❌ Errores: ${result.errores}` : '',
+    ].filter(Boolean).join('\n')
+
+    await updateMsg(resumen)
+
+    if (result.detalles.length > 0) {
+      const detallesStr = result.detalles.slice(0, 20).join('\n')
+      await updateMsg(`📋 Detalles:\n${detallesStr}${result.detalles.length > 20 ? `\n... y ${result.detalles.length - 20} más` : ''}`)
+    }
+
+    return NextResponse.json({ ok: true, ...result })
+  } catch (error) {
+    console.error('[handleImportLoteCommand] Error:', error)
+    await updateMsg(`❌ Error: ${error instanceof Error ? error.message : 'Unknown'}`)
+    return NextResponse.json({ ok: true })
+  }
 }
 
 async function handleImportCommandPrivate(msg: TelegramMessage, command: string, chatId: number) {
