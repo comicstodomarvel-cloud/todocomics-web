@@ -1,11 +1,11 @@
-﻿# Dependencias de Node
+﻿# Dependencias
 node_modules/
 
 # Build de Next.js
 .next/
 out/
 
-# Variables de entorno (¡CLAVES SECRETAS!)
+# Variables de entorno (CLAVES SECRETAS)
 .env.local
 .env.development.local
 .env.test.local
@@ -24,6 +24,6 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Archivos de configuración de IA
+# Archivos de IA
 AGENTS.md
 CLAUDE.md
