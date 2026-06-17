@@ -102,26 +102,33 @@ function deducirCategoria(hashtags: string[]): string {
  * @returns file_id de la imagen, o null si no hay ninguna.
  */
 function obtenerFileId(msg: TelegramMessage): string | null {
+  console.log('[obtenerFileId] === INICIO ===')
+  console.log('[obtenerFileId] msg.photo existe:', !!msg.photo)
+  console.log('[obtenerFileId] msg.document existe:', !!msg.document)
+
+  if (msg.photo) {
+    console.log('[obtenerFileId] msg.photo.length:', msg.photo.length)
+    console.log('[obtenerFileId] Última foto (mayor):', JSON.stringify(msg.photo[msg.photo.length - 1]))
+  }
+
   if (msg.photo && msg.photo.length > 0) {
-    const mejor = msg.photo[msg.photo.length - 1]
-    console.log('[Telegram Webhook] File ID desde photo:', mejor.file_id)
-    return mejor.file_id
+    const fileId = msg.photo[msg.photo.length - 1].file_id
+    console.log('[obtenerFileId] file_id extraído de photo:', fileId)
+    return fileId
   }
 
   if (msg.document) {
-    console.log(
-      '[Telegram Webhook] Document encontrado, mime_type:',
-      msg.document.mime_type ?? 'sin mime_type'
-    )
+    console.log('[obtenerFileId] document.mime_type:', msg.document.mime_type)
+    console.log('[obtenerFileId] document.file_id:', msg.document.file_id)
     if (msg.document.mime_type?.startsWith('image/')) {
-      console.log('[Telegram Webhook] File ID desde document:', msg.document.file_id)
+      console.log('[obtenerFileId] Es imagen, usando document.file_id')
       return msg.document.file_id
     }
-    console.log('[Telegram Webhook] Document ignorado (no es imagen):', msg.document.mime_type)
+    console.log('[obtenerFileId] No es imagen, ignorando document')
     return null
   }
 
-  console.log('[Telegram Webhook] No hay photo ni document en el mensaje')
+  console.log('[obtenerFileId] No se encontró file_id')
   return null
 }
 
@@ -130,42 +137,60 @@ function obtenerFileId(msg: TelegramMessage): string | null {
  * Telegram no envía URLs directas; hay que resolver el file_path.
  */
 async function obtenerUrlPortada(fileId: string): Promise<string> {
+  console.log('[obtenerUrlPortada] === INICIO ===')
+  console.log('[obtenerUrlPortada] fileId recibido:', fileId)
+
   const token = process.env.TELEGRAM_BOT_TOKEN
+  console.log('[obtenerUrlPortada] TELEGRAM_BOT_TOKEN existe:', !!token)
+  console.log('[obtenerUrlPortada] token length:', token?.length)
+
   if (!token) {
-    console.warn('[Telegram Webhook] TELEGRAM_BOT_TOKEN no definido')
+    console.error('[obtenerUrlPortada] ERROR: TELEGRAM_BOT_TOKEN no definido')
     return ''
   }
 
+  const url = `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`
+  console.log('[obtenerUrlPortada] URL de getFile:', url)
+
   try {
-    const res = await fetch(
-      `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`
-    )
+    console.log('[obtenerUrlPortada] Llamando a fetch...')
+    const res = await fetch(url)
+    console.log('[obtenerUrlPortada] Response status:', res.status)
+    console.log('[obtenerUrlPortada] Response ok:', res.ok)
+
     if (!res.ok) {
-      console.error('[Telegram Webhook] getFile status:', res.status)
+      console.error('[obtenerUrlPortada] ERROR: HTTP status', res.status)
+      const errorText = await res.text()
+      console.error('[obtenerUrlPortada] Error body:', errorText)
       return ''
     }
 
     const json = await res.json()
-    console.log('[Telegram Webhook] getFile respuesta completa:', JSON.stringify(json, null, 2))
+    console.log('[obtenerUrlPortada] Respuesta completa de getFile:')
+    console.log(JSON.stringify(json, null, 2))
 
     if (!json.ok) {
-      console.error('[Telegram Webhook] getFile error:', json.description)
+      console.error('[obtenerUrlPortada] ERROR: json.ok = false')
+      console.error('[obtenerUrlPortada] description:', json.description)
       return ''
     }
 
-    const filePath: string | undefined = json.result?.file_path
+    const filePath = json.result?.file_path
+    console.log('[obtenerUrlPortada] file_path:', filePath)
+
     if (!filePath) {
-      console.error('[Telegram Webhook] getFile no devolvió file_path')
+      console.error('[obtenerUrlPortada] ERROR: file_path es undefined')
       return ''
     }
 
-    const url = `https://api.telegram.org/file/bot${token}/${filePath}`
-    console.log('[Telegram Webhook] Portada resuelta:', url)
-    return url
+    const finalUrl = `https://api.telegram.org/file/bot${token}/${filePath}`
+    console.log('[obtenerUrlPortada] URL final construida:', finalUrl)
+
+    return finalUrl
   } catch (err) {
-    console.error('[Telegram Webhook] Error al obtener portada:', err)
+    console.error('[obtenerUrlPortada] ERROR en try/catch:', err)
     if (err instanceof Error) {
-      console.error('[Telegram Webhook] Stack:', err.stack)
+      console.error('[obtenerUrlPortada] Error stack:', err.stack)
     }
     return ''
   }
@@ -238,13 +263,19 @@ async function parseTelegramContent(
   const descripcion = lineasDesc.join('\n').trim() || 'Sin descripción'
 
   // --- Portada ---
-  let url_portada = ''
+  console.log('[parseTelegramContent] === INICIO ===')
+  console.log('[parseTelegramContent] msg.photo?.length:', msg.photo?.length)
+
   const fileId = obtenerFileId(msg)
+  console.log('[parseTelegramContent] fileId retornado:', fileId)
+
+  let url_portada = ''
   if (fileId) {
-    console.log('[Telegram Webhook] Resolviendo URL para file_id:', fileId)
+    console.log('[parseTelegramContent] Llamando a obtenerUrlPortada...')
     url_portada = await obtenerUrlPortada(fileId)
+    console.log('[parseTelegramContent] url_portada obtenida:', url_portada)
   } else {
-    console.log('[Telegram Webhook] No se encontró portada (ni photo ni document)')
+    console.log('[parseTelegramContent] No hay fileId, url_portada vacía')
   }
 
   const parsed: ParsedContent = {
@@ -336,6 +367,9 @@ export async function POST(request: Request) {
       )
     }
 
+    console.log('[POST] === RESULTADO FINAL ===')
+    console.log('[POST] parsed.url_portada:', parsed.url_portada)
+    console.log('[POST] Insertando en Supabase...')
     console.log('[Telegram Webhook] Contenido insertado correctamente, id:', data.id)
     return NextResponse.json(
       { ok: true, id: data.id, titulo: parsed.titulo },
