@@ -472,7 +472,58 @@ export async function POST(request: Request) {
       )
     }
 
+    const isEdit = !!update.edited_channel_post || !!update.edited_message
+    const messageId = msg.message_id
+
+    console.log('[Telegram Webhook] Es edición:', isEdit)
+    console.log('[Telegram Webhook] Message ID:', messageId)
+
     const admin = getSupabaseAdmin()
+
+    const { data: existing, error: searchError } = await admin
+      .from('contenido')
+      .select('id, url_portada')
+      .eq('telegram_message_id', messageId)
+      .maybeSingle()
+
+    if (existing) {
+      console.log('[Telegram Webhook] Post ya existe (ID:', existing.id, '). Actualizando...')
+
+      const portadaFinal = parsed.url_portada || existing.url_portada
+
+      if (parsed.url_portada) {
+        console.log('[Telegram Webhook] Portada actualizada con la nueva imagen')
+      } else {
+        console.log('[Telegram Webhook] Manteniendo portada anterior')
+      }
+
+      const { error: updateError } = await admin
+        .from('contenido')
+        .update({
+          titulo: sanitizarTexto(parsed.titulo),
+          descripcion: sanitizarTexto(parsed.descripcion),
+          url_portada: portadaFinal,
+          categoria: parsed.categoria,
+          hashtags: parsed.hashtags,
+          link_descarga: sanitizarTexto(parsed.link_descarga),
+        })
+        .eq('id', existing.id)
+
+      if (updateError) {
+        console.error('[Telegram Webhook] Error al actualizar:', updateError.message)
+        return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 })
+      }
+
+      console.log('[Telegram Webhook] ✅ Post actualizado correctamente, id:', existing.id)
+      return NextResponse.json({
+        ok: true,
+        action: 'updated',
+        id: existing.id,
+        titulo: sanitizarTexto(parsed.titulo),
+      }, { status: 200 })
+    }
+
+    console.log('[Telegram Webhook] Post nuevo. Insertando...')
 
     const { data, error } = await admin
       .from('contenido')
@@ -483,26 +534,23 @@ export async function POST(request: Request) {
         categoria: parsed.categoria,
         hashtags: parsed.hashtags,
         link_descarga: sanitizarTexto(parsed.link_descarga),
+        telegram_message_id: messageId,
       })
       .select('id')
       .single()
 
     if (error) {
-      console.error('[Telegram Webhook] Error al insertar en Supabase:', error.message)
-      return NextResponse.json(
-        { error: 'Error al guardar el contenido' },
-        { status: 500 }
-      )
+      console.error('[Telegram Webhook] Error al insertar:', error.message)
+      return NextResponse.json({ error: 'Error al guardar' }, { status: 500 })
     }
 
-    console.log('[POST] === RESULTADO FINAL ===')
-    console.log('[POST] parsed.url_portada:', parsed.url_portada)
-    console.log('[POST] Insertando en Supabase...')
-    console.log('[Telegram Webhook] Contenido insertado correctamente, id:', data.id)
-    return NextResponse.json(
-      { ok: true, id: data.id, titulo: parsed.titulo },
-      { status: 200 }
-    )
+    console.log('[Telegram Webhook] ✅ Post insertado, id:', data.id)
+    return NextResponse.json({
+      ok: true,
+      action: 'inserted',
+      id: data.id,
+      titulo: sanitizarTexto(parsed.titulo),
+    }, { status: 200 })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error desconocido'
     console.error('[Telegram Webhook] Error:', message)
