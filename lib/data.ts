@@ -110,6 +110,64 @@ export async function getUpdatesForContent(contentId: string) {
   return data ?? []
 }
 
+export async function getCatalogStats(): Promise<{ total: number; byCategory: Record<string, number> } | null> {
+  const { data, error } = await supabase
+    .from('contenido')
+    .select('categoria')
+
+  if (error) {
+    console.error('Error al obtener estadísticas:', error.message)
+    return null
+  }
+
+  if (!data || data.length === 0) return null
+
+  const byCategory: Record<string, number> = {}
+  for (const item of data) {
+    byCategory[item.categoria] = (byCategory[item.categoria] || 0) + 1
+  }
+
+  return { total: data.length, byCategory }
+}
+
+export async function getContentByIds(ids: string[]): Promise<ContentItem[]> {
+  if (ids.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('contenido')
+    .select('*')
+    .in('id', ids)
+
+  if (error) {
+    console.error('Error al obtener contenido por IDs:', error.message)
+    return []
+  }
+
+  return (data as ContentItem[]) ?? []
+}
+
+export async function getRelatedContent(
+  contenidoId: string,
+  hashtags: string[],
+  limit = 6
+): Promise<ContentItem[]> {
+  if (hashtags.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('contenido')
+    .select('*')
+    .neq('id', contenidoId)
+    .overlaps('hashtags', hashtags)
+    .limit(limit)
+
+  if (error) {
+    console.error('Error al obtener contenido relacionado:', error.message)
+    return []
+  }
+
+  return (data as ContentItem[]) ?? []
+}
+
 export async function getFavoriteOfMonth(): Promise<{ item: ContentItem; visits: number } | null> {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

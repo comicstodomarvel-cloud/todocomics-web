@@ -5,6 +5,7 @@ import { ExternalLink, ArrowLeft } from 'lucide-react'
 import { getContentById } from '@/lib/data'
 import { mockData } from '@/data/mockData'
 import VisitTracker from '@/components/VisitTracker'
+import RelatedContent from '@/components/RelatedContent'
 
 export default async function ItemPage({
   params,
@@ -84,6 +85,8 @@ export default async function ItemPage({
           </div>
         </div>
       </div>
+
+      <RelatedContent currentId={item.id} hashtags={item.hashtags} categoria={item.categoria} />
     </div>
   )
 }

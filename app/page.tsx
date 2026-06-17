@@ -8,6 +8,8 @@ import UpdatesWidget from '@/components/updates/UpdatesWidget';
 import UpdatesDropdownButton from '@/components/updates/UpdatesDropdownButton';
 import RandomRecommendation from '@/components/RandomRecommendation';
 import FavoriteBadge from '@/components/FavoriteBadge';
+import ReadLaterSection from '@/components/ReadLaterSection';
+import CatalogStats from '@/components/CatalogStats';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -148,6 +150,9 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* Leer más tarde */}
+      <ReadLaterSection />
+
       {/* Grid de contenido */}
       <section className="container mx-auto px-4 py-8">
         <h2 className="mb-6 text-2xl font-bold">Continúa explorando</h2>
@@ -164,6 +169,7 @@ export default async function HomePage({
       {/* Footer */}
       <footer className="bg-zinc-900 text-zinc-400 py-8 mt-16">
         <div className="container mx-auto px-4 text-center">
+          <CatalogStats />
           <p>© 2026 TodoComics. Todos los derechos reservados.</p>
           <p className="text-xs text-zinc-500 mt-3 max-w-2xl mx-auto leading-relaxed">
             TodoComics es un sitio web que recopila y organiza enlaces de contenido

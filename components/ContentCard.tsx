@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import ImageWithFallback from './ImageWithFallback'
 import UpdateBadge from './updates/UpdateBadge'
+import ReadLaterButton from './ReadLaterButton'
 import type { ContentItem } from '@/lib/data'
 
 interface ContentCardProps {
@@ -13,6 +14,7 @@ export default function ContentCard({ item, lastUpdateDate }: ContentCardProps) 
     <Link href={`/item/${item.id}`} className="group block">
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-800">
         {lastUpdateDate && <UpdateBadge updateDate={lastUpdateDate} />}
+        <ReadLaterButton contenidoId={item.id} />
         <ImageWithFallback
           src={item.url_portada}
           alt={item.titulo}
