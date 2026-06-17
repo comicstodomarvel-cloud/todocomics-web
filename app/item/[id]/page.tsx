@@ -6,6 +6,7 @@ import { getContentById } from '@/lib/data'
 import { mockData } from '@/data/mockData'
 import VisitTracker from '@/components/VisitTracker'
 import RelatedContent from '@/components/RelatedContent'
+import RatingWidget from '@/components/RatingWidget'
 
 export default async function ItemPage({
   params,
@@ -63,6 +64,8 @@ export default async function ItemPage({
               </span>
             ))}
           </div>
+
+          <RatingWidget contenidoId={item.id} />
 
           <div className="flex flex-wrap gap-4">
             <a
