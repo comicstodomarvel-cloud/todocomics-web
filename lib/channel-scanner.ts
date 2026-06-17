@@ -35,10 +35,13 @@ export async function scanChannelHistory(limit: number = 50): Promise<ScanResult
     if (remaining <= 0) break
 
     const result = await client.invoke(
-      new Api.messages.GetHistory({
+      new Api.messages.Search({
         peer: CHAT_ID,
+        q: '',
+        filter: new Api.InputMessagesFilterEmpty(),
+        minDate: 0,
+        maxDate: 0,
         offsetId,
-        offsetDate: 0,
         addOffset: 0,
         limit: remaining,
         maxId: 0,
