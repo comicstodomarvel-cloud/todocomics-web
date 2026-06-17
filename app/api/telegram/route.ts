@@ -4,7 +4,9 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 interface TelegramUpdate {
   update_id: number
   channel_post?: TelegramMessage
+  edited_channel_post?: TelegramMessage
   message?: TelegramMessage
+  edited_message?: TelegramMessage
 }
 
 interface TelegramPhoto {
@@ -31,6 +33,7 @@ interface TelegramMessage {
   photo?: TelegramPhoto[]
   document?: TelegramDocument
   date: number
+  edit_date?: number
 }
 
 interface ParsedContent {
@@ -428,9 +431,19 @@ export async function POST(request: Request) {
     console.log('[Telegram Webhook] === NUEVO UPDATE ===')
     console.log('[Telegram Webhook] Keys del update:', Object.keys(update))
 
-    const msg = update.channel_post || update.message
+    const msg = update.channel_post || update.edited_channel_post || update.message || update.edited_message
 
-    console.log('[Telegram Webhook] Tipo de mensaje:', update.channel_post ? 'channel_post' : update.message ? 'message' : 'ninguno')
+    let messageType = 'ninguno'
+    if (update.channel_post) messageType = 'channel_post'
+    if (update.edited_channel_post) messageType = 'edited_channel_post'
+    if (update.message) messageType = 'message'
+    if (update.edited_message) messageType = 'edited_message'
+
+    console.log('[Telegram Webhook] Tipo de mensaje:', messageType)
+
+    if (msg?.edit_date) {
+      console.log('[Telegram Webhook] Mensaje editado (edit_date):', msg.edit_date)
+    }
     console.log('[Telegram Webhook] Keys del msg:', msg ? Object.keys(msg) : 'no msg')
     console.log('[Telegram Webhook] msg.photo existe:', !!msg?.photo, '| length:', msg?.photo?.length ?? 0)
     console.log('[Telegram Webhook] msg.document existe:', !!msg?.document, '| mime_type:', msg?.document?.mime_type ?? 'N/A')
@@ -438,7 +451,7 @@ export async function POST(request: Request) {
 
     if (!msg) {
       return NextResponse.json(
-        { error: 'El payload no contiene channel_post ni message' },
+        { error: 'El payload no contiene channel_post, edited_channel_post ni message' },
         { status: 400 }
       )
     }
