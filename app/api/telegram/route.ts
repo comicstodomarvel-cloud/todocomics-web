@@ -534,10 +534,38 @@ export async function POST(request: Request) {
           }, { status: 200 })
         }
 
-        console.warn('[Webhook] No se encontró contenido original por message_id, insertando como contenido normal')
+        console.log('[Webhook] Update huérfano - contenido original no encontrado, registrando sin vínculo')
       } else {
-        console.warn('[Webhook] No se pudo extraer message_id del link original, insertando como contenido normal')
+        console.log('[Webhook] Update huérfano - no se pudo extraer message_id del link, registrando sin vínculo')
       }
+
+      const admin = getSupabaseAdmin()
+      const { error: orphanError } = await admin
+        .from('actualizaciones')
+        .insert({
+          contenido_id: null,
+          titulo: parsed.titulo.replace(/POST ACTUALIZADO \| /i, '').trim(),
+          descripcion: sanitizarTexto(parsed.descripcion),
+          tipo: 'volumen',
+          fecha: new Date().toISOString(),
+          telegram_message_id: msg.message_id,
+          metadata: {
+            link_post_original: linkOriginal ?? null,
+            portada_url: parsed.url_portada,
+            es_huerfano: true,
+          },
+        })
+
+      if (orphanError) {
+        console.error('[Webhook] Error al crear update huérfano:', orphanError)
+        return NextResponse.json({ error: 'Error al guardar update huérfano' }, { status: 500 })
+      }
+
+      console.log('[Webhook] Update huérfano registrado correctamente')
+      return NextResponse.json({
+        ok: true,
+        action: 'orphan_update_registered',
+      }, { status: 200 })
     }
 
     const isEdit = !!update.edited_channel_post || !!update.edited_message

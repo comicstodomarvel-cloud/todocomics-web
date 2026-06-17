@@ -2,7 +2,7 @@ export type UpdateTipo = 'volumen' | 'correccion' | 'enlace_nuevo' | 'portada'
 
 export interface Update {
   id: string
-  contenido_id: string
+  contenido_id: string | null
   titulo: string
   descripcion: string | null
   tipo: UpdateTipo
@@ -11,11 +11,12 @@ export interface Update {
   metadata: {
     link_post_original?: string
     portada_url?: string
+    es_huerfano?: boolean
   }
   contenido?: {
     id: string
     titulo: string
     categoria: string
     url_portada: string | null
-  }
+  } | null
 }

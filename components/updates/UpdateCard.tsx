@@ -17,6 +17,7 @@ const LABELS: Record<string, string> = {
 }
 
 export default function UpdateCard({ update }: { update: Update }) {
+  const isOrphan = !update.contenido_id || !update.contenido
   const icon = ICONS[update.tipo] || '📢'
   const label = LABELS[update.tipo] || 'Actualización'
 
@@ -33,29 +34,46 @@ export default function UpdateCard({ update }: { update: Update }) {
             <span>{formatDateRelative(update.fecha)}</span>
           </div>
 
-          {update.contenido && (
-            <h3 className="font-bold text-lg text-zinc-100 truncate">
-              {update.contenido.titulo}
-            </h3>
-          )}
-
-          <p className="text-zinc-400 text-sm mt-1 line-clamp-2">
-            {update.titulo}
-          </p>
-
-          {update.descripcion && (
-            <p className="text-zinc-500 text-xs mt-1 line-clamp-1">
-              {update.descripcion}
-            </p>
-          )}
-
-          {update.contenido && (
-            <Link
-              href={`/item/${update.contenido.id}`}
-              className="text-amber-500 hover:text-amber-400 text-sm mt-2 inline-block"
-            >
-              Ver serie →
-            </Link>
+          {isOrphan ? (
+            <>
+              <h3 className="font-bold text-lg text-zinc-100">{update.titulo}</h3>
+              {update.descripcion && (
+                <p className="text-zinc-400 text-sm mt-1">{update.descripcion}</p>
+              )}
+              <div className="bg-amber-500/10 text-amber-500 text-xs px-2 py-1 rounded mt-2 inline-block">
+                Contenido no disponible en la web
+              </div>
+              {update.metadata?.link_post_original && (
+                <a
+                  href={update.metadata.link_post_original}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-500 hover:text-amber-400 text-sm mt-2 block"
+                >
+                  Ver en Telegram →
+                </a>
+              )}
+            </>
+          ) : (
+            <>
+              <h3 className="font-bold text-lg text-zinc-100 truncate">
+                {update.contenido!.titulo}
+              </h3>
+              <p className="text-zinc-400 text-sm mt-1 line-clamp-2">
+                {update.titulo}
+              </p>
+              {update.descripcion && (
+                <p className="text-zinc-500 text-xs mt-1 line-clamp-1">
+                  {update.descripcion}
+                </p>
+              )}
+              <Link
+                href={`/item/${update.contenido!.id}`}
+                className="text-amber-500 hover:text-amber-400 text-sm mt-2 inline-block"
+              >
+                Ver serie →
+              </Link>
+            </>
           )}
         </div>
       </div>
