@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https://axfugtisjsjbkqlkixla.supabase.co;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https://axfugtisjsjbkqlkixla.supabase.co https://res.cloudinary.com https://images.unsplash.com https://upload.wikimedia.org https://api.telegram.org data: blob:; font-src 'self' data:; connect-src 'self' https://axfugtisjsjbkqlkixla.supabase.co https://api.telegram.org;",
           },
         ],
       },
