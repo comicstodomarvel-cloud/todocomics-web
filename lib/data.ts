@@ -208,6 +208,15 @@ export async function getFavoriteOfMonth(): Promise<{ item: ContentItem; visits:
   return { item, visits: topCount }
 }
 
+export async function getBrokenLinkIds(): Promise<Set<string>> {
+  const { data } = await supabase
+    .from('reportes_links')
+    .select('contenido_id')
+    .eq('estado', 'verificado')
+
+  return new Set(data?.map((r) => r.contenido_id) ?? [])
+}
+
 export async function getContentByHashtag(hashtagId: string): Promise<ContentItem[]> {
   const filterDef = HASHTAG_FILTERS.find((f) => f.id === hashtagId)
   if (!filterDef) {

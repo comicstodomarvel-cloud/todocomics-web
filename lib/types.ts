@@ -31,3 +31,14 @@ export interface Comment {
   dislikes?: number
   miVoto?: 'like' | 'dislike' | null
 }
+
+export type ReporteEstado = 'pendiente' | 'verificado' | 'resuelto' | 'falso'
+
+export interface ReporteLink {
+  id: string
+  contenido_id: string
+  session_id: string
+  comentario: string
+  estado: ReporteEstado
+  fecha: string
+}

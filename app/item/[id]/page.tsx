@@ -8,6 +8,7 @@ import VisitTracker from '@/components/VisitTracker'
 import RelatedContent from '@/components/RelatedContent'
 import RatingWidget from '@/components/RatingWidget'
 import CommentSection from '@/components/CommentSection'
+import ReportBrokenLink from '@/components/ReportBrokenLink'
 
 export default async function ItemPage({
   params,
@@ -68,7 +69,7 @@ export default async function ItemPage({
 
           <RatingWidget contenidoId={item.id} />
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <a
               href={item.link_descarga}
               target="_blank"
@@ -78,6 +79,8 @@ export default async function ItemPage({
               <ExternalLink size={18} />
               Descargar
             </a>
+
+            <ReportBrokenLink contenidoId={item.id} />
 
             <Link
               href="/"
