@@ -27,4 +27,7 @@ export interface Comment {
   nickname: string
   contenido: string
   fecha: string
+  likes?: number
+  dislikes?: number
+  miVoto?: 'like' | 'dislike' | null
 }

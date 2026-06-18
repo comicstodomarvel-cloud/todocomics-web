@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Send, Pencil, Trash2, Check } from 'lucide-react'
+import { Send, Pencil, Trash2, Check, ThumbsUp, ThumbsDown } from 'lucide-react'
 
 interface Comment {
   id: string
@@ -9,6 +9,19 @@ interface Comment {
   nickname: string
   contenido: string
   fecha: string
+  likes: number
+  dislikes: number
+  miVoto: 'like' | 'dislike' | null
+}
+
+function getSessionId(): string {
+  if (typeof window === 'undefined') return ''
+  let sid = localStorage.getItem('session_id')
+  if (!sid) {
+    sid = crypto.randomUUID()
+    localStorage.setItem('session_id', sid)
+  }
+  return sid
 }
 
 export default function CommentSection({ contenidoId }: { contenidoId: string }) {
@@ -21,6 +34,7 @@ export default function CommentSection({ contenidoId }: { contenidoId: string })
   const [actionTarget, setActionTarget] = useState<{ id: string; action: 'edit' | 'delete' } | null>(null)
   const [confirmNickname, setConfirmNickname] = useState('')
   const [editText, setEditText] = useState('')
+  const [voting, setVoting] = useState<string | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('comment_nickname')
@@ -29,7 +43,10 @@ export default function CommentSection({ contenidoId }: { contenidoId: string })
 
   const fetchComments = useCallback(async () => {
     try {
-      const res = await fetch(`/api/comentarios?contenidoId=${contenidoId}`)
+      const sessionId = getSessionId()
+      const res = await fetch(`/api/comentarios?contenidoId=${contenidoId}`, {
+        headers: sessionId ? { 'x-session-id': sessionId } : undefined,
+      })
       if (res.ok) {
         setComments(await res.json())
       }
@@ -74,6 +91,43 @@ export default function CommentSection({ contenidoId }: { contenidoId: string })
       setError('Error de conexión')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleVote(comentarioId: string, tipo: 'like' | 'dislike') {
+    const sessionId = getSessionId()
+    if (!sessionId) return
+
+    setVoting(comentarioId)
+    setError('')
+
+    try {
+      const res = await fetch('/api/comentarios/votos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-session-id': sessionId,
+        },
+        body: JSON.stringify({ comentarioId, tipo }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comentarioId
+              ? { ...c, likes: data.likes, dislikes: data.dislikes, miVoto: data.miVoto }
+              : c
+          )
+        )
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Error al votar')
+      }
+    } catch {
+      setError('Error de conexión')
+    } finally {
+      setVoting(null)
     }
   }
 
@@ -225,6 +279,32 @@ export default function CommentSection({ contenidoId }: { contenidoId: string })
               <p className="text-sm text-zinc-300 whitespace-pre-wrap break-words">
                 {comment.contenido}
               </p>
+              <div className="flex items-center gap-4 mt-3 pt-2 border-t border-zinc-800">
+                <button
+                  onClick={() => handleVote(comment.id, 'like')}
+                  disabled={voting === comment.id}
+                  className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-40 ${
+                    comment.miVoto === 'like'
+                      ? 'text-amber-500'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <ThumbsUp size={14} />
+                  {comment.likes}
+                </button>
+                <button
+                  onClick={() => handleVote(comment.id, 'dislike')}
+                  disabled={voting === comment.id}
+                  className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-40 ${
+                    comment.miVoto === 'dislike'
+                      ? 'text-red-400'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <ThumbsDown size={14} />
+                  {comment.dislikes}
+                </button>
+              </div>
             </div>
           ))}
         </div>

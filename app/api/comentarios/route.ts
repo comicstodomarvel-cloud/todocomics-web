@@ -5,12 +5,13 @@ import type { Comment } from '@/lib/types'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const contenidoId = searchParams.get('contenidoId')
+  const sessionId = request.headers.get('x-session-id')
 
   if (!contenidoId) {
     return NextResponse.json({ error: 'contenidoId es requerido' }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  const { data: comments, error } = await supabase
     .from('comentarios')
     .select('*')
     .eq('contenido_id', contenidoId)
@@ -21,7 +22,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Error al cargar comentarios' }, { status: 500 })
   }
 
-  return NextResponse.json(data as Comment[])
+  if (!comments || comments.length === 0) {
+    return NextResponse.json([])
+  }
+
+  const commentIds = comments.map((c) => c.id)
+
+  const { data: votes } = await supabase
+    .from('comentarios_votos')
+    .select('comentario_id, tipo, session_id')
+    .in('comentario_id', commentIds)
+
+  const enriched: Array<Comment & { likes: number; dislikes: number; miVoto: 'like' | 'dislike' | null }> =
+    comments.map((comment) => {
+      const commentVotes = votes?.filter((v) => v.comentario_id === comment.id) ?? []
+      const likes = commentVotes.filter((v) => v.tipo === 'like').length
+      const dislikes = commentVotes.filter((v) => v.tipo === 'dislike').length
+      let miVoto: 'like' | 'dislike' | null = null
+      if (sessionId) {
+        const userVote = commentVotes.find((v) => v.session_id === sessionId)
+        if (userVote) miVoto = userVote.tipo as 'like' | 'dislike'
+      }
+      return { ...comment, likes, dislikes, miVoto }
+    })
+
+  return NextResponse.json(enriched)
 }
 
 export async function POST(request: NextRequest) {
