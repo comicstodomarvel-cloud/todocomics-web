@@ -20,3 +20,11 @@ export interface Update {
     url_portada: string | null
   } | null
 }
+
+export interface Comment {
+  id: string
+  contenido_id: string
+  nickname: string
+  contenido: string
+  fecha: string
+}

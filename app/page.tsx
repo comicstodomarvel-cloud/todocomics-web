@@ -2,6 +2,7 @@ import { getLatestContent, searchContent, getContentByCategoria, getContentByHas
 import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
 import SearchBar from '@/components/SearchBar';
+import OnlineCounter from '@/components/OnlineCounter';
 import HashtagFilter from '@/components/HashtagFilter';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import UpdatesWidget from '@/components/updates/UpdatesWidget';
@@ -146,7 +147,10 @@ export default async function HomePage({
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <SearchBar />
-          <FavoriteBadge />
+          <div className="flex items-center gap-3 ml-auto">
+            <OnlineCounter />
+            <FavoriteBadge />
+          </div>
         </div>
       </section>
 

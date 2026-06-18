@@ -7,6 +7,7 @@ import { mockData } from '@/data/mockData'
 import VisitTracker from '@/components/VisitTracker'
 import RelatedContent from '@/components/RelatedContent'
 import RatingWidget from '@/components/RatingWidget'
+import CommentSection from '@/components/CommentSection'
 
 export default async function ItemPage({
   params,
@@ -88,6 +89,10 @@ export default async function ItemPage({
           </div>
         </div>
       </div>
+
+      <section className="px-6 md:px-16 pb-12">
+        <CommentSection contenidoId={item.id} />
+      </section>
 
       <RelatedContent currentId={item.id} hashtags={item.hashtags} categoria={item.categoria} />
     </div>
