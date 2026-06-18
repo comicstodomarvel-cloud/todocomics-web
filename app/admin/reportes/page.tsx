@@ -26,6 +26,7 @@ export default function AdminReportesPage() {
   const [adminKey, setAdminKey] = useState('')
   const [keyInput, setKeyInput] = useState('')
   const [updating, setUpdating] = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -62,6 +63,7 @@ export default function AdminReportesPage() {
 
   async function updateEstado(contenidoId: string, estado: string) {
     setUpdating(contenidoId)
+    setActionError('')
     try {
       const res = await fetch('/api/reportes', {
         method: 'PUT',
@@ -71,9 +73,16 @@ export default function AdminReportesPage() {
         },
         body: JSON.stringify({ contenidoId, estado }),
       })
-      if (res.ok) fetchItems(adminKey)
-    } catch {
-      // silencio
+      if (!res.ok) {
+        const data = await res.json()
+        setActionError(data.error || `Error ${res.status}`)
+      } else {
+        setActionError('')
+        fetchItems(adminKey)
+      }
+    } catch (e) {
+      setActionError('Error de red — revisa la consola')
+      console.error('updateEstado error:', e)
     } finally {
       setUpdating(null)
     }
@@ -113,6 +122,11 @@ export default function AdminReportesPage() {
       ) : items.length === 0 ? (
         <p className="text-zinc-500">No hay reportes</p>
       ) : (
+        {actionError && (
+          <div className="rounded-lg border border-red-800 bg-red-950/30 px-4 py-3 text-sm text-red-400 mb-6">
+            {actionError}
+          </div>
+        )}
         <div className="space-y-6">
           {items.map((item) => (
             <div
