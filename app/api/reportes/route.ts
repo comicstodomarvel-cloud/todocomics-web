@@ -73,15 +73,40 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionId = getSessionId(request)
-    if (!sessionId) {
-      return NextResponse.json({ error: 'x-session-id requerido' }, { status: 400 })
-    }
-
-    const { contenidoId, comentario } = await request.json()
+    const { action, contenidoId, comentario, estado } = await request.json()
 
     if (!contenidoId || typeof contenidoId !== 'string') {
       return NextResponse.json({ error: 'contenidoId requerido' }, { status: 400 })
+    }
+
+    // Admin update
+    if (action === 'admin_update') {
+      const adminKey = request.headers.get('x-admin-key')
+      if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      }
+
+      if (!['pendiente', 'verificado', 'resuelto', 'falso'].includes(estado)) {
+        return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
+      }
+
+      const { error } = await supabase
+        .from('reportes_links')
+        .update({ estado })
+        .eq('contenido_id', contenidoId)
+
+      if (error) {
+        console.error('Error al actualizar reporte:', error.message)
+        return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true })
+    }
+
+    // User report
+    const sessionId = getSessionId(request)
+    if (!sessionId) {
+      return NextResponse.json({ error: 'x-session-id requerido' }, { status: 400 })
     }
 
     const { data: existing } = await supabase
@@ -104,43 +129,13 @@ export async function POST(request: NextRequest) {
       })
 
     if (error) {
+      console.error('Error al insertar reporte:', error.message)
       return NextResponse.json({ error: 'Error al reportar' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true }, { status: 201 })
-  } catch {
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    const adminKey = request.headers.get('x-admin-key')
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    const { contenidoId, estado } = await request.json()
-
-    if (!contenidoId || typeof contenidoId !== 'string') {
-      return NextResponse.json({ error: 'contenidoId requerido' }, { status: 400 })
-    }
-
-    if (!['pendiente', 'verificado', 'resuelto', 'falso'].includes(estado)) {
-      return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
-    }
-
-    const { error } = await supabase
-      .from('reportes_links')
-      .update({ estado })
-      .eq('contenido_id', contenidoId)
-
-    if (error) {
-      return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true })
-  } catch {
+  } catch (e) {
+    console.error('POST reportes error:', e)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

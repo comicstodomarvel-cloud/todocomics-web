@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import ImageWithFallback from '@/components/ImageWithFallback'
 import { CheckCircle, XCircle, RotateCcw } from 'lucide-react'
 
@@ -27,20 +27,13 @@ export default function AdminReportesPage() {
   const [keyInput, setKeyInput] = useState('')
   const [updating, setUpdating] = useState<string | null>(null)
   const [actionError, setActionError] = useState('')
+  const [actionSuccess, setActionSuccess] = useState('')
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const key = params.get('key') || ''
-    setAdminKey(key)
-    if (key) fetchItems(key)
-    else setLoading(false)
-  }, [])
-
-  async function fetchItems(key: string) {
+  const fetchItems = useCallback(async (key: string) => {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/api/reportes?admin=1&key=${key}`)
+      const res = await fetch(`/api/reportes?key=${key}`)
       if (!res.ok) {
         setError('No autorizado — clave inválida')
         return
@@ -51,7 +44,15 @@ export default function AdminReportesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const key = params.get('key') || ''
+    setAdminKey(key)
+    if (key) fetchItems(key)
+    else setLoading(false)
+  }, [fetchItems])
 
   function handleKeySubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -64,23 +65,24 @@ export default function AdminReportesPage() {
   async function updateEstado(contenidoId: string, estado: string) {
     setUpdating(contenidoId)
     setActionError('')
+    setActionSuccess('')
     try {
       const res = await fetch('/api/reportes', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-admin-key': adminKey,
         },
-        body: JSON.stringify({ contenidoId, estado }),
+        body: JSON.stringify({ contenidoId, estado, action: 'admin_update' }),
       })
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
-        setActionError(data.error || `Error ${res.status}`)
+        setActionError(`Error ${res.status}: ${data.error || 'desconocido'}`)
       } else {
-        setActionError('')
+        setActionSuccess(`✅ Estado cambiado a "${estado}"`)
         fetchItems(adminKey)
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setActionError('Error de red — revisa la consola')
       console.error('updateEstado error:', e)
     } finally {
@@ -115,6 +117,17 @@ export default function AdminReportesPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
       <h1 className="text-2xl font-bold mb-8">📋 Reportes de Links Caídos</h1>
 
+      {actionError && (
+        <div className="rounded-lg border border-red-800 bg-red-950/30 px-4 py-3 text-sm text-red-400 mb-6">
+          {actionError}
+        </div>
+      )}
+      {actionSuccess && (
+        <div className="rounded-lg border border-green-800 bg-green-950/30 px-4 py-3 text-sm text-green-400 mb-6">
+          {actionSuccess}
+        </div>
+      )}
+
       {loading ? (
         <p className="text-zinc-500">Cargando...</p>
       ) : error ? (
@@ -122,11 +135,6 @@ export default function AdminReportesPage() {
       ) : items.length === 0 ? (
         <p className="text-zinc-500">No hay reportes</p>
       ) : (
-        {actionError && (
-          <div className="rounded-lg border border-red-800 bg-red-950/30 px-4 py-3 text-sm text-red-400 mb-6">
-            {actionError}
-          </div>
-        )}
         <div className="space-y-6">
           {items.map((item) => (
             <div
