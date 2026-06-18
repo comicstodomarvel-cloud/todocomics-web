@@ -79,8 +79,12 @@ export default function AdminReportesPage() {
       if (!res.ok) {
         setActionError(`Error ${res.status}: ${data.error || 'desconocido'}`)
       } else {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.contenido_id === contenidoId ? { ...i, estado } : i
+          )
+        )
         setActionSuccess(`✅ Estado cambiado a "${estado}"`)
-        fetchItems(adminKey)
       }
     } catch (e: unknown) {
       setActionError('Error de red — revisa la consola')
