@@ -79,12 +79,17 @@ export default function AdminReportesPage() {
       if (!res.ok) {
         setActionError(`Error ${res.status}: ${data.error || 'desconocido'}`)
       } else {
-        setItems((prev) =>
-          prev.map((i) =>
-            i.contenido_id === contenidoId ? { ...i, estado } : i
+        if (estado === 'resuelto' || estado === 'falso') {
+          setItems((prev) => prev.filter((i) => i.contenido_id !== contenidoId))
+          setActionSuccess(`✅ Eliminado de la lista (${estado})`)
+        } else {
+          setItems((prev) =>
+            prev.map((i) =>
+              i.contenido_id === contenidoId ? { ...i, estado } : i
+            )
           )
-        )
-        setActionSuccess(`✅ Estado cambiado a "${estado}"`)
+          setActionSuccess(`✅ Estado cambiado a "${estado}"`)
+        }
       }
     } catch (e: unknown) {
       setActionError('Error de red — revisa la consola')
