@@ -27,7 +27,10 @@ export default function AdminImportarPage() {
       return
     }
 
-    const titulo = primeraLinea.split('|')[0].trim()
+    const titulo = primeraLinea
+      .replace(/:tick:|:white_check_mark:|:x:|:warning:|:(?:\w+):/g, '')
+      .replace(/\s*\|\s*/g, ' │ ')
+      .trim()
 
     const idxPrimerSalto = texto.indexOf('\n\n')
     let desc = ''
