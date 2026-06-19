@@ -21,16 +21,34 @@ export async function fetchDiscordMessage(
   botToken: string
 ): Promise<Record<string, unknown> | null> {
   const url = buildDiscordApiUrl(channelId, messageId)
-  const res = await fetch(url, {
-    headers: { Authorization: `Bot ${botToken}` },
-  })
 
-  if (!res.ok) {
-    console.error('[discord-utils] Error fetching message:', res.status, await res.text())
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 8000)
+
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bot ${botToken}` },
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeout)
+
+    if (!res.ok) {
+      const body = await res.text()
+      console.error('[discord-utils] Discord API error:', res.status, body)
+      return null
+    }
+
+    return res.json()
+  } catch (err) {
+    clearTimeout(timeout)
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      console.error('[discord-utils] Timeout fetching Discord message (8s)')
+      return null
+    }
+    console.error('[discord-utils] Fetch error:', err)
     return null
   }
-
-  return res.json()
 }
 
 export async function sendFollowUp(

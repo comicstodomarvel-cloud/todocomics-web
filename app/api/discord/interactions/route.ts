@@ -111,19 +111,20 @@ async function processImport(
   interactionToken: string,
   botToken: string
 ) {
-  const parsed = parseMessageLink(messageUrl)
-  if (!parsed) {
-    await sendFollowUp(interactionToken, '❌ URL inválida. Debe ser: https://discord.com/channels/guild/channel/message', botToken)
-    return
-  }
+  try {
+    const parsed = parseMessageLink(messageUrl)
+    if (!parsed) {
+      await sendFollowUp(interactionToken, '❌ URL inválida. Debe ser: https://discord.com/channels/guild/channel/message', botToken)
+      return
+    }
 
-  await sendFollowUp(interactionToken, '🔍 Obteniendo mensaje de Discord...', botToken)
+    await sendFollowUp(interactionToken, '🔍 Obteniendo mensaje de Discord...', botToken)
 
-  const msg = await fetchDiscordMessage(parsed.channelId, parsed.messageId, botToken)
-  if (!msg) {
-    await sendFollowUp(interactionToken, '❌ No se pudo obtener el mensaje. Verifica que el bot tenga acceso al canal.', botToken)
-    return
-  }
+    const msg = await fetchDiscordMessage(parsed.channelId, parsed.messageId, botToken)
+    if (!msg) {
+      await sendFollowUp(interactionToken, '❌ No se pudo obtener el mensaje. Verifica que el bot tenga permiso "Leer historial de mensajes" en el canal.', botToken)
+      return
+    }
 
   const titulo = extractTitle(msg)
   if (!titulo) {
@@ -202,4 +203,9 @@ async function processImport(
   if (!descripcionRaw) resumen += `\n⚠️ Sin descripción`
 
   await sendFollowUp(interactionToken, resumen, botToken)
+  } catch (err) {
+    console.error('[Discord] processImport error:', err)
+    const msg = err instanceof Error ? err.message : 'Error desconocido'
+    await sendFollowUp(interactionToken, `❌ Error: ${msg}`, botToken)
+  }
 }
