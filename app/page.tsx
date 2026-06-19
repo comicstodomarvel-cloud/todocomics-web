@@ -1,6 +1,9 @@
 import { getLatestContent, searchContent, getContentByCategoria, getContentByHashtag, getLatestUpdateDates, getBrokenLinkIds, getReportStatus } from '@/lib/data';
 import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
+import ContentListItem from '@/components/ContentListItem';
+import ViewModeToggle from '@/components/ViewModeToggle';
+import LoadMoreButton from '@/components/LoadMoreButton';
 import SearchBar from '@/components/SearchBar';
 import OnlineCounter from '@/components/OnlineCounter';
 import HashtagFilter from '@/components/HashtagFilter';
@@ -18,10 +21,11 @@ export const revalidate = 300;
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string }>;
+  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string; vista?: string }>;
 }) {
   const params = await searchParams;
-  const { busqueda, categoria, hashtag } = params;
+  const { busqueda, categoria, hashtag, vista } = params;
+  const viewMode = vista === 'lista' ? 'lista' : 'grid';
 
   // ✅ TIPO EXPLÍCITO para evitar error de TypeScript
   let content: ContentItem[] = [];
@@ -160,12 +164,30 @@ export default async function HomePage({
 
       {/* Grid de contenido */}
       <section className="container mx-auto px-4 py-8">
-        <h2 className="mb-6 text-2xl font-bold">Continúa explorando</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
-          {gridItems.map((item) => (
-            <ContentCard key={item.id} item={item} lastUpdateDate={updateDates[item.id]} linkCaido={brokenIds.has(item.id)} linkReportado={reportedIds.has(item.id)} />
-          ))}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Continúa explorando</h2>
+          <ViewModeToggle />
         </div>
+        {viewMode === 'lista' ? (
+          <div className="space-y-3">
+            {gridItems.map((item) => (
+              <ContentListItem key={item.id} item={item} lastUpdateDate={updateDates[item.id]} linkCaido={brokenIds.has(item.id)} linkReportado={reportedIds.has(item.id)} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+            {gridItems.map((item) => (
+              <ContentCard key={item.id} item={item} lastUpdateDate={updateDates[item.id]} linkCaido={brokenIds.has(item.id)} linkReportado={reportedIds.has(item.id)} />
+            ))}
+          </div>
+        )}
+
+        <LoadMoreButton
+          viewMode={viewMode}
+          updateDates={updateDates}
+          brokenIds={[...brokenIds]}
+          reportedIds={[...reportedIds]}
+        />
       </section>
 
       {/* Widget de actualizaciones */}

@@ -1,7 +1,8 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import ImageWithFallback from '@/components/ImageWithFallback'
 import { notFound } from 'next/navigation'
-import { ExternalLink, ArrowLeft, AlertTriangle } from 'lucide-react'
+import { ExternalLink, ArrowLeft, AlertTriangle, Share2 } from 'lucide-react'
 import { getContentById, getItemReportStatus } from '@/lib/data'
 import { mockData } from '@/data/mockData'
 import VisitTracker from '@/components/VisitTracker'
@@ -9,12 +10,42 @@ import RelatedContent from '@/components/RelatedContent'
 import RatingWidget from '@/components/RatingWidget'
 import CommentSection from '@/components/CommentSection'
 import ReportBrokenLink from '@/components/ReportBrokenLink'
+import ShareButton from '@/components/ShareButton'
+
+type Props = { params: Promise<{ id: string }> }
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  let item = await getContentById(id).catch(() => null)
+  if (!item) item = mockData.find((m) => m.id === id) ?? null
+  if (!item) return {}
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todocomics.com'
+  const imageUrl = item.url_portada?.startsWith('http') ? item.url_portada : `${siteUrl}/og-default.jpg`
+
+  return {
+    title: `${item.titulo} — TodoComics`,
+    description: item.descripcion?.slice(0, 200) || `Explora ${item.titulo} en TodoComics`,
+    openGraph: {
+      title: item.titulo,
+      description: item.descripcion?.slice(0, 200) || `Explora ${item.titulo} en TodoComics`,
+      type: 'article',
+      siteName: 'TodoComics',
+      url: `${siteUrl}/item/${id}`,
+      images: [{ url: imageUrl, width: 1200, height: 1800 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: item.titulo,
+      description: item.descripcion?.slice(0, 200) || `Explora ${item.titulo} en TodoComics`,
+      images: [imageUrl],
+    },
+  }
+}
 
 export default async function ItemPage({
   params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+}: Props) {
   try {
     const { id } = await params
     let item = await getContentById(id).catch(() => null)
@@ -29,6 +60,8 @@ export default async function ItemPage({
 
     const safeHashtags = Array.isArray(item.hashtags) ? item.hashtags : []
     const reportStatus = await getItemReportStatus(item.id)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todocomics.com'
+    const shareUrl = `${siteUrl}/item/${id}`
 
     return (
       <div className="min-h-screen bg-zinc-950">
@@ -85,6 +118,8 @@ export default async function ItemPage({
               </a>
 
               <ReportBrokenLink contenidoId={item.id} reportStatus={reportStatus} />
+
+              <ShareButton titulo={item.titulo} url={shareUrl} />
 
               <Link
                 href="/"

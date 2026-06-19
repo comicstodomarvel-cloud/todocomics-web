@@ -17,10 +17,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todocomics.vercel.app'
+
 export const metadata: Metadata = {
   title: "TodoComics - Catálogo Geek",
   description:
     "Explora cómics, películas, series y libros del mundo geek. Tu catálogo personal estilo Netflix.",
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    title: "TodoComics - Catálogo Geek",
+    description:
+      "Explora cómics, películas, series y libros del mundo geek. Tu catálogo personal estilo Netflix.",
+    type: "website",
+    siteName: "TodoComics",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TodoComics - Catálogo Geek",
+    description:
+      "Explora cómics, películas, series y libros del mundo geek. Tu catálogo personal estilo Netflix.",
+  },
 };
 
 export const viewport = {
