@@ -132,13 +132,10 @@ export default function AdminEditarPage() {
       if (!res.ok) {
         setResultado({ ok: false, msg: `Error ${res.status}: ${data.error || 'desconocido'}` })
       } else {
+        const finalUrlPortada = data.url_portada_final || body.url_portada || urlPortada
+        setPostData((prev) => prev ? { ...prev, ...body, url_portada: finalUrlPortada } : prev)
+        if (finalUrlPortada) setUrlPortada(finalUrlPortada)
         setResultado({ ok: true, msg: '✅ Post actualizado correctamente' })
-        const updated = { ...postData, ...body }
-        setPostData(updated as PostData)
-        if (body.url_portada && data.url_portada_final) {
-          setPostData((prev) => prev ? { ...prev, url_portada: data.url_portada_final } : prev)
-          setUrlPortada(data.url_portada_final)
-        }
       }
     } catch (e: unknown) {
       setResultado({ ok: false, msg: 'Error de red — revisa la consola' })

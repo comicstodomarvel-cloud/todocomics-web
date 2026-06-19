@@ -73,6 +73,8 @@ export async function PATCH(
       }
     }
 
+    let url_portada_final = ''
+
     if (url_portada !== undefined) {
       if (typeof url_portada === 'string' && url_portada.startsWith('http')) {
         try {
@@ -85,16 +87,20 @@ export async function PATCH(
             const imageBuffer = await imageRes.arrayBuffer()
             const { uploadImageBytesToSupabase } = await import('@/lib/upload-image')
             const filename = `portada-${Date.now()}.jpg`
-            updates.url_portada = await uploadImageBytesToSupabase(imageBuffer, filename)
+            url_portada_final = await uploadImageBytesToSupabase(imageBuffer, filename)
+            updates.url_portada = url_portada_final || url_portada
           } else {
             updates.url_portada = url_portada
+            url_portada_final = url_portada
           }
         } catch (err) {
           console.error('[api/contenido/[id]] Error descargando portada:', err)
           updates.url_portada = url_portada
+          url_portada_final = url_portada
         }
       } else {
         updates.url_portada = (url_portada || '').trim()
+        url_portada_final = updates.url_portada as string
       }
     }
 
@@ -112,7 +118,9 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true })
+    const response: Record<string, unknown> = { ok: true }
+    if (url_portada_final) response.url_portada_final = url_portada_final
+    return NextResponse.json(response)
   } catch (err) {
     console.error('[api/contenido/[id]] Error:', err)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
