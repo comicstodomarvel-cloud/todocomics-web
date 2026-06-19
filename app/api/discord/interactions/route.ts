@@ -31,10 +31,9 @@ interface DiscordInteraction {
 export async function POST(request: Request) {
   try {
     const publicKey = process.env.DISCORD_PUBLIC_KEY
-    const botToken = process.env.DISCORD_BOT_TOKEN
 
-    if (!publicKey || !botToken) {
-      console.error('[Discord] Missing env vars: DISCORD_PUBLIC_KEY or DISCORD_BOT_TOKEN')
+    if (!publicKey) {
+      console.error('[Discord] Missing DISCORD_PUBLIC_KEY')
       return new NextResponse('Internal Server Error', { status: 500 })
     }
 
@@ -53,6 +52,18 @@ export async function POST(request: Request) {
     }
 
     if (interaction.type === 2 && interaction.data?.name === 'import') {
+      const botToken = process.env.DISCORD_BOT_TOKEN
+      if (!botToken) {
+        console.error('[Discord] Missing DISCORD_BOT_TOKEN')
+        return NextResponse.json({
+          type: 4,
+          data: {
+            content: '❌ Error de configuración: DISCORD_BOT_TOKEN no está definido.',
+            flags: 64,
+          },
+        })
+      }
+
       const options = interaction.data.options || []
       const linkOpt = options.find((o) => o.name === 'link')
       const hashtagOpt = options.find((o) => o.name === 'hashtag')
