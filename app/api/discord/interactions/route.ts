@@ -199,8 +199,6 @@ async function processImport(
       return
     }
 
-    await sendFollowUp(interactionToken, '🔍 Obteniendo mensaje de Discord...', botToken)
-
     const msg = await fetchDiscordMessage(parsed.channelId, parsed.messageId, botToken)
     if (!msg) {
       await sendFollowUp(interactionToken, '❌ No se pudo obtener el mensaje. Verifica que el bot tenga permiso "Leer historial de mensajes" en el canal.', botToken)
@@ -210,12 +208,9 @@ async function processImport(
     const titulo = extractTitle(msg)
     if (!titulo) {
       const diag = embedDiagnostic(msg)
-      const errMsg = `❌ No se pudo extraer título del mensaje.\n\`\`\`\n${diag}\n\`\`\``
-      await sendFollowUp(interactionToken, errMsg, botToken)
+      await sendFollowUp(interactionToken, `❌ No se pudo extraer título.\n\`\`\`\n${diag}\n\`\`\``, botToken)
       return
     }
-
-    await sendFollowUp(interactionToken, `📝 Procesando: **${titulo}**...`, botToken)
 
     const descripcionRaw = extractDescription(msg)
     const link_descarga = extractDownloadLink(msg) || ''
@@ -224,10 +219,12 @@ async function processImport(
     let url_portada = ''
 
     if (imageUrl) {
-      await sendFollowUp(interactionToken, '🖼️ Descargando portada...', botToken)
-
       try {
-        const imageRes = await fetch(imageUrl)
+        const imgController = new AbortController()
+        const imgTimeout = setTimeout(() => imgController.abort(), 4000)
+        const imageRes = await fetch(imageUrl, { signal: imgController.signal })
+        clearTimeout(imgTimeout)
+
         if (imageRes.ok) {
           const imageBuffer = await imageRes.arrayBuffer()
           const { uploadImageBytesToSupabase } = await import('@/lib/upload-image')
@@ -242,7 +239,6 @@ async function processImport(
     const hashtagLimpio = hashtag.replace(/^#/, '').trim()
     const hashtags = hashtagLimpio ? [hashtagLimpio] : []
     const categoria = deducirCategoria(hashtags)
-
     const discordMessageId = parsed.messageId
 
     const admin = getSupabaseAdmin()
@@ -289,6 +285,6 @@ async function processImport(
   } catch (err) {
     console.error('[Discord] processImport error:', err)
     const msg = err instanceof Error ? err.message : 'Error desconocido'
-    await sendFollowUp(interactionToken, `❌ Error: ${msg}`, botToken)
+    sendFollowUp(interactionToken, `❌ Error: ${msg}`, botToken)
   }
 }

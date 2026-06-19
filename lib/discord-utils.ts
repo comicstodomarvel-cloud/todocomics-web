@@ -23,7 +23,7 @@ export async function fetchDiscordMessage(
   const url = buildDiscordApiUrl(channelId, messageId)
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 8000)
+  const timeout = setTimeout(() => controller.abort(), 4000)
 
   try {
     const res = await fetch(url, {
@@ -43,7 +43,7 @@ export async function fetchDiscordMessage(
   } catch (err) {
     clearTimeout(timeout)
     if (err instanceof DOMException && err.name === 'AbortError') {
-      console.error('[discord-utils] Timeout fetching Discord message (8s)')
+      console.error('[discord-utils] Timeout fetching Discord message (4s)')
       return null
     }
     console.error('[discord-utils] Fetch error:', err)
@@ -55,16 +55,28 @@ export async function sendFollowUp(
   interactionToken: string,
   content: string,
   botToken: string
-): Promise<void> {
+): Promise<boolean> {
   const url = `https://discord.com/api/v10/webhooks/${process.env.DISCORD_APP_ID}/${interactionToken}/messages/@original`
-  await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bot ${botToken}`,
-    },
-    body: JSON.stringify({ content }),
-  })
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 4000)
+
+  try {
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bot ${botToken}`,
+      },
+      body: JSON.stringify({ content }),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    return res.ok
+  } catch {
+    clearTimeout(timeout)
+    return false
+  }
 }
 
 /** Limpia emojis personalizados de Discord: <a:nombre:id> y <:nombre:id> */
