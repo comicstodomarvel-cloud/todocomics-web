@@ -49,69 +49,139 @@ export async function sendFollowUp(
   })
 }
 
-export function extractImageUrl(msg: Record<string, unknown>): string | null {
-  const embeds = msg.embeds as Array<Record<string, unknown>> | undefined
-  if (!embeds || embeds.length === 0) return null
-
-  const embed = embeds[0]
-
-  const image = embed.image as Record<string, unknown> | undefined
-  if (image?.url && typeof image.url === 'string') return image.url
-
-  const thumbnail = embed.thumbnail as Record<string, unknown> | undefined
-  if (thumbnail?.url && typeof thumbnail.url === 'string') return thumbnail.url
-
-  return null
+/** Limpia emojis personalizados de Discord: <a:nombre:id> y <:nombre:id> */
+function stripDiscordEmoji(texto: string): string {
+  return texto.replace(/<a?:\w+:\d+>/g, '').trim()
 }
 
+/** Recolecta todo el texto del mensaje sin modificar (content + embed) */
+function collectRawText(msg: Record<string, unknown>): string {
+  const partes: string[] = []
+
+  if (msg.content && typeof msg.content === 'string' && msg.content.trim()) {
+    partes.push(msg.content.trim())
+  }
+
+  const embeds = msg.embeds as Array<Record<string, unknown>> | undefined
+  if (embeds && embeds.length > 0) {
+    const e = embeds[0]
+
+    const titulo = e.title as string | undefined
+    if (titulo) partes.push(titulo)
+
+    const desc = e.description as string | undefined
+    if (desc) partes.push(desc)
+
+    const fields = e.fields as Array<Record<string, unknown>> | undefined
+    if (fields) {
+      for (const field of fields) {
+        if (field.name && typeof field.name === 'string') partes.push(field.name as string)
+        if (field.value && typeof field.value === 'string') partes.push(field.value as string)
+      }
+    }
+
+    const author = e.author as Record<string, unknown> | undefined
+    if (author?.name && typeof author.name === 'string') partes.push(author.name as string)
+
+    const footer = e.footer as Record<string, unknown> | undefined
+    if (footer?.text && typeof footer.text === 'string') partes.push(footer.text as string)
+  }
+
+  return partes.join('\n')
+}
+
+/** Texto limpio para humanos (sin emojis, sin formato markdown de links) */
+function collectCleanText(msg: Record<string, unknown>): string {
+  const raw = collectRawText(msg)
+  return raw
+    .replace(/<a?:\w+:\d+>/g, '')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
+    .trim()
+}
+
+/** Extrae el título: primera línea no-vacía que no sea solo un emoji ni URL */
 export function extractTitle(msg: Record<string, unknown>): string {
-  const embeds = msg.embeds as Array<Record<string, unknown>> | undefined
-  if (embeds && embeds.length > 0) {
-    const embed = embeds[0]
-    if (embed.title && typeof embed.title === 'string') return embed.title
+  const texto = collectCleanText(msg)
+  const lineas = texto.split('\n').map((l) => l.trim()).filter(Boolean)
+
+  for (const linea of lineas) {
+    if (linea.length > 0 && !linea.startsWith('http')) {
+      return linea
+    }
   }
+
   return ''
 }
 
+/** Extrae la descripción: todo después de la línea del título */
 export function extractDescription(msg: Record<string, unknown>): string {
-  const embeds = msg.embeds as Array<Record<string, unknown>> | undefined
-  if (embeds && embeds.length > 0) {
-    const embed = embeds[0]
-    if (embed.description && typeof embed.description === 'string') return embed.description
-  }
-  return ''
+  const texto = collectCleanText(msg)
+  const lineas = texto.split('\n').map((l) => l.trim()).filter(Boolean)
+
+  const titulo = extractTitle(msg)
+  if (!titulo) return texto
+
+  const idx = lineas.findIndex((l) => l === titulo)
+  if (idx === -1) return ''
+
+  return lineas.slice(idx + 1).join('\n')
 }
 
 export const PATRON_LINK =
   /https?:\/\/(?:www\.)?(?:[0-9]+terabox|terabox|teraboxapp|teraboxurl|freeterabox|videy|videyyy|freevidey|videynow|bit\.ly|bitly|mega\.nz|mega|drive\.google|mediafire|short\.url|tinyurl|ow\.ly|is\.gd)[^\s)"'\]]+/i
 
+/** Extrae link de descarga del mensaje completo (markdown links incluidos) */
 export function extractDownloadLink(msg: Record<string, unknown>): string {
+  const raw = collectRawText(msg)
+
+  // 1. Markdown links: [DESCARGA DIRECTA](https://bit.ly/xxx)
+  const markdownRegex = /\[([^\]]*?)\]\s*\((https?:\/\/[^\s)]+)\)/gi
+  let match
+  while ((match = markdownRegex.exec(raw)) !== null) {
+    const url = match[2]
+    if (PATRON_LINK.test(url)) return url
+  }
+
+  // 2. embed.url
   const embeds = msg.embeds as Array<Record<string, unknown>> | undefined
-  if (!embeds || embeds.length === 0) return ''
-
-  const embed = embeds[0]
-
-  if (embed.url && typeof embed.url === 'string' && PATRON_LINK.test(embed.url)) {
-    return embed.url
+  if (embeds && embeds.length > 0) {
+    const url = embeds[0].url as string | undefined
+    if (url && PATRON_LINK.test(url)) return url
   }
 
-  const description = embed.description
-  if (description && typeof description === 'string') {
-    const match = description.match(PATRON_LINK)
-    if (match) return match[0].replace(/[.,;:)\]}>]+$/, '')
+  // 3. Regex sobre texto plano
+  const regexMatch = raw.match(PATRON_LINK)
+  if (regexMatch) return regexMatch[0].replace(/[.,;:)\]}>]+$/, '')
+
+  return ''
+}
+
+/** Extrae URL de imagen del embed o attachments */
+export function extractImageUrl(msg: Record<string, unknown>): string | null {
+  const embeds = msg.embeds as Array<Record<string, unknown>> | undefined
+  if (embeds && embeds.length > 0) {
+    const embed = embeds[0]
+
+    const image = embed.image as Record<string, unknown> | undefined
+    if (image?.url && typeof image.url === 'string') return image.url
+
+    const thumbnail = embed.thumbnail as Record<string, unknown> | undefined
+    if (thumbnail?.url && typeof thumbnail.url === 'string') return thumbnail.url
   }
 
-  const fields = embed.fields as Array<Record<string, unknown>> | undefined
-  if (fields) {
-    for (const field of fields) {
-      if (field.value && typeof field.value === 'string') {
-        const match = field.value.match(PATRON_LINK)
-        if (match) return match[0].replace(/[.,;:)\]}>]+$/, '')
+  const attachments = msg.attachments as Array<Record<string, unknown>> | undefined
+  if (attachments) {
+    for (const att of attachments) {
+      const ct = att.content_type as string | undefined
+      const url = att.url as string | undefined
+      if (url) {
+        if (ct?.startsWith('image/')) return url
+        if (!ct) return url
       }
     }
   }
 
-  return ''
+  return null
 }
 
 export function sanitizarTexto(texto: string): string {
