@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Hash } from 'lucide-react'
 
 export default function ServerIcon({
@@ -13,11 +16,15 @@ export default function ServerIcon({
   size?: number
   className?: string
 }) {
-  if (iconHash) {
+  const [failed, setFailed] = useState(false)
+
+  if (iconHash && !failed) {
+    const ext = iconHash.startsWith('a_') ? 'gif' : 'png'
     return (
       <img
-        src={`https://cdn.discordapp.com/icons/${guildId}/${iconHash}.png?size=${size * 2}`}
+        src={`https://cdn.discordapp.com/icons/${guildId}/${iconHash}.${ext}?size=${size * 2}`}
         alt={guildName}
+        onError={() => setFailed(true)}
         className={`rounded-full object-cover flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       />
