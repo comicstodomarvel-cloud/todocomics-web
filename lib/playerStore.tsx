@@ -81,7 +81,7 @@ const initialState: PlayerState = {
   duration: 0,
   volume: loadFromStorage(STORAGE_KEYS.volume, 50),
   isPanelOpen: loadFromStorage(STORAGE_KEYS.panelOpen, true),
-  isDesktopCollapsed: false,
+  isDesktopCollapsed: true,
   isSheetOpen: false,
   activeTab: "playlist",
   favorites: loadFromStorage(STORAGE_KEYS.favorites, []),
@@ -105,7 +105,7 @@ function playerReducer(state: PlayerState, action: PlayerAction): PlayerState {
         isPlaying: true,
         currentTime: 0,
         isSheetOpen: false,
-  isDesktopCollapsed: true,
+        isDesktopCollapsed: false,
       }
     case "TOGGLE_PLAY":
       return { ...state, isPlaying: !state.isPlaying }
