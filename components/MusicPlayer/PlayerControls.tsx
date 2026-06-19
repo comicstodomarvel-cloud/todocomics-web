@@ -7,6 +7,7 @@ import {
   SkipBack,
   SkipForward,
   Heart,
+  Shuffle,
 } from "lucide-react"
 
 export default function PlayerControls() {
@@ -15,7 +16,9 @@ export default function PlayerControls() {
     nextTrack,
     prevTrack,
     toggleFavorite,
+    toggleShuffle,
     isPlaying,
+    isShuffling,
     currentIndex,
     playlist,
     favorites,
@@ -27,6 +30,17 @@ export default function PlayerControls() {
 
   return (
     <div className="flex items-center justify-center gap-4 px-4">
+      <button
+        onClick={toggleShuffle}
+        disabled={!hasTracks}
+        className={`transition-all p-1 disabled:text-zinc-700 disabled:cursor-not-allowed ${
+          isShuffling ? "text-amber-500" : "text-zinc-400 hover:text-zinc-100"
+        }`}
+        aria-label={isShuffling ? "Desactivar aleatorio" : "Activar aleatorio"}
+      >
+        <Shuffle size={16} />
+      </button>
+
       <button
         onClick={prevTrack}
         disabled={!hasTracks || currentIndex <= 0}
@@ -47,7 +61,7 @@ export default function PlayerControls() {
 
       <button
         onClick={nextTrack}
-        disabled={!hasTracks || currentIndex >= playlist.length - 1}
+        disabled={!hasTracks || (!isShuffling && currentIndex >= playlist.length - 1)}
         className="text-zinc-400 hover:text-zinc-100 disabled:text-zinc-700 disabled:cursor-not-allowed transition-colors p-1"
         aria-label="Siguiente"
       >

@@ -49,6 +49,28 @@ const MOCK_PLAYLIST: Track[] = [
   { videoId: "y5t0hL4JZ3M", title: "Justice League Theme (2017)", artist: "Danny Elfman", thumbnail: "https://img.youtube.com/vi/y5t0hL4JZ3M/hqdefault.jpg", duration: 270 },
 ]
 
+function getDailyPlaylistSelection(allIds: string[], count: number): string[] {
+  const today = new Date()
+  const dateStr = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
+
+  let hash = 0
+  for (let i = 0; i < dateStr.length; i++) {
+    const char = dateStr.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash
+  }
+
+  const shuffled = [...allIds]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.abs((hash * (i + 1) * 2654435761) % (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+
+  return shuffled.slice(0, Math.min(count, shuffled.length))
+}
+
+export const DAILY_PLAYLIST_COUNT = Number(process.env.YOUTUBE_DAILY_COUNT) || 2
+
 export async function getPlaylist(): Promise<Track[]> {
   const apiKey = process.env.YOUTUBE_API_KEY
   const playlistIds = process.env.YOUTUBE_PLAYLIST_IDS
@@ -58,11 +80,15 @@ export async function getPlaylist(): Promise<Track[]> {
   }
 
   try {
-    const ids = playlistIds.split(",").map((id) => id.trim())
+    const allIds = playlistIds.split(",").map((id) => id.trim())
+    const dailyIds = allIds.length > DAILY_PLAYLIST_COUNT
+      ? getDailyPlaylistSelection(allIds, DAILY_PLAYLIST_COUNT)
+      : allIds
+
     const allTracks: Track[] = []
     const seen = new Set<string>()
 
-    for (const playlistId of ids) {
+    for (const playlistId of dailyIds) {
       let nextPageToken: string | undefined
       do {
         const params = new URLSearchParams({

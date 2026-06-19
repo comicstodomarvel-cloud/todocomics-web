@@ -40,7 +40,7 @@ export default function NowPlayingInfo({ compact = false }: { compact?: boolean 
 
   return (
     <div className="flex flex-col items-center gap-3 px-4">
-      <div className="w-full aspect-square max-w-[280px] rounded-lg overflow-hidden bg-zinc-800 shadow-lg">
+      <div className="w-full aspect-square max-w-[160px] rounded-lg overflow-hidden bg-zinc-800 shadow-lg">
         <img
           src={track.thumbnail}
           alt={track.title}

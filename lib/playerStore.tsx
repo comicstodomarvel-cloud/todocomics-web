@@ -23,6 +23,7 @@ interface PlayerState {
   isSheetOpen: boolean
   activeTab: "playlist" | "favorites"
   favorites: string[]
+  isShuffling: boolean
   isLoading: boolean
   error: string | null
 }
@@ -47,6 +48,7 @@ type PlayerAction =
   | { type: "SET_ACTIVE_TAB"; payload: "playlist" | "favorites" }
   | { type: "TOGGLE_FAVORITE"; payload: string }
   | { type: "LOAD_FAVORITES"; payload: string[] }
+  | { type: "TOGGLE_SHUFFLE" }
 
 const STORAGE_KEYS = {
   favorites: "tc-music-favorites",
@@ -83,6 +85,7 @@ const initialState: PlayerState = {
   isSheetOpen: false,
   activeTab: "playlist",
   favorites: loadFromStorage(STORAGE_KEYS.favorites, []),
+  isShuffling: false,
   isLoading: true,
   error: null,
 }
@@ -109,6 +112,13 @@ function playerReducer(state: PlayerState, action: PlayerAction): PlayerState {
     case "SET_PLAYING":
       return { ...state, isPlaying: action.payload }
     case "NEXT_TRACK": {
+      if (state.isShuffling && state.playlist.length > 1) {
+        let randomIndex: number
+        do {
+          randomIndex = Math.floor(Math.random() * state.playlist.length)
+        } while (randomIndex === state.currentIndex)
+        return { ...state, currentIndex: randomIndex, isPlaying: true, currentTime: 0 }
+      }
       const next = state.currentIndex + 1
       if (next >= state.playlist.length) {
         return { ...state, isPlaying: false, currentTime: 0 }
@@ -125,6 +135,13 @@ function playerReducer(state: PlayerState, action: PlayerAction): PlayerState {
     case "UPDATE_PROGRESS":
       return { ...state, currentTime: action.payload.currentTime, duration: action.payload.duration }
     case "TRACK_ENDED": {
+      if (state.isShuffling && state.playlist.length > 1) {
+        let randomIndex: number
+        do {
+          randomIndex = Math.floor(Math.random() * state.playlist.length)
+        } while (randomIndex === state.currentIndex)
+        return { ...state, currentIndex: randomIndex, currentTime: 0 }
+      }
       const next = state.currentIndex + 1
       if (next >= state.playlist.length) {
         return { ...state, isPlaying: false, currentTime: 0 }
@@ -135,6 +152,8 @@ function playerReducer(state: PlayerState, action: PlayerAction): PlayerState {
       return { ...state, volume: action.payload }
     case "TOGGLE_PANEL":
       return { ...state, isPanelOpen: !state.isPanelOpen }
+    case "TOGGLE_SHUFFLE":
+      return { ...state, isShuffling: !state.isShuffling }
     case "TOGGLE_DESKTOP_COLLAPSED":
       return { ...state, isDesktopCollapsed: !state.isDesktopCollapsed }
     case "SET_DESKTOP_COLLAPSED":
@@ -172,6 +191,7 @@ export interface PlayerContextValue extends PlayerState {
   closeSheet: () => void
   setActiveTab: (tab: "playlist" | "favorites") => void
   toggleFavorite: (videoId: string) => void
+  toggleShuffle: () => void
   setPlayerInstance: (player: YT.Player) => void
   updateProgress: (time: number, duration: number) => void
   onTrackEnded: () => void
@@ -273,6 +293,10 @@ export function PlayerProvider({
     dispatch({ type: "TOGGLE_DESKTOP_COLLAPSED" })
   }, [])
 
+  const toggleShuffle = useCallback(() => {
+    dispatch({ type: "TOGGLE_SHUFFLE" })
+  }, [])
+
   const toggleSheet = useCallback(() => {
     dispatch({ type: "TOGGLE_SHEET" })
   }, [])
@@ -334,6 +358,7 @@ export function PlayerProvider({
     togglePanel,
     toggleDesktopCollapsed,
     setDesktopCollapsed,
+    toggleShuffle,
     toggleSheet,
     closeSheet,
     setActiveTab,

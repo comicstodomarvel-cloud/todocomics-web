@@ -71,8 +71,8 @@ export default function MobileSheet() {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col gap-4 px-2 pb-2 overflow-y-auto">
-          <div className="pt-2">
+        <div className="flex-none flex flex-col gap-3 px-2 pb-2">
+          <div className="pt-1">
             <NowPlayingInfo />
           </div>
           <ProgressBar />
