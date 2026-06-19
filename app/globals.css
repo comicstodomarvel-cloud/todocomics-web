@@ -53,3 +53,66 @@ button {
     opacity: 1 !important;
   }
 }
+
+/* ─── Reproductor de Música ─── */
+
+@keyframes music-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes music-ring-1 {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes music-ring-2 {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.animate-music-pulse {
+  animation: music-pulse 2s ease-in-out infinite;
+}
+
+.animate-music-ring-1 {
+  animation: music-ring-1 2.5s ease-out infinite;
+}
+
+.animate-music-ring-2 {
+  animation: music-ring-2 2.5s ease-out infinite 0.4s;
+}
+
+/* Scrollbar delgada para la playlist */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(39, 39, 42);
+  border-radius: 9999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(63, 63, 70);
+}

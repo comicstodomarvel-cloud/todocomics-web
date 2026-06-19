@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import HeartbeatPing from "@/components/HeartbeatPing";
+import { getPlaylist } from "@/lib/musicData";
+import MusicPlayerShell from "@/components/MusicPlayer/MusicPlayerShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,11 +26,13 @@ export const viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const playlist = await getPlaylist();
+
   return (
     <html
       lang="es"
@@ -36,7 +40,9 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-zinc-950 text-zinc-100">
         <HeartbeatPing />
-        {children}
+        <MusicPlayerShell playlist={playlist}>
+          {children}
+        </MusicPlayerShell>
       </body>
     </html>
   );
