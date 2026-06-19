@@ -29,6 +29,7 @@ export const HASHTAG_FILTERS = [
   { id: 'idw', label: 'IDW', search: ['IDW', 'idw'] },
   { id: 'boom', label: 'Boom!', search: ['Boom', 'boom'] },
   { id: 'manga', label: 'Mangas', search: ['Manga', 'manga'] },
+  { id: 'anime', label: 'Anime', search: ['Anime', 'anime'] },
   { id: 'crossovers', label: 'Crossovers', search: ['Crossovers', 'crossovers'] },
   { id: 'libro', label: 'Libros', search: ['Libro', 'libro'] },
   { id: 'serie', label: 'Series', search: ['Serie', 'serie', 'Series', 'series'] },
