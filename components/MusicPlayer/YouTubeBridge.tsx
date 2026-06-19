@@ -7,7 +7,7 @@ let apiLoaded = false
 
 export default function YouTubeBridge() {
   const playerRef = useRef<YT.Player | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const mountedRef = useRef(true)
   const {
     setPlayerInstance,
     updateProgress,
@@ -19,11 +19,18 @@ export default function YouTubeBridge() {
   const progressInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
   useEffect(() => {
+    mountedRef.current = true
     if (typeof window === "undefined") return
 
+    const container = document.createElement("div")
+    container.id = "youtube-player"
+    container.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none"
+    container.setAttribute("aria-hidden", "true")
+    document.body.appendChild(container)
+
     function createPlayer() {
-      if (!containerRef.current || playerRef.current) return
-      const player = new YT.Player(containerRef.current, {
+      if (!mountedRef.current || playerRef.current) return
+      const player = new YT.Player(container, {
         height: "0",
         width: "0",
         playerVars: {
@@ -39,11 +46,13 @@ export default function YouTubeBridge() {
         },
         events: {
           onReady: () => {
+            if (!mountedRef.current) return
             playerRef.current = player
             player.setVolume(50)
             setPlayerInstance(player)
           },
           onStateChange: (e: YT.OnStateChangeEvent) => {
+            if (!mountedRef.current) return
             if (e.data === YT.PlayerState.PLAYING) {
               const dur = player.getDuration()
               updateProgress(0, dur)
@@ -81,11 +90,14 @@ export default function YouTubeBridge() {
     }
 
     return () => {
+      mountedRef.current = false
       if (progressInterval.current) {
         clearInterval(progressInterval.current)
+        progressInterval.current = undefined
       }
-      playerRef.current?.destroy()
-      playerRef.current = null
+      if (container.parentNode) {
+        container.parentNode.removeChild(container)
+      }
     }
   }, [setPlayerInstance, updateProgress, onTrackEnded])
 
@@ -94,13 +106,5 @@ export default function YouTubeBridge() {
     playerRef.current.loadVideoById(playlist[currentIndex].videoId)
   }, [currentIndex, playlist])
 
-  return (
-    <div
-      ref={containerRef}
-      id="youtube-player"
-      className="fixed opacity-0 pointer-events-none"
-      style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
-      aria-hidden="true"
-    />
-  )
+  return null
 }

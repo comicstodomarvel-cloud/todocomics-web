@@ -13,7 +13,8 @@ export default async function RelatedContent({
   hashtags,
   categoria,
 }: RelatedContentProps) {
-  const related = await getRelatedContent(currentId, hashtags, 6)
+  const safeHashtags = Array.isArray(hashtags) ? hashtags : []
+  const related = await getRelatedContent(currentId, safeHashtags, 6)
 
   if (related.length === 0) return null
 

@@ -215,27 +215,21 @@ export function PlayerProvider({
   })
 
   const playerRef = useRef<YT.Player | null>(null)
+  const isPanelOpenRef = useRef(state.isPanelOpen)
+
+  useEffect(() => {
+    isPanelOpenRef.current = state.isPanelOpen
+  }, [state.isPanelOpen])
 
   const dispatchAndPersist = useCallback((action: PlayerAction) => {
     dispatch(action)
-    if (action.type === "TOGGLE_FAVORITE") {
-      setTimeout(() => {
-        const current = loadFromStorage<string[]>(STORAGE_KEYS.favorites, [])
-        const exists = current.includes(action.payload)
-        const updated = exists
-          ? current.filter((f) => f !== action.payload)
-          : [...current, action.payload]
-        saveToStorage(STORAGE_KEYS.favorites, updated)
-      }, 0)
-    }
     if (action.type === "SET_VOLUME") {
       saveToStorage(STORAGE_KEYS.volume, action.payload)
     }
     if (action.type === "TOGGLE_PANEL") {
-      const newVal = !state.isPanelOpen
-      saveToStorage(STORAGE_KEYS.panelOpen, newVal)
+      saveToStorage(STORAGE_KEYS.panelOpen, !isPanelOpenRef.current)
     }
-  }, [state.isPanelOpen])
+  }, [])
 
   const setPlayerInstance = useCallback((player: YT.Player) => {
     playerRef.current = player
