@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import HeartbeatPing from "@/components/HeartbeatPing";
 import { getPlaylist } from "@/lib/musicData";
+import { getDiscordData } from "@/lib/discordData";
 import MusicPlayerShell from "@/components/MusicPlayer/MusicPlayerShell";
+import DiscordWidgetShell from "@/components/DiscordWidget/DiscordWidgetShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +33,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const playlist = await getPlaylist();
+  const [playlist, discordData] = await Promise.all([
+    getPlaylist(),
+    getDiscordData(),
+  ]);
 
   return (
     <html
@@ -40,6 +45,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full bg-zinc-950 text-zinc-100">
         <HeartbeatPing />
+        <DiscordWidgetShell discordData={discordData} />
         <MusicPlayerShell playlist={playlist}>
           {children}
         </MusicPlayerShell>
