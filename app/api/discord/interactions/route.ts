@@ -1,9 +1,11 @@
+import { setDefaultResultOrder } from 'node:dns'
+setDefaultResultOrder('ipv4first')
+
 import { NextResponse } from 'next/server'
 import { verifyDiscordRequest } from '@/lib/discord-verify'
 import {
   parseMessageLink,
   fetchDiscordMessage,
-  testDiscordConnectivity,
   sendFollowUp,
   extractTitle,
   extractDescription,
@@ -202,8 +204,7 @@ async function processImport(
 
     const msg = await fetchDiscordMessage(parsed.channelId, parsed.messageId, botToken)
     if (!msg) {
-      const conn = await testDiscordConnectivity(botToken)
-      await sendFollowUp(interactionToken, `❌ No se pudo obtener el mensaje.\n${conn}\nVerifica que el bot esté en el servidor y tenga permiso "Leer historial de mensajes".`, botToken)
+      await sendFollowUp(interactionToken, '❌ No se pudo obtener el mensaje. Verifica que el bot esté en el servidor con permiso "Leer historial de mensajes".', botToken)
       return
     }
 

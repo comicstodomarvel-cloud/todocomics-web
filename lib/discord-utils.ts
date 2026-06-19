@@ -51,17 +51,6 @@ export async function fetchDiscordMessage(
   }
 }
 
-export async function testDiscordConnectivity(botToken: string): Promise<string> {
-  try {
-    const res = await fetch('https://discord.com/api/v10/gateway', {
-      signal: AbortSignal.timeout(3000),
-    })
-    return `gateway=${res.status}`
-  } catch {
-    return 'gateway=timeout'
-  }
-}
-
 export async function sendFollowUp(
   interactionToken: string,
   content: string,
