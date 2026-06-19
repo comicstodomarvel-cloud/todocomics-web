@@ -63,40 +63,46 @@ export default function DesktopPanel() {
       <button
         onClick={hasMusic ? toggleDesktopCollapsed : undefined}
         className={`fixed right-5 z-50
-          hidden lg:flex items-center justify-center
-          w-12 h-12 rounded-full
-          bg-zinc-800 hover:bg-zinc-700
-          shadow-[0_4px_20px_rgba(0,0,0,0.5)]
-          transition-all duration-300 active:scale-90
+          hidden lg:flex items-center
+          bg-zinc-800/95 backdrop-blur-xl border border-zinc-700/50
+          shadow-[0_4px_20px_rgba(0,0,0,0.6)]
+          transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+          active:scale-95
           ${
             isDesktopCollapsed
               ? "top-1/2 -translate-y-1/2"
               : "translate-x-80 top-1/2 -translate-y-1/2 pointer-events-none"
           }
-          ${isPlaying && hasMusic ? "ring-2 ring-amber-500/50 animate-music-pulse" : ""}
+          ${track
+            ? "h-14 rounded-full pl-1 pr-3.5 gap-2.5"
+            : "w-14 h-14 rounded-full justify-center"
+          }
           ${!hasMusic ? "opacity-60" : ""}
         `}
-        style={{
-          transitionProperty: "transform, opacity",
-        }}
         aria-label={isDesktopCollapsed ? "Abrir reproductor" : "Reproductor"}
         tabIndex={isDesktopCollapsed ? 0 : -1}
       >
-        {isPlaying && hasMusic && track ? (
-          <img
-            src={track.thumbnail}
-            alt=""
-            className="w-full h-full rounded-full object-cover"
-          />
-        ) : (
-          <Music size={20} className="text-zinc-100" />
-        )}
-
-        {isPlaying && hasMusic && (
+        {track ? (
           <>
-            <span className="absolute inset-0 rounded-full bg-amber-500/20 animate-music-ring-1" />
-            <span className="absolute inset-0 rounded-full bg-amber-500/10 animate-music-ring-2" />
+            <img
+              src={track.thumbnail}
+              alt={track.title}
+              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0 max-w-[160px]">
+              <p className="text-zinc-100 text-sm font-medium truncate leading-tight">
+                {track.title}
+              </p>
+              <p className="text-zinc-400 text-xs truncate leading-tight">
+                {track.artist}
+              </p>
+            </div>
+            {isPlaying && (
+              <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+            )}
           </>
+        ) : (
+          <Music size={22} className="text-zinc-100" />
         )}
       </button>
     </>
