@@ -13,7 +13,6 @@ export default function DesktopPanel() {
     isDesktopCollapsed,
     toggleDesktopCollapsed,
     isPlaying,
-    togglePlay,
     playlist,
     currentIndex,
   } = usePlayer()
@@ -60,72 +59,45 @@ export default function DesktopPanel() {
         </div>
       </div>
 
-      {/* Mini collapsed card */}
+      {/* Desktop FAB */}
       <button
         onClick={hasMusic ? toggleDesktopCollapsed : undefined}
-        className={`fixed right-0 z-50 bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl
-          transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]
-          hidden lg:flex items-center gap-3 px-3 py-2.5 cursor-pointer
+        className={`fixed right-5 z-50
+          hidden lg:flex items-center justify-center
+          w-12 h-12 rounded-full
+          bg-zinc-800 hover:bg-zinc-700
+          shadow-[0_4px_20px_rgba(0,0,0,0.5)]
+          transition-all duration-300 active:scale-90
           ${
             isDesktopCollapsed
-              ? "translate-x-0 top-1/2 -translate-y-1/2 w-56 rounded-l-xl"
-              : "translate-x-[calc(100%+120px)] top-1/2 -translate-y-1/2 w-56 rounded-l-xl pointer-events-none"
+              ? "top-1/2 -translate-y-1/2"
+              : "translate-x-80 top-1/2 -translate-y-1/2 pointer-events-none"
           }
+          ${isPlaying && hasMusic ? "ring-2 ring-amber-500/50 animate-music-pulse" : ""}
           ${!hasMusic ? "opacity-60" : ""}
-          hover:translate-x-1 group
         `}
         style={{
           transitionProperty: "transform, opacity",
         }}
-        aria-label={isDesktopCollapsed ? "Expandir reproductor" : "Reproductor"}
+        aria-label={isDesktopCollapsed ? "Abrir reproductor" : "Reproductor"}
         tabIndex={isDesktopCollapsed ? 0 : -1}
       >
-        {track ? (
-          <>
-            <img
-              src={track.thumbnail}
-              alt={track.title}
-              className="w-9 h-9 rounded object-cover flex-shrink-0"
-            />
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-zinc-100 text-sm font-medium truncate leading-tight">
-                {track.title}
-              </p>
-              <p className="text-zinc-500 text-xs truncate leading-tight">
-                {track.artist}
-              </p>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                togglePlay()
-              }}
-              className="flex-shrink-0 w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
-              aria-label={isPlaying ? "Pausar" : "Reproducir"}
-            >
-              {isPlaying ? (
-                <span className="w-3 h-3 bg-zinc-100 rounded-sm" />
-              ) : (
-                <span className="w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-zinc-100 ml-0.5" />
-              )}
-            </button>
-          </>
+        {isPlaying && hasMusic && track ? (
+          <img
+            src={track.thumbnail}
+            alt=""
+            className="w-full h-full rounded-full object-cover"
+          />
         ) : (
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-9 h-9 rounded bg-zinc-800 flex items-center justify-center flex-shrink-0">
-              <Music size={16} className="text-zinc-500" />
-            </div>
-            <div className="text-left">
-              <p className="text-zinc-400 text-sm font-medium">TodoComics Music</p>
-              <p className="text-zinc-600 text-xs">
-                {hasMusic ? `${playlist.length} temas` : "Sin playlist"}
-              </p>
-            </div>
-          </div>
+          <Music size={20} className="text-zinc-100" />
         )}
 
-        {/* Hover indicator */}
-        <div className="absolute inset-y-0 left-0 w-1 bg-amber-500/0 group-hover:bg-amber-500/50 rounded-l-xl transition-all" />
+        {isPlaying && hasMusic && (
+          <>
+            <span className="absolute inset-0 rounded-full bg-amber-500/20 animate-music-ring-1" />
+            <span className="absolute inset-0 rounded-full bg-amber-500/10 animate-music-ring-2" />
+          </>
+        )}
       </button>
     </>
   )
