@@ -4,6 +4,7 @@ import UpdateBadge from './updates/UpdateBadge'
 import ReportBadge from './ReportBadge'
 import ReportedBadge from './ReportedBadge'
 import ReadLaterButton from './ReadLaterButton'
+import FavoritoButton from './FavoritoButton'
 import type { ContentItem } from '@/lib/data'
 
 interface ContentListItemProps {
@@ -56,6 +57,7 @@ export default function ContentListItem({ item, lastUpdateDate, linkCaido, linkR
       </div>
 
       <ReadLaterButton contenidoId={item.id} />
+      <FavoritoButton contenidoId={item.id} />
     </div>
   )
 }

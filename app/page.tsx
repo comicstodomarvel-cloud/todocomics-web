@@ -14,6 +14,8 @@ import RandomRecommendation from '@/components/RandomRecommendation';
 import FavoriteBadge from '@/components/FavoriteBadge';
 import ReadLaterSection from '@/components/ReadLaterSection';
 import CatalogStats from '@/components/CatalogStats';
+import UserMenu from '@/components/UserMenu';
+import FavoritosSection from '@/components/FavoritosSection';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -154,13 +156,24 @@ export default async function HomePage({
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
           <SearchBar />
-          <FavoriteBadge />
-          <OnlineCounter />
+          <div className="flex items-center gap-3">
+            <FavoriteBadge />
+            <UserMenu />
+            <OnlineCounter />
+          </div>
         </div>
       </section>
 
       {/* Leer más tarde */}
       <ReadLaterSection />
+
+      {/* Favoritos */}
+      <FavoritosSection
+        viewMode={viewMode}
+        updateDates={updateDates}
+        brokenIds={[...brokenIds]}
+        reportedIds={[...reportedIds]}
+      />
 
       {/* Grid de contenido */}
       <section className="container mx-auto px-4 py-8">

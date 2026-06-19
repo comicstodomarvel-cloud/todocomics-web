@@ -2,6 +2,7 @@ import Link from 'next/link'
 import ImageWithFallback from './ImageWithFallback'
 import UpdateBadge from './updates/UpdateBadge'
 import ReadLaterButton from './ReadLaterButton'
+import FavoritoButton from './FavoritoButton'
 import ReportBadge from './ReportBadge'
 import ReportedBadge from './ReportedBadge'
 import type { ContentItem } from '@/lib/data'
@@ -45,6 +46,7 @@ export default function ContentCard({ item, lastUpdateDate, linkCaido, linkRepor
       </Link>
 
       <ReadLaterButton contenidoId={item.id} />
+      <FavoritoButton contenidoId={item.id} />
     </div>
   )
 }
