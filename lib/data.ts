@@ -254,6 +254,20 @@ export async function getItemReportStatus(
   return 'none'
 }
 
+export async function checkDuplicates(
+  titulo: string
+): Promise<Pick<ContentItem, 'id' | 'titulo' | 'fecha_creacion'>[]> {
+  const segmento = titulo.split('│')[0].trim()
+  if (!segmento) return []
+  const { data } = await supabase
+    .from('contenido')
+    .select('id, titulo, fecha_creacion')
+    .ilike('titulo', `%${segmento}%`)
+    .order('fecha_creacion', { ascending: false })
+    .limit(5)
+  return (data ?? []) as any
+}
+
 export async function getContentByHashtag(hashtagId: string): Promise<ContentItem[]> {
   const filterDef = HASHTAG_FILTERS.find((f) => f.id === hashtagId)
   if (!filterDef) {
