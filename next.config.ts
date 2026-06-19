@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
         hostname: 'axfugtisjsjbkqlkixla.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.discordapp.com',
+        pathname: '/**',
+      },
     ],
   },
   async headers() {
@@ -41,7 +46,7 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://axfugtisjsjbkqlkixla.supabase.co https://res.cloudinary.com https://images.unsplash.com https://upload.wikimedia.org https://api.telegram.org https://img.youtube.com https://i.ytimg.com data: blob:; font-src 'self' data:; connect-src 'self' https://axfugtisjsjbkqlkixla.supabase.co https://api.telegram.com; frame-src 'self' https://www.youtube.com;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://axfugtisjsjbkqlkixla.supabase.co https://res.cloudinary.com https://images.unsplash.com https://upload.wikimedia.org https://api.telegram.org https://img.youtube.com https://i.ytimg.com https://cdn.discordapp.com data: blob:; font-src 'self' data:; connect-src 'self' https://axfugtisjsjbkqlkixla.supabase.co https://api.telegram.com https://discord.com; frame-src 'self' https://www.youtube.com;",
           },
         ],
       },
