@@ -9,10 +9,9 @@ import {
   extractImageUrl,
   extractDownloadLink,
   sanitizarTexto,
-  PATRON_LINK,
 } from '@/lib/discord-utils'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { CATEGORIAS } from '@/lib/hashtags'
+import { HASHTAG_CATEGORIA } from '@/lib/hashtags'
 
 interface DiscordInteraction {
   type: number
@@ -26,6 +25,54 @@ interface DiscordInteraction {
   }
   member?: Record<string, unknown>
   guild_id?: string
+}
+
+function deducirCategoria(hashtags: string[]): string {
+  for (const tag of hashtags) {
+    const upper = tag.toUpperCase()
+    if (upper in HASHTAG_CATEGORIA) return HASHTAG_CATEGORIA[upper]
+  }
+  return 'Comic'
+}
+
+function embedDiagnostic(msg: Record<string, unknown>): string {
+  const lines: string[] = []
+  const embeds = msg.embeds as Array<Record<string, unknown>> | undefined
+  lines.push(`embeds=${embeds?.length ?? 0}`)
+
+  if (embeds && embeds.length > 0) {
+    const e = embeds[0]
+    const keys = Object.keys(e)
+    lines.push(`embed.campos=[${keys.slice(0, 8).join(',')}]`)
+
+    const t = e.title as string | undefined
+    lines.push(`embed.title="${(t ?? '').slice(0, 80)}"`)
+
+    const d = e.description as string | undefined
+    lines.push(`embed.description="${(d ?? '').slice(0, 120)}"`)
+
+    const img = e.image as Record<string, unknown> | undefined
+    lines.push(`embed.image.url="${(img?.url as string ?? '').slice(0, 80)}"`)
+
+    const thumb = e.thumbnail as Record<string, unknown> | undefined
+    lines.push(`embed.thumbnail.url="${(thumb?.url as string ?? '').slice(0, 80)}"`)
+
+    const fields = e.fields as Array<Record<string, unknown>> | undefined
+    lines.push(`embed.fields=${fields?.length ?? 0}`)
+    if (fields && fields.length > 0) {
+      const f = fields[0]
+      lines.push(`campo[0].name="${(f.name as string ?? '').slice(0, 80)}"`)
+      lines.push(`campo[0].value="${(f.value as string ?? '').slice(0, 80)}"`)
+    }
+  }
+
+  const content = msg.content as string | undefined
+  lines.push(`msg.content="${(content ?? '').slice(0, 80)}"`)
+
+  const attachments = msg.attachments as Array<Record<string, unknown>> | undefined
+  lines.push(`attachments=${attachments?.length ?? 0}`)
+
+  return lines.join('\n')
 }
 
 export async function GET() {
@@ -90,10 +137,7 @@ export async function POST(request: Request) {
 
       const response = NextResponse.json({ type: 5 })
 
-      processImport(messageUrl, hashtag, interaction.token, botToken).catch((err) => {
-        console.error('[Discord] processImport error:', err)
-        sendFollowUp(interaction.token, `❌ Error: ${err instanceof Error ? err.message : 'Error desconocido'}`, botToken)
-      })
+      processImport(messageUrl, hashtag, interaction.token, botToken)
 
       return response
     }
@@ -126,83 +170,85 @@ async function processImport(
       return
     }
 
-  const titulo = extractTitle(msg)
-  if (!titulo) {
-    await sendFollowUp(interactionToken, '❌ El mensaje no contiene un embed con título.', botToken)
-    return
-  }
-
-  await sendFollowUp(interactionToken, `📝 Procesando: **${titulo}**...`, botToken)
-
-  const descripcionRaw = extractDescription(msg)
-  const link_descarga = extractDownloadLink(msg) || ''
-  const imageUrl = extractImageUrl(msg)
-
-  let url_portada = ''
-
-  if (imageUrl) {
-    await sendFollowUp(interactionToken, '🖼️ Descargando portada...', botToken)
-
-    try {
-      const imageRes = await fetch(imageUrl)
-      if (imageRes.ok) {
-        const imageBuffer = await imageRes.arrayBuffer()
-        const { uploadImageBytesToSupabase } = await import('@/lib/upload-image')
-        const filename = `portada-${Date.now()}.jpg`
-        url_portada = await uploadImageBytesToSupabase(imageBuffer, filename)
-      }
-    } catch (err) {
-      console.error('[Discord] Error descargando portada:', err)
+    const titulo = extractTitle(msg)
+    if (!titulo) {
+      const diag = embedDiagnostic(msg)
+      const errMsg = `❌ No se pudo extraer título del mensaje.\n\`\`\`\n${diag}\n\`\`\``
+      await sendFollowUp(interactionToken, errMsg, botToken)
+      return
     }
-  }
 
-  const categoria = CATEGORIAS.includes(hashtag as typeof CATEGORIAS[number])
-    ? hashtag
-    : 'Comic'
+    await sendFollowUp(interactionToken, `📝 Procesando: **${titulo}**...`, botToken)
 
-  const discordMessageId = parsed.messageId
+    const descripcionRaw = extractDescription(msg)
+    const link_descarga = extractDownloadLink(msg) || ''
+    const imageUrl = extractImageUrl(msg)
 
-  const admin = getSupabaseAdmin()
+    let url_portada = ''
 
-  const { data: existing } = await admin
-    .from('contenido')
-    .select('id')
-    .eq('discord_message_id', discordMessageId)
-    .maybeSingle()
+    if (imageUrl) {
+      await sendFollowUp(interactionToken, '🖼️ Descargando portada...', botToken)
 
-  if (existing) {
-    await sendFollowUp(interactionToken, `⚠️ Este mensaje ya fue importado (ID: ${existing.id})`, botToken)
-    return
-  }
+      try {
+        const imageRes = await fetch(imageUrl)
+        if (imageRes.ok) {
+          const imageBuffer = await imageRes.arrayBuffer()
+          const { uploadImageBytesToSupabase } = await import('@/lib/upload-image')
+          const filename = `portada-${Date.now()}.jpg`
+          url_portada = await uploadImageBytesToSupabase(imageBuffer, filename)
+        }
+      } catch (err) {
+        console.error('[Discord] Error descargando portada:', err)
+      }
+    }
 
-  const descripcionFinal = sanitizarTexto(descripcionRaw || 'Sin descripción')
+    const hashtagLimpio = hashtag.replace(/^#/, '').trim()
+    const hashtags = hashtagLimpio ? [hashtagLimpio] : []
+    const categoria = deducirCategoria(hashtags)
 
-  const { data: nuevo, error } = await admin
-    .from('contenido')
-    .insert({
-      titulo: sanitizarTexto(titulo),
-      descripcion: descripcionFinal,
-      url_portada,
-      categoria,
-      hashtags: [categoria],
-      link_descarga: sanitizarTexto(link_descarga),
-      discord_message_id: discordMessageId,
-    })
-    .select('id')
-    .single()
+    const discordMessageId = parsed.messageId
 
-  if (error) {
-    await sendFollowUp(interactionToken, `❌ Error al guardar: ${error.message}`, botToken)
-    return
-  }
+    const admin = getSupabaseAdmin()
 
-  let resumen = `✅ **Importado correctamente**\n📌 **${titulo}** como #${categoria}\n🆔 ID: ${nuevo.id}`
+    const { data: existing } = await admin
+      .from('contenido')
+      .select('id')
+      .eq('discord_message_id', discordMessageId)
+      .maybeSingle()
 
-  if (url_portada) resumen += `\n🖼️ Portada subida`
-  if (link_descarga) resumen += `\n🔗 Link de descarga detectado`
-  if (!descripcionRaw) resumen += `\n⚠️ Sin descripción`
+    if (existing) {
+      await sendFollowUp(interactionToken, `⚠️ Este mensaje ya fue importado (ID: ${existing.id})`, botToken)
+      return
+    }
 
-  await sendFollowUp(interactionToken, resumen, botToken)
+    const descripcionFinal = sanitizarTexto(descripcionRaw || 'Sin descripción')
+
+    const { data: nuevo, error } = await admin
+      .from('contenido')
+      .insert({
+        titulo: sanitizarTexto(titulo),
+        descripcion: descripcionFinal,
+        url_portada,
+        categoria,
+        hashtags,
+        link_descarga: sanitizarTexto(link_descarga),
+        discord_message_id: discordMessageId,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      await sendFollowUp(interactionToken, `❌ Error al guardar: ${error.message}`, botToken)
+      return
+    }
+
+    let resumen = `✅ **Importado correctamente**\n📌 **${titulo}** como #${categoria}\n🆔 ID: ${nuevo.id}`
+
+    if (url_portada) resumen += `\n🖼️ Portada subida`
+    if (link_descarga) resumen += `\n🔗 Link de descarga detectado`
+    if (!descripcionRaw) resumen += `\n⚠️ Sin descripción`
+
+    await sendFollowUp(interactionToken, resumen, botToken)
   } catch (err) {
     console.error('[Discord] processImport error:', err)
     const msg = err instanceof Error ? err.message : 'Error desconocido'

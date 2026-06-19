@@ -37,15 +37,8 @@ const command = {
     {
       type: 3,
       name: 'hashtag',
-      description: 'Categoría del contenido en la web',
+      description: 'Hashtag para la web (ej: #Comic, #Manga, #AlgoPersonalizado)',
       required: true,
-      choices: [
-        { name: '#Comic', value: 'Comic' },
-        { name: '#Manga', value: 'Manga' },
-        { name: '#Pelicula', value: 'Pelicula' },
-        { name: '#Serie', value: 'Serie' },
-        { name: '#Libro', value: 'Libro' },
-      ],
     },
   ],
 }
