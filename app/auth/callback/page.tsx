@@ -1,13 +1,21 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 export default function AuthCallbackPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const handled = useRef(false)
+
+  const [supabaseClient] = useState(() => createClient(
+    supabaseUrl, supabaseAnonKey,
+    { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'todocomics-auth' } }
+  ))
 
   useEffect(() => {
     if (handled.current) return
@@ -16,8 +24,7 @@ export default function AuthCallbackPage() {
     const code = searchParams.get('code')
 
     if (code) {
-      // Email confirmation flow — exchange code for session
-      supabaseBrowser.auth.exchangeCodeForSession(code).then(({ error }) => {
+      supabaseClient.auth.exchangeCodeForSession(code).then(({ error }) => {
         if (error) {
           console.error('[auth/callback] exchangeCodeForSession:', error.message)
           router.replace('/?confirmed=error')
@@ -26,22 +33,20 @@ export default function AuthCallbackPage() {
         router.replace('/?confirmed=true')
       })
     } else {
-      // OAuth flow — the hash (#access_token=...) is automatically
-      // processed by supabase-js. Wait for the session or SIGNED_IN event.
-      supabaseBrowser.auth.getSession().then(({ data: { session } }) => {
+      supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session) {
           router.replace('/')
         }
       })
 
-      const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange((event) => {
+      const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event) => {
         if (event === 'SIGNED_IN') {
           subscription.unsubscribe()
           router.replace('/')
         }
       })
     }
-  }, [router, searchParams])
+  }, [router, searchParams, supabaseClient])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950">

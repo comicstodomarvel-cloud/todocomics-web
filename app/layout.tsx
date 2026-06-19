@@ -62,9 +62,6 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-zinc-950 text-zinc-100">
-        <script dangerouslySetInnerHTML={{
-          __html: `(function(){if(location.hash.includes("access_token")&&!location.pathname.startsWith("/auth/callback")){location.href="/auth/callback"+location.hash}})()`
-        }} />
         <HeartbeatPing />
         <DiscordWidgetShell discordData={discordData} />
         <AuthProvider>

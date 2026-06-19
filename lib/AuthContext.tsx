@@ -2,7 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
-import { supabaseBrowser } from './supabase-browser'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 interface AuthState {
   user: User | null
@@ -36,27 +39,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [perfil, setPerfil] = useState<{ nickname: string; avatar_url: string } | null>(null)
 
+  const [supabaseClient] = useState(() => createClient(
+    supabaseUrl, supabaseAnonKey,
+    { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'todocomics-auth' } }
+  ))
+
   const refreshPerfil = useCallback(async () => {
     if (!user) {
       setPerfil(null)
       return
     }
-    const { data } = await supabaseBrowser
+    const { data } = await supabaseClient
       .from('perfiles')
       .select('nickname, avatar_url')
       .eq('id', user.id)
       .single()
     setPerfil(data ?? null)
-  }, [user])
+  }, [user, supabaseClient])
 
   useEffect(() => {
-    supabaseBrowser.auth.getSession().then(({ data: { session: s } }) => {
+    supabaseClient.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s)
       setUser(s?.user ?? null)
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
@@ -65,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [supabaseClient])
 
   useEffect(() => {
     if (user) refreshPerfil()
@@ -73,12 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, refreshPerfil])
 
   const signIn = async (email: string, password: string): Promise<string | null> => {
-    const { error } = await supabaseBrowser.auth.signInWithPassword({ email, password })
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password })
     return error?.message ?? null
   }
 
   const signUp = async (email: string, password: string, nickname: string): Promise<string | null> => {
-    const { error } = await supabaseBrowser.auth.signUp({
+    const { error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: {
@@ -104,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    await supabaseBrowser.auth.signInWithOAuth({
+    await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
@@ -113,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    await supabaseBrowser.auth.signOut()
+    await supabaseClient.auth.signOut()
     setPerfil(null)
   }
 
