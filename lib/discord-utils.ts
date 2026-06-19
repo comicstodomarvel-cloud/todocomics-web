@@ -1,3 +1,57 @@
+import https from 'node:https'
+
+function discordFetch(
+  url: string,
+  options: {
+    method?: string
+    headers?: Record<string, string>
+    body?: string
+    timeout?: number
+  } = {}
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url)
+    const req = https.request(
+      {
+        hostname: parsed.hostname,
+        port: 443,
+        path: parsed.pathname + parsed.search,
+        method: options.method ?? 'GET',
+        headers: options.headers,
+        family: 4,
+        timeout: options.timeout ?? 4000,
+      },
+      (res) => {
+        const chunks: Buffer[] = []
+        res.on('data', (chunk: Buffer) => chunks.push(chunk))
+        res.on('end', () => {
+          const body = Buffer.concat(chunks).toString()
+          resolve(
+            new Response(body, {
+              status: res.statusCode ?? 200,
+              statusText: res.statusMessage ?? '',
+            })
+          )
+        })
+      }
+    )
+    req.on('error', (err) => {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg === 'timeout') {
+        reject(new DOMException('Timeout', 'AbortError'))
+      } else {
+        reject(err)
+      }
+    })
+    req.on('timeout', () => {
+      req.destroy()
+      reject(new DOMException('Timeout', 'AbortError'))
+    })
+    if (options.body) req.write(options.body)
+    req.end()
+  })
+}
+
 export interface ParsedMessageLink {
   guildId: string
   channelId: string
@@ -22,16 +76,11 @@ export async function fetchDiscordMessage(
 ): Promise<Record<string, unknown> | null> {
   const url = buildDiscordApiUrl(channelId, messageId)
 
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 4000)
-
   try {
-    const res = await fetch(url, {
+    const res = await discordFetch(url, {
       headers: { Authorization: `Bot ${botToken}` },
-      signal: controller.signal,
+      timeout: 4000,
     })
-
-    clearTimeout(timeout)
 
     if (!res.ok) {
       const body = await res.text()
@@ -41,7 +90,6 @@ export async function fetchDiscordMessage(
 
     return res.json()
   } catch (err) {
-    clearTimeout(timeout)
     if (err instanceof DOMException && err.name === 'AbortError') {
       console.error('[discord-utils] Timeout fetching Discord message (4s)')
       return null
@@ -56,25 +104,21 @@ export async function sendFollowUp(
   content: string,
   botToken: string
 ): Promise<boolean> {
-  const url = `https://discord.com/api/v10/webhooks/${process.env.DISCORD_APP_ID}/${interactionToken}/messages/@original`
-
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 4000)
+  const appId = process.env.DISCORD_APP_ID
+  const url = `https://discord.com/api/v10/webhooks/${appId}/${interactionToken}/messages/@original`
 
   try {
-    const res = await fetch(url, {
+    const res = await discordFetch(url, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bot ${botToken}`,
       },
       body: JSON.stringify({ content }),
-      signal: controller.signal,
+      timeout: 4000,
     })
-    clearTimeout(timeout)
     return res.ok
   } catch {
-    clearTimeout(timeout)
     return false
   }
 }

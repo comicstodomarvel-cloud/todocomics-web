@@ -1,6 +1,3 @@
-import { setDefaultResultOrder } from 'node:dns'
-setDefaultResultOrder('ipv4first')
-
 import { NextResponse } from 'next/server'
 import { verifyDiscordRequest } from '@/lib/discord-verify'
 import {
