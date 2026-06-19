@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import HeartbeatPing from "@/components/HeartbeatPing";
+import OAuthRedirect from "@/components/OAuthRedirect";
 import { getPlaylist } from "@/lib/musicData";
 import { getDiscordData } from "@/lib/discordData";
 import { AuthProvider } from "@/lib/AuthContext";
@@ -63,6 +64,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full bg-zinc-950 text-zinc-100">
         <HeartbeatPing />
+        <OAuthRedirect />
         <DiscordWidgetShell discordData={discordData} />
         <AuthProvider>
           <MusicPlayerShell playlist={playlist}>
