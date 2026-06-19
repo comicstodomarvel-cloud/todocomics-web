@@ -217,6 +217,40 @@ export async function getBrokenLinkIds(): Promise<Set<string>> {
   return new Set(data?.map((r) => r.contenido_id) ?? [])
 }
 
+export async function getReportStatus(): Promise<{
+  verificado: Set<string>
+  pendiente: Set<string>
+}> {
+  const { data } = await supabase
+    .from('reportes_links')
+    .select('contenido_id, estado')
+    .in('estado', ['pendiente', 'verificado'])
+
+  const verificado = new Set<string>()
+  const pendiente = new Set<string>()
+
+  for (const r of data ?? []) {
+    if (r.estado === 'verificado') verificado.add(r.contenido_id)
+    else if (r.estado === 'pendiente') pendiente.add(r.contenido_id)
+  }
+
+  return { verificado, pendiente }
+}
+
+export async function getItemReportStatus(
+  contenidoId: string
+): Promise<'none' | 'pendiente' | 'verificado' | 'resuelto'> {
+  const { data } = await supabase
+    .from('reportes_links')
+    .select('estado')
+    .eq('contenido_id', contenidoId)
+    .order('fecha', { ascending: false })
+    .limit(1)
+
+  if (!data || data.length === 0) return 'none'
+  return data[0].estado
+}
+
 export async function getContentByHashtag(hashtagId: string): Promise<ContentItem[]> {
   const filterDef = HASHTAG_FILTERS.find((f) => f.id === hashtagId)
   if (!filterDef) {

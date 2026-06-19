@@ -3,21 +3,24 @@ import ImageWithFallback from './ImageWithFallback'
 import UpdateBadge from './updates/UpdateBadge'
 import ReadLaterButton from './ReadLaterButton'
 import ReportBadge from './ReportBadge'
+import ReportedBadge from './ReportedBadge'
 import type { ContentItem } from '@/lib/data'
 
 interface ContentCardProps {
   item: ContentItem
   lastUpdateDate?: string
   linkCaido?: boolean
+  linkReportado?: boolean
 }
 
-export default function ContentCard({ item, lastUpdateDate, linkCaido }: ContentCardProps) {
+export default function ContentCard({ item, lastUpdateDate, linkCaido, linkReportado }: ContentCardProps) {
   return (
     <div className="group relative block">
       <Link href={`/item/${item.id}`}>
         <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-800">
           {lastUpdateDate && <UpdateBadge updateDate={lastUpdateDate} />}
           {linkCaido && <ReportBadge />}
+          {!linkCaido && linkReportado && <ReportedBadge />}
           <ImageWithFallback
             src={item.url_portada}
             alt={item.titulo}

@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const { data: reportes, error } = await supabase
       .from('reportes_links')
       .select('*')
+      .in('estado', ['pendiente', 'verificado'])
       .order('fecha', { ascending: false })
 
     if (error) {

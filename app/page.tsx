@@ -1,4 +1,4 @@
-import { getLatestContent, searchContent, getContentByCategoria, getContentByHashtag, getLatestUpdateDates, getBrokenLinkIds } from '@/lib/data';
+import { getLatestContent, searchContent, getContentByCategoria, getContentByHashtag, getLatestUpdateDates, getBrokenLinkIds, getReportStatus } from '@/lib/data';
 import type { ContentItem } from '@/lib/data';
 import ContentCard from '@/components/ContentCard';
 import SearchBar from '@/components/SearchBar';
@@ -69,8 +69,8 @@ export default async function HomePage({
   // Fechas de última actualización para badges
   const updateDates = !busqueda && !categoria && !hashtag ? await getLatestUpdateDates() : {};
 
-  // IDs de contenido con link caído verificado
-  const brokenIds = await getBrokenLinkIds();
+  // IDs de contenido con link caído verificado o reportado pendiente
+  const { verificado: brokenIds, pendiente: reportedIds } = await getReportStatus();
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -163,7 +163,7 @@ export default async function HomePage({
         <h2 className="mb-6 text-2xl font-bold">Continúa explorando</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
           {gridItems.map((item) => (
-            <ContentCard key={item.id} item={item} lastUpdateDate={updateDates[item.id]} linkCaido={brokenIds.has(item.id)} />
+            <ContentCard key={item.id} item={item} lastUpdateDate={updateDates[item.id]} linkCaido={brokenIds.has(item.id)} linkReportado={reportedIds.has(item.id)} />
           ))}
         </div>
       </section>

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import ImageWithFallback from '@/components/ImageWithFallback'
 import { notFound } from 'next/navigation'
 import { ExternalLink, ArrowLeft, AlertTriangle } from 'lucide-react'
-import { getContentById } from '@/lib/data'
+import { getContentById, getItemReportStatus } from '@/lib/data'
 import { mockData } from '@/data/mockData'
 import VisitTracker from '@/components/VisitTracker'
 import RelatedContent from '@/components/RelatedContent'
@@ -28,6 +28,7 @@ export default async function ItemPage({
     }
 
     const safeHashtags = Array.isArray(item.hashtags) ? item.hashtags : []
+    const reportStatus = await getItemReportStatus(item.id)
 
     return (
       <div className="min-h-screen bg-zinc-950">
@@ -83,7 +84,7 @@ export default async function ItemPage({
                 Descargar
               </a>
 
-              <ReportBrokenLink contenidoId={item.id} />
+              <ReportBrokenLink contenidoId={item.id} reportStatus={reportStatus} />
 
               <Link
                 href="/"
