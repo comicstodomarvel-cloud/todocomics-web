@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle, Send, CheckCircle, Clock } from 'lucide-react'
+import { AlertTriangle, Send, CheckCircle, Clock, Check } from 'lucide-react'
 
 export default function ReportBrokenLink({ contenidoId, reportStatus = 'none' }: { contenidoId: string; reportStatus?: string }) {
   const [expanded, setExpanded] = useState(false)
@@ -20,6 +20,15 @@ export default function ReportBrokenLink({ contenidoId, reportStatus = 'none' }:
       <span className="inline-flex items-center gap-1.5 rounded-md border border-red-700 bg-red-950/30 px-4 py-2 text-xs text-red-400">
         <AlertTriangle size={14} />
         Link caído
+      </span>
+    )
+  }
+
+  if (reportStatus === 'resuelto') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-md border border-green-700 bg-green-950/30 px-4 py-2 text-xs text-green-400">
+        <Check size={14} />
+        Link resuelto
       </span>
     )
   }

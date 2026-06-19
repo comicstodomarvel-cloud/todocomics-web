@@ -244,11 +244,14 @@ export async function getItemReportStatus(
     .from('reportes_links')
     .select('estado')
     .eq('contenido_id', contenidoId)
-    .order('fecha', { ascending: false })
-    .limit(1)
 
   if (!data || data.length === 0) return 'none'
-  return data[0].estado
+
+  const estados = new Set(data.map((r) => r.estado))
+  if (estados.has('verificado')) return 'verificado'
+  if (estados.has('pendiente')) return 'pendiente'
+  if (estados.has('resuelto')) return 'resuelto'
+  return 'none'
 }
 
 export async function getContentByHashtag(hashtagId: string): Promise<ContentItem[]> {

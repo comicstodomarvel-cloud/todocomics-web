@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 function getSessionId(request: NextRequest): string | null {
   return request.headers.get('x-session-id')
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
       }
 
-      const { error } = await supabase
+      const { error } = await getSupabaseAdmin()
         .from('reportes_links')
         .update({ estado })
         .eq('contenido_id', contenidoId)
