@@ -69,6 +69,17 @@ export default function AdminPage() {
             Gestionar reportes de links caídos enviados por usuarios
           </p>
         </Link>
+
+        <Link
+          href={`/admin/editar?key=${adminKey}`}
+          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-amber-700 transition-colors"
+        >
+          <div className="text-3xl mb-3">✏️</div>
+          <h2 className="text-lg font-semibold text-white mb-1">Editar post</h2>
+          <p className="text-sm text-zinc-400">
+            Modificar título, descripción, link o portada de un post existente
+          </p>
+        </Link>
       </div>
     </div>
   )
