@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Mail, Lock, User as UserIcon } from 'lucide-react'
+import { X, Mail, Lock, User as UserIcon, CheckCircle, Send } from 'lucide-react'
 import { useAuth } from '@/lib/AuthContext'
 
 interface LoginModalProps {
@@ -10,15 +10,30 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ open, onClose }: LoginModalProps) {
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registered, setRegistered] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState('')
+  const [resending, setResending] = useState(false)
+  const [resendSent, setResendSent] = useState(false)
 
   if (!open) return null
+
+  function resetToLogin() {
+    setMode('login')
+    setRegistered(false)
+    setRegisteredEmail('')
+    setResendSent(false)
+    setError('')
+    setEmail('')
+    setPassword('')
+    setNickname('')
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -27,8 +42,16 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
 
     if (mode === 'login') {
       const err = await signIn(email, password)
-      if (err) setError(err)
-      else onClose()
+      if (err) {
+        if (err.toLowerCase().includes('email not confirmed')) {
+          setError('Correo no confirmado. Revisa tu bandeja de entrada o solicita un reenvío.')
+        } else {
+          setError(err)
+        }
+      } else {
+        onClose()
+      }
+      setLoading(false)
     } else {
       if (!nickname.trim()) {
         setError('El nickname es obligatorio')
@@ -36,11 +59,71 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
         return
       }
       const err = await signUp(email, password, nickname.trim())
-      if (err) setError(err)
-      else setError('Revisa tu correo para confirmar la cuenta')
+      setLoading(false)
+      if (err) {
+        setError(err)
+      } else {
+        setRegistered(true)
+        setRegisteredEmail(email)
+      }
     }
+  }
 
-    setLoading(false)
+  async function handleResend() {
+    setResending(true)
+    setResendSent(false)
+    const err = await resendConfirmation(registeredEmail)
+    setResending(false)
+    if (err) {
+      setError(err)
+    } else {
+      setResendSent(true)
+    }
+  }
+
+  if (registered) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-bold text-white">Cuenta creada</h2>
+            <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex flex-col items-center text-center mb-6">
+            <CheckCircle size={48} className="text-emerald-400 mb-3" />
+            <p className="text-zinc-200 text-sm leading-relaxed">
+              Te enviamos un enlace de confirmación a <span className="text-amber-400 font-medium">{registeredEmail}</span>
+            </p>
+            <p className="text-zinc-500 text-xs mt-2">Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.</p>
+          </div>
+
+          {error && <p className="text-xs text-red-400 text-center mb-3">{error}</p>}
+
+          {resendSent && (
+            <p className="text-xs text-emerald-400 text-center mb-3">Correo reenviado correctamente</p>
+          )}
+
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="w-full flex items-center justify-center gap-2 rounded-md border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800 disabled:opacity-40 mb-3"
+          >
+            <Send size={16} />
+            {resending ? 'Enviando...' : 'Reenviar correo de confirmación'}
+          </button>
+
+          <button
+            onClick={resetToLogin}
+            className="w-full rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400"
+          >
+            Ya confirmé, iniciar sesión
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

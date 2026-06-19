@@ -14,6 +14,7 @@ interface AuthState {
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
   refreshPerfil: () => Promise<void>
+  resendConfirmation: (email: string) => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthState>({
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthState>({
   signInWithGoogle: async () => {},
   signOut: async () => {},
   refreshPerfil: async () => {},
+  resendConfirmation: async () => null,
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -81,17 +83,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         data: { nickname },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
     return error?.message ?? null
+  }
+
+  const resendConfirmation = async (email: string): Promise<string | null> => {
+    try {
+      const res = await fetch('/api/auth/resend-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      return data.error ?? null
+    } catch {
+      return 'Error de conexión al reenviar el correo'
+    }
   }
 
   const signInWithGoogle = async () => {
     await supabaseBrowser.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
   }
@@ -103,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, perfil, signIn, signUp, signInWithGoogle, signOut, refreshPerfil }}
+      value={{ user, session, loading, perfil, signIn, signUp, signInWithGoogle, signOut, refreshPerfil, resendConfirmation }}
     >
       {children}
     </AuthContext.Provider>

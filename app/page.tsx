@@ -16,6 +16,7 @@ import ReadLaterSection from '@/components/ReadLaterSection';
 import CatalogStats from '@/components/CatalogStats';
 import UserMenu from '@/components/UserMenu';
 import FavoritosSection from '@/components/FavoritosSection';
+import ConfirmedBanner from '@/components/ConfirmedBanner';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
@@ -80,6 +81,7 @@ export default async function HomePage({
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <ConfirmedBanner />
       {/* Botón dropdown de Updates */}
       <UpdatesDropdownButton />
       {/* Botón flotante de filtros por hashtag */}
