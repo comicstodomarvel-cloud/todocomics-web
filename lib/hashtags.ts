@@ -5,6 +5,8 @@ export const HASHTAG_CATEGORIA: Record<string, (typeof CATEGORIAS)[number]> = {
   MANGA: 'Manga',
   PELICULA: 'Pelicula',
   SERIE: 'Serie',
+  SERIES: 'Serie',
+  ANIME: 'Serie',
   LIBRO: 'Libro',
 }
 
@@ -29,7 +31,7 @@ export const HASHTAG_FILTERS = [
   { id: 'manga', label: 'Mangas', search: ['Manga', 'manga'] },
   { id: 'crossovers', label: 'Crossovers', search: ['Crossovers', 'crossovers'] },
   { id: 'libro', label: 'Libros', search: ['Libro', 'libro'] },
-  { id: 'serie', label: 'Series', search: ['Serie', 'serie'] },
+  { id: 'serie', label: 'Series', search: ['Serie', 'serie', 'Series', 'series'] },
   { id: 'pelicula', label: 'Películas', search: ['Pelicula', 'pelicula'] },
   { id: 'otros', label: 'Otros', search: ['otros'] },
 ] as const
