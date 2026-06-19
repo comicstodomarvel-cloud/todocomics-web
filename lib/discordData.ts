@@ -2,6 +2,7 @@ export interface DiscordData {
   guildName: string
   guildId: string
   iconHash: string | null
+  customIconUrl: string | null
   memberCount: number
   onlineCount: number
   inviteCode: string
@@ -9,6 +10,7 @@ export interface DiscordData {
 
 const INVITE_CODE = 'nKTnYSTRHE'
 const GUILD_ID = '977358920702119997'
+const CUSTOM_ICON_URL = 'https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/logo.jpg'
 
 async function fetchFromInviteAPI(): Promise<DiscordData | null> {
   const res = await fetch(
@@ -24,6 +26,7 @@ async function fetchFromInviteAPI(): Promise<DiscordData | null> {
     guildName: json.guild?.name ?? 'TodoComics',
     guildId: json.guild?.id ?? GUILD_ID,
     iconHash: json.guild?.icon ?? null,
+    customIconUrl: CUSTOM_ICON_URL,
     memberCount: json.approximate_member_count ?? 0,
     onlineCount: json.approximate_presence_count ?? 0,
     inviteCode: INVITE_CODE,
@@ -45,6 +48,7 @@ async function fetchFromWidgetAPI(): Promise<DiscordData | null> {
       guildName: json.name ?? 'TodoComics',
       guildId: GUILD_ID,
       iconHash: null,
+      customIconUrl: CUSTOM_ICON_URL,
       memberCount: json.members?.length ?? 0,
       onlineCount: json.presence_count ?? 0,
       inviteCode: INVITE_CODE,

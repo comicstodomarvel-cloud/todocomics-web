@@ -6,23 +6,30 @@ import { Hash } from 'lucide-react'
 export default function ServerIcon({
   guildId,
   iconHash,
+  customIconUrl,
   guildName,
   size = 48,
   className = '',
 }: {
   guildId: string
   iconHash: string | null
+  customIconUrl?: string | null
   guildName: string
   size?: number
   className?: string
 }) {
   const [failed, setFailed] = useState(false)
 
-  if (iconHash && !failed) {
-    const ext = iconHash.startsWith('a_') ? 'gif' : 'png'
+  const src = customIconUrl
+    ? customIconUrl
+    : iconHash
+      ? `https://cdn.discordapp.com/icons/${guildId}/${iconHash}.${iconHash.startsWith('a_') ? 'gif' : 'png'}?size=${size * 2}`
+      : null
+
+  if (src && !failed) {
     return (
       <img
-        src={`https://cdn.discordapp.com/icons/${guildId}/${iconHash}.${ext}?size=${size * 2}`}
+        src={src}
         alt={guildName}
         onError={() => setFailed(true)}
         className={`rounded-full object-cover flex-shrink-0 ${className}`}

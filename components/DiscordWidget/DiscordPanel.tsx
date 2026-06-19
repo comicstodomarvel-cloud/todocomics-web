@@ -13,11 +13,12 @@ export default function DiscordPanel({
   isCollapsed: boolean
   onToggle: () => void
 }) {
-  const { guildName, guildId, iconHash, memberCount, onlineCount, inviteCode } =
+  const { guildName, guildId, iconHash, customIconUrl, memberCount, onlineCount, inviteCode } =
     data ?? {
       guildName: "TodoComics",
       guildId: "977358920702119997",
       iconHash: null,
+      customIconUrl: null,
       memberCount: 0,
       onlineCount: 0,
       inviteCode: "nKTnYSTRHE",
@@ -61,6 +62,7 @@ export default function DiscordPanel({
           <ServerIcon
             guildId={guildId}
             iconHash={iconHash}
+            customIconUrl={customIconUrl}
             guildName={guildName}
             size={80}
             className="shadow-lg"
@@ -132,6 +134,7 @@ export default function DiscordPanel({
         <ServerIcon
           guildId={guildId}
           iconHash={iconHash}
+          customIconUrl={customIconUrl}
           guildName={guildName}
           size={36}
         />

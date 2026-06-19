@@ -105,7 +105,7 @@ function playerReducer(state: PlayerState, action: PlayerAction): PlayerState {
         isPlaying: true,
         currentTime: 0,
         isSheetOpen: false,
-        isDesktopCollapsed: false,
+  isDesktopCollapsed: true,
       }
     case "TOGGLE_PLAY":
       return { ...state, isPlaying: !state.isPlaying }
