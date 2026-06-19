@@ -28,6 +28,13 @@ interface DiscordInteraction {
   guild_id?: string
 }
 
+export async function GET() {
+  return new NextResponse(
+    '✅ Discord Interactions Endpoint activo. Solo acepta POST de Discord. El error 405 en navegador es esperado.',
+    { status: 200 }
+  )
+}
+
 export async function POST(request: Request) {
   try {
     const publicKey = process.env.DISCORD_PUBLIC_KEY
