@@ -4,7 +4,6 @@ import "./globals.css";
 import HeartbeatPing from "@/components/HeartbeatPing";
 import { getPlaylist } from "@/lib/musicData";
 import { getDiscordData } from "@/lib/discordData";
-import { AuthProvider } from "@/lib/AuthContext";
 import MusicPlayerShell from "@/components/MusicPlayer/MusicPlayerShell";
 import DiscordWidgetShell from "@/components/DiscordWidget/DiscordWidgetShell";
 
@@ -64,11 +63,9 @@ export default async function RootLayout({
       <body className="min-h-full bg-zinc-950 text-zinc-100">
         <HeartbeatPing />
         <DiscordWidgetShell discordData={discordData} />
-        <AuthProvider>
-          <MusicPlayerShell playlist={playlist}>
-            {children}
-          </MusicPlayerShell>
-        </AuthProvider>
+        <MusicPlayerShell playlist={playlist}>
+          {children}
+        </MusicPlayerShell>
       </body>
     </html>
   );

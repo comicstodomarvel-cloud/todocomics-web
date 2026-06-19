@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { Heart } from 'lucide-react'
-import { useAuth } from '@/lib/AuthContext'
 import type { ContentItem } from '@/lib/data'
 import ContentCard from './ContentCard'
 import ContentListItem from './ContentListItem'
@@ -25,7 +24,6 @@ interface FavoritosSectionProps {
 }
 
 export default function FavoritosSection({ viewMode, updateDates, brokenIds, reportedIds }: FavoritosSectionProps) {
-  const { session } = useAuth()
   const [items, setItems] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const brokenSet = new Set(brokenIds)
@@ -33,17 +31,15 @@ export default function FavoritosSection({ viewMode, updateDates, brokenIds, rep
 
   useEffect(() => {
     const sessionId = getSessionId()
-    const headers: Record<string, string> = {}
-    if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
 
-    fetch(`/api/favoritos?session_id=${sessionId}`, { headers })
+    fetch(`/api/favoritos?session_id=${sessionId}`)
       .then((r) => r.json())
       .then((data) => {
         setItems(data.items ?? [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [session])
+  }, [])
 
   if (loading) return null
   if (items.length === 0) return null

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { Heart } from 'lucide-react'
-import { useAuth } from '@/lib/AuthContext'
 
 function getSessionId(): string {
   if (typeof window === 'undefined') return ''
@@ -15,23 +14,20 @@ function getSessionId(): string {
 }
 
 export default function FavoritoButton({ contenidoId }: { contenidoId: string }) {
-  const { session } = useAuth()
   const [favorito, setFavorito] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const sessionId = getSessionId()
-    const headers: Record<string, string> = {}
-    if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
 
-    fetch(`/api/favoritos?session_id=${sessionId}`, { headers })
+    fetch(`/api/favoritos?session_id=${sessionId}`)
       .then((r) => r.json())
       .then((data) => {
         const ids = (data.favoritos ?? []).map((f: { contenido_id: string }) => f.contenido_id)
         setFavorito(ids.includes(contenidoId))
       })
       .catch(() => {})
-  }, [contenidoId, session])
+  }, [contenidoId])
 
   async function handleToggle(e: React.MouseEvent) {
     e.preventDefault()
@@ -40,15 +36,11 @@ export default function FavoritoButton({ contenidoId }: { contenidoId: string })
     setLoading(true)
 
     const sessionId = getSessionId()
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-    if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
 
     try {
       const res = await fetch('/api/favoritos', {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contenido_id: contenidoId, session_id: sessionId }),
       })
       const data = await res.json()
