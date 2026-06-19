@@ -3,6 +3,7 @@ import { verifyDiscordRequest } from '@/lib/discord-verify'
 import {
   parseMessageLink,
   fetchDiscordMessage,
+  testDiscordConnectivity,
   sendFollowUp,
   extractTitle,
   extractDescription,
@@ -201,7 +202,8 @@ async function processImport(
 
     const msg = await fetchDiscordMessage(parsed.channelId, parsed.messageId, botToken)
     if (!msg) {
-      await sendFollowUp(interactionToken, '❌ No se pudo obtener el mensaje. Verifica que el bot tenga permiso "Leer historial de mensajes" en el canal.', botToken)
+      const conn = await testDiscordConnectivity(botToken)
+      await sendFollowUp(interactionToken, `❌ No se pudo obtener el mensaje.\n${conn}\nVerifica que el bot esté en el servidor y tenga permiso "Leer historial de mensajes".`, botToken)
       return
     }
 
