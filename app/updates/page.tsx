@@ -1,9 +1,34 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import UpdatesFeed from '@/components/updates/UpdatesFeed'
 import type { Update } from '@/lib/types'
 
 export const revalidate = 60
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todocomics.com'
+
+export const metadata: Metadata = {
+  title: 'Últimas Actualizaciones - TodoComics',
+  description:
+    'Mantente al día con las últimas actualizaciones de cómics, mangas, películas, series y libros en TodoComics.',
+  alternates: {
+    canonical: '/updates',
+  },
+  openGraph: {
+    title: 'Últimas Actualizaciones - TodoComics',
+    description:
+      'Mantente al día con las últimas actualizaciones de cómics, mangas, películas, series y libros en TodoComics.',
+    siteName: 'TodoComics',
+    url: `${siteUrl}/updates`,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Últimas Actualizaciones - TodoComics',
+    description:
+      'Mantente al día con las últimas actualizaciones de cómics, mangas, películas, series y libros en TodoComics.',
+  },
+}
 
 export default async function UpdatesPage() {
   const { data: updates, error, count } = await supabase

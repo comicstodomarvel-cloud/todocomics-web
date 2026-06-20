@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import JsonLd from "@/components/JsonLd";
 import HeartbeatPing from "@/components/HeartbeatPing";
 import { getPlaylist } from "@/lib/musicData";
 import { getDiscordData } from "@/lib/discordData";
@@ -24,6 +25,9 @@ export const metadata: Metadata = {
   description:
     "Explora cómics, películas, series y libros del mundo geek. Tu catálogo personal estilo Netflix.",
   metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "TodoComics - Catálogo Geek",
     description:
@@ -61,6 +65,24 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-zinc-950 text-zinc-100">
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "TodoComics",
+            url: siteUrl,
+            description:
+              "Explora cómics, películas, series y libros del mundo geek. Tu catálogo personal estilo Netflix.",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate: `${siteUrl}/?busqueda={search_term_string}`,
+              },
+              "query-input": "required name=search_term_string",
+            },
+          }}
+        />
         <HeartbeatPing />
         <DiscordWidgetShell discordData={discordData} />
         <MusicPlayerShell playlist={playlist}>

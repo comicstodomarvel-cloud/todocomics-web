@@ -6,12 +6,14 @@ import { ExternalLink, ArrowLeft, AlertTriangle, Share2 } from 'lucide-react'
 import { getContentById, getItemReportStatus } from '@/lib/data'
 import { mockData } from '@/data/mockData'
 import VisitTracker from '@/components/VisitTracker'
+import JsonLd from '@/components/JsonLd'
 import RelatedContent from '@/components/RelatedContent'
 import RatingWidget from '@/components/RatingWidget'
 import CommentSection from '@/components/CommentSection'
 import ReportBrokenLink from '@/components/ReportBrokenLink'
 import ShareButton from '@/components/ShareButton'
 import LikeButton from '@/components/LikeButton'
+import Breadcrumbs from '@/components/Breadcrumbs'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -27,6 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${item.titulo} — TodoComics`,
     description: item.descripcion?.slice(0, 200) || `Explora ${item.titulo} en TodoComics`,
+    alternates: {
+      canonical: `${siteUrl}/item/${id}`,
+    },
     openGraph: {
       title: item.titulo,
       description: item.descripcion?.slice(0, 200) || `Explora ${item.titulo} en TodoComics`,
@@ -34,6 +39,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'TodoComics',
       url: `${siteUrl}/item/${id}`,
       images: [{ url: imageUrl, width: 1200, height: 1800 }],
+      publishedTime: item.fecha_creacion,
+      tags: item.hashtags,
     },
     twitter: {
       card: 'summary_large_image',
@@ -67,6 +74,33 @@ export default async function ItemPage({
     return (
       <div className="min-h-screen bg-zinc-950">
         <VisitTracker contenidoId={item.id} />
+        <div className="px-6 pt-6 md:px-16 md:pt-8">
+          <Breadcrumbs
+            items={[
+              { label: item.categoria, href: `/?categoria=${encodeURIComponent(item.categoria)}` },
+              { label: item.titulo },
+            ]}
+          />
+        </div>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: item.titulo,
+            description: item.descripcion?.slice(0, 200),
+            image: item.url_portada,
+            datePublished: item.fecha_creacion,
+            author: {
+              "@type": "Organization",
+              name: "TodoComics",
+            },
+            about: {
+              "@type": "Thing",
+              name: item.categoria,
+            },
+            keywords: item.hashtags?.join(", "),
+          }}
+        />
         <div className="mx-auto flex flex-col px-6 py-8 md:flex-row md:gap-10 md:px-16 md:py-12">
           <div className="relative mb-6 w-full shrink-0 md:mb-0 md:w-1/3">
             <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg">

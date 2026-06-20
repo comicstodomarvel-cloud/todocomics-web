@@ -1,20 +1,63 @@
 import type { Metadata } from 'next'
 import FaqInteractive from '@/components/FaqInteractive'
+import JsonLd from '@/components/JsonLd'
+import Breadcrumbs from '@/components/Breadcrumbs'
 import { getCatalogStats } from '@/lib/data'
+import { supabase } from '@/lib/supabase'
 
 export const revalidate = 120
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todocomics.com'
 
 export const metadata: Metadata = {
   title: 'FAQ - Preguntas Frecuentes | TodoComics',
   description:
     'Respuestas a las preguntas más frecuentes sobre TodoComics: contraseñas, descargas, reportes de enlaces caídos y más.',
+  alternates: {
+    canonical: '/faq',
+  },
+  openGraph: {
+    title: 'FAQ - Preguntas Frecuentes | TodoComics',
+    description:
+      'Respuestas a las preguntas más frecuentes sobre TodoComics: contraseñas, descargas, reportes de enlaces caídos y más.',
+    siteName: 'TodoComics',
+    url: `${siteUrl}/faq`,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FAQ - Preguntas Frecuentes | TodoComics',
+    description:
+      'Respuestas a las preguntas más frecuentes sobre TodoComics: contraseñas, descargas, reportes de enlaces caídos y más.',
+  },
 }
 
 export default async function FaqPage() {
-  const stats = await getCatalogStats()
+  const [stats, faqData] = await Promise.all([
+    getCatalogStats(),
+    supabase.from('faq').select('pregunta, respuesta').order('orden', { ascending: true }),
+  ])
+
+  const faqSchema = faqData.data?.length
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqData.data.map((item) => ({
+          '@type': 'Question',
+          name: item.pregunta,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: item.respuesta,
+          },
+        })),
+      }
+    : null
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
+      {faqSchema && <JsonLd data={faqSchema as Record<string, unknown>} />}
+      <div className="px-4 pt-6 md:px-8 md:pt-8 max-w-6xl mx-auto">
+        <Breadcrumbs items={[{ label: 'FAQ' }]} />
+      </div>
       <FaqInteractive stats={stats} />
 
       <section className="bg-gradient-to-r from-[#ff8c00] to-orange-600 py-14 md:py-18">

@@ -15,10 +15,63 @@ import FavoriteBadge from '@/components/FavoriteBadge';
 import ReadLaterSection from '@/components/ReadLaterSection';
 import CatalogStats from '@/components/CatalogStats';
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import JsonLd from '@/components/JsonLd';
 
 // Revalidar cada 5 minutos (300 segundos)
 export const revalidate = 300;
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todocomics.com';
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string; vista?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const { busqueda, categoria, hashtag } = params;
+
+  let title = 'TodoComics - Catálogo Geek';
+  let description =
+    'Explora cómics, películas, series y libros del mundo geek. Tu catálogo personal estilo Netflix.';
+
+  if (busqueda) {
+    title = `"${busqueda}" - Resultados de búsqueda | TodoComics`;
+    description = `Resultados de búsqueda para "${busqueda}" en TodoComics. Encuentra cómics, películas, series y más.`;
+  } else if (categoria && categoria !== 'Todos') {
+    title = `${categoria}s - Catálogo | TodoComics`;
+    description = `Explora nuestra colección de ${categoria.toLowerCase()}s en TodoComics.`;
+  } else if (hashtag) {
+    const labelMap: Record<string, string> = {
+      marvel: 'Marvel',
+      dc: 'DC Comics',
+      manga: 'Manga',
+      anime: 'Anime',
+      starwars: 'Star Wars',
+    };
+    const label = labelMap[hashtag] || hashtag;
+    title = `Contenido de ${label} - TodoComics`;
+    description = `Explora contenido relacionado con ${label} en TodoComics.`;
+  }
+
+  return {
+    title,
+    description,
+    alternates: { canonical: '/' },
+    openGraph: {
+      title,
+      description,
+      siteName: 'TodoComics',
+      url: siteUrl,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  };
+}
 
 export default async function HomePage({
   searchParams,
@@ -80,6 +133,17 @@ export default async function HomePage({
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          itemListElement: gridItems.map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            url: `${siteUrl}/item/${item.id}`,
+          })),
+        }}
+      />
       {/* Botón dropdown de Updates */}
       <UpdatesDropdownButton />
       {/* Botón flotante de filtros por hashtag */}
