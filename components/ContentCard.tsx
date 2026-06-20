@@ -45,8 +45,10 @@ export default function ContentCard({ item, lastUpdateDate, linkCaido, linkRepor
         </div>
       </Link>
 
-      <ReadLaterButton contenidoId={item.id} />
-      <FavoritoButton contenidoId={item.id} />
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <ReadLaterButton contenidoId={item.id} />
+        <FavoritoButton contenidoId={item.id} />
+      </div>
     </div>
   )
 }
