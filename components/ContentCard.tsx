@@ -7,6 +7,12 @@ import ReportBadge from './ReportBadge'
 import ReportedBadge from './ReportedBadge'
 import type { ContentItem } from '@/lib/data'
 
+function getPublisher(hashtags: string[]): 'marvel' | 'dc' | null {
+  if (hashtags.some(h => h.toLowerCase() === 'marvel')) return 'marvel'
+  if (hashtags.some(h => h.toLowerCase() === 'dc' || h.toLowerCase() === 'dc comics')) return 'dc'
+  return null
+}
+
 interface ContentCardProps {
   item: ContentItem
   lastUpdateDate?: string
@@ -15,10 +21,12 @@ interface ContentCardProps {
 }
 
 export default function ContentCard({ item, lastUpdateDate, linkCaido, linkReportado }: ContentCardProps) {
+  const publisher = getPublisher(item.hashtags)
+
   return (
-    <div className="group relative block">
+    <div className={`group relative block ${publisher ?? ''}`}>
       <Link href={`/item/${item.id}`}>
-        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-800">
+        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-800 transition-all duration-300 ease-in-out">
           {lastUpdateDate && <UpdateBadge updateDate={lastUpdateDate} />}
           {linkCaido && <ReportBadge />}
           {!linkCaido && linkReportado && <ReportedBadge />}
@@ -26,7 +34,7 @@ export default function ContentCard({ item, lastUpdateDate, linkCaido, linkRepor
             src={item.url_portada}
             alt={item.titulo}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
+            className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
           />
 

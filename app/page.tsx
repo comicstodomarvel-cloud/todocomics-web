@@ -161,8 +161,8 @@ export default async function HomePage({
             priority
           />
           {/* Gradiente oscuro para que el texto sea legible */}
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 via-[35%] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
         </div>
 
         {/* Contenido del Hero */}

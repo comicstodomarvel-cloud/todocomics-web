@@ -54,6 +54,23 @@ button {
   }
 }
 
+/* ─── Efecto hover en tarjetas de cómics ─── */
+
+/* Sombra roja para Marvel */
+.group.marvel:hover > a > div:first-of-type {
+  box-shadow: 0 0 28px 6px rgba(237, 29, 36, 0.3);
+}
+
+/* Sombra azul para DC */
+.group.dc:hover > a > div:first-of-type {
+  box-shadow: 0 0 28px 6px rgba(0, 75, 135, 0.3);
+}
+
+/* Sombra neutra para contenido sin editorial detectada */
+.group:not(.marvel):not(.dc):hover > a > div:first-of-type {
+  box-shadow: 0 0 24px 4px rgba(255, 255, 255, 0.06);
+}
+
 /* ─── Reproductor de Música ─── */
 
 @keyframes music-pulse {
