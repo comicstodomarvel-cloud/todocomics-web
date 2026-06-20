@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import ImageWithFallback from '@/components/ImageWithFallback'
 
 interface PostData {
@@ -181,7 +182,10 @@ export default function AdminEditarPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-8 text-white">Editar post existente</h1>
+      <div className="flex items-center gap-4 mb-8">
+        <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
+        <h1 className="text-2xl font-bold text-white">Editar post existente</h1>
+      </div>
 
       <div className="max-w-3xl space-y-6">
         <div>

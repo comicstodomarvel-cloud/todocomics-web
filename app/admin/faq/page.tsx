@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, X, Check } from 'lucide-react'
 
 interface FaqItem {
@@ -204,7 +205,10 @@ export default function AdminFaqPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Gestionar FAQ</h1>
+          <div className="flex items-center gap-4">
+            <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
+            <h1 className="text-2xl font-bold text-white">Gestionar FAQ</h1>
+          </div>
           <button
             onClick={() => setCreando(!creando)}
             className="flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 transition-colors"

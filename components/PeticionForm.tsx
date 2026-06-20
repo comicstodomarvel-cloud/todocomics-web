@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronRight, Check, Send, HelpCircle } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, ChevronRight, Check, Send, HelpCircle } from 'lucide-react'
 
 interface Peticion {
   id: string
@@ -46,6 +47,7 @@ export default function PeticionForm() {
   const [submitting, setSubmitting] = useState(false)
   const [peticiones, setPeticiones] = useState<Peticion[]>([])
   const [toast, setToast] = useState<string | null>(null)
+  const [faqAlert, setFaqAlert] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -109,6 +111,13 @@ export default function PeticionForm() {
     if (!form.editorial.trim() || !form.nombre_comic.trim() || !form.link_portada.startsWith('https://')) return
     if (submitting) return
 
+    if (totalPendientes >= 3) {
+      setFaqAlert('Solo podés tener hasta 3 peticiones sin resolver al mismo tiempo. Esperá a que se libere un espacio para agregar una nueva.')
+      setTimeout(() => setFaqAlert(null), 5000)
+      setSubmitting(false)
+      return
+    }
+
     setSubmitting(true)
     setError('')
 
@@ -148,6 +157,13 @@ export default function PeticionForm() {
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
       {/* Welcome */}
       <div className="mb-8 text-center">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mb-4"
+        >
+          <ArrowLeft size={14} />
+          Volver al catálogo
+        </Link>
         <h1 className="text-3xl md:text-4xl font-bold mb-3">Solicitar un Cómic</h1>
         <p className="text-zinc-400 max-w-xl mx-auto">
           ¿No encontraste lo que buscabas? Completá el formulario y vamos a intentar agregarlo al catálogo.
@@ -391,6 +407,19 @@ export default function PeticionForm() {
           </section>
         </div>
       </div>
+
+      {/* FAQ-style limit alert */}
+      {faqAlert && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-[#1a1a1a] rounded-xl border border-zinc-800 p-5 shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-2">
+          <p className="text-sm text-zinc-100 leading-relaxed">{faqAlert}</p>
+          <button
+            onClick={() => setFaqAlert(null)}
+            className="mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
 
       {/* Toast */}
       {toast && (

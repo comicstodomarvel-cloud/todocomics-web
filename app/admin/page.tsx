@@ -45,7 +45,15 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-8 text-white">Panel de Administración</h1>
+      <div className="flex items-center gap-4 mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+        >
+          ← Volver al inicio
+        </Link>
+        <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
+      </div>
 
       <div className="grid gap-6 sm:grid-cols-2 max-w-2xl">
         <Link

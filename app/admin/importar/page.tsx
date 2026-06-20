@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useCallback, useEffect, useRef } from 'react'
 
 export default function AdminImportarPage() {
@@ -171,9 +172,10 @@ export default function AdminImportarPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-8 text-white">
-        Importar post manualmente
-      </h1>
+      <div className="flex items-center gap-4 mb-8">
+        <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
+        <h1 className="text-2xl font-bold text-white">Importar post manualmente</h1>
+      </div>
 
       <div className="max-w-3xl space-y-6">
         <div>

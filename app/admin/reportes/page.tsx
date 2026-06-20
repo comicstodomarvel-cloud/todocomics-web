@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import ImageWithFallback from '@/components/ImageWithFallback'
+import Link from 'next/link'
 import { CheckCircle, XCircle, RotateCcw } from 'lucide-react'
 
 interface ReporteItem {
@@ -124,7 +125,10 @@ export default function AdminReportesPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-8">📋 Reportes de Links Caídos</h1>
+      <div className="flex items-center gap-4 mb-8">
+        <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
+        <h1 className="text-2xl font-bold">📋 Reportes de Links Caídos</h1>
+      </div>
 
       {actionError && (
         <div className="rounded-lg border border-red-800 bg-red-950/30 px-4 py-3 text-sm text-red-400 mb-6">
