@@ -1,55 +1,43 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import FaqSection from '@/components/FaqSection'
+import FaqInteractive from '@/components/FaqInteractive'
 
 export const metadata: Metadata = {
   title: 'FAQ - Preguntas Frecuentes | TodoComics',
   description:
-    'Respuestas a las preguntas más frecuentes sobre TodoComics: contraseñas, descargas, reportes y más.',
+    'Respuestas a las preguntas más frecuentes sobre TodoComics: contraseñas, descargas, reportes de enlaces caídos y más.',
 }
 
 export default function FaqPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* Botón flotante de regreso (mobile) */}
-      <Link
-        href="/"
-        className="fixed bottom-8 right-8 z-50 md:hidden bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 hover:scale-105 flex items-center gap-2"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h3a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-        <span>Inicio</span>
-      </Link>
+    <div className="min-h-screen bg-black text-zinc-100">
+      <FaqInteractive />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Preguntas Frecuentes</h1>
-            <p className="text-zinc-400">
-              Respuestas a las dudas más comunes sobre TodoComics
-            </p>
-          </div>
-
-          <Link
-            href="/"
-            className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold px-6 py-3 rounded-full transition-colors"
+      <section className="bg-gradient-to-r from-[#ff8c00] to-orange-600 py-14 md:py-18">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-black mb-2">
+            ¿No encontraste lo que buscabas?
+          </h2>
+          <p className="text-black/70 mb-7 max-w-lg mx-auto text-sm md:text-base">
+            Unite a nuestro Discord y preguntá directamente a la comunidad o al equipo
+          </p>
+          <a
+            href="https://discord.gg/todocomics"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 bg-black text-white font-bold px-8 py-3.5 rounded-full hover:bg-zinc-900 transition-colors shadow-lg"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
             </svg>
-            <span>Volver al Inicio</span>
-          </Link>
+            Unirse a Discord
+            <span className="text-lg leading-none">&rarr;</span>
+          </a>
         </div>
+      </section>
 
-        <div className="max-w-3xl mx-auto">
-          <FaqSection />
-        </div>
-      </div>
-
-      <footer className="bg-zinc-900 text-zinc-400 py-8 mt-16">
-        <div className="container mx-auto px-4 text-center">
-          <p>© 2026 TodoComics. Todos los derechos reservados.</p>
+      <footer className="bg-[#121212] text-zinc-500 py-8">
+        <div className="max-w-6xl mx-auto px-4 text-center text-sm">
+          <p>&copy; 2026 TodoComics. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
