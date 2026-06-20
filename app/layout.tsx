@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import JsonLd from "@/components/JsonLd";
+import RegisterSW from "@/components/RegisterSW";
 import HeartbeatPing from "@/components/HeartbeatPing";
 import { getPlaylist } from "@/lib/musicData";
 import { getDiscordData } from "@/lib/discordData";
@@ -25,6 +26,19 @@ export const metadata: Metadata = {
   description:
     "Explora cómics, películas, series y libros del mundo geek. Tu catálogo personal estilo Netflix.",
   metadataBase: new URL(siteUrl),
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "TodoComics",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   alternates: {
     canonical: "/",
   },
@@ -47,6 +61,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#121212",
 };
 
 export default async function RootLayout({
@@ -84,6 +99,7 @@ export default async function RootLayout({
           }}
         />
         <HeartbeatPing />
+        <RegisterSW />
         <DiscordWidgetShell discordData={discordData} />
         <MusicPlayerShell playlist={playlist}>
           {children}
