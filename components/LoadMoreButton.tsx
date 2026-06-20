@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { ContentItem } from '@/lib/data'
 import ContentCard from './ContentCard'
@@ -28,10 +28,12 @@ export default function LoadMoreButton({
   const [hasMore, setHasMore] = useState(true)
   const [error, setError] = useState('')
   const [loaded, setLoaded] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement>(null)
   const brokenSet = new Set(brokenIds)
   const reportedSet = new Set(reportedIds)
 
   const loadMore = useCallback(async () => {
+    if (loading || !hasMore) return
     setLoading(true)
     setError('')
     const nextPage = page + 1
@@ -53,9 +55,26 @@ export default function LoadMoreButton({
     } finally {
       setLoading(false)
     }
-  }, [page, searchParams])
+  }, [page, searchParams, loading, hasMore])
 
-  if (!hasMore && loaded) return null
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMore()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, hasMore, loading])
+
+  if (!hasMore && loaded && items.length === 0) return null
 
   return (
     <>
@@ -88,15 +107,19 @@ export default function LoadMoreButton({
       {error && <p className="text-center text-sm text-red-400">{error}</p>}
 
       {hasMore && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={loadMore}
-            disabled={loading}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-8 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Cargando...' : 'Cargar más'}
-          </button>
-        </div>
+        <>
+          <div ref={sentinelRef} className="h-4" />
+          <div className="mt-4 mb-8 text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-amber-500" />
+            <p className="mt-2 text-sm text-zinc-500">Cargando más...</p>
+          </div>
+        </>
+      )}
+
+      {!hasMore && loaded && (
+        <p className="mt-8 text-center text-sm text-zinc-600">
+          Llegaste al final del catálogo
+        </p>
       )}
     </>
   )
