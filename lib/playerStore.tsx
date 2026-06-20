@@ -195,6 +195,7 @@ export interface PlayerContextValue extends PlayerState {
   setPlayerInstance: (player: YT.Player) => void
   updateProgress: (time: number, duration: number) => void
   onTrackEnded: () => void
+  setError: (msg: string | null) => void
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
@@ -318,6 +319,10 @@ export function PlayerProvider({
     dispatch({ type: "TRACK_ENDED" })
   }, [])
 
+  const setError = useCallback((msg: string | null) => {
+    dispatch({ type: "SET_ERROR", payload: msg })
+  }, [])
+
   useEffect(() => {
     if (state.playlist.length > 0 && state.currentIndex >= 0) {
       const track = state.playlist[state.currentIndex]
@@ -360,6 +365,7 @@ export function PlayerProvider({
     setPlayerInstance,
     updateProgress,
     onTrackEnded,
+    setError,
   }
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
