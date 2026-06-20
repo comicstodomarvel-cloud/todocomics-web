@@ -145,8 +145,7 @@ export default function PeticionForm() {
     if (submitting) return
 
     if (totalPendientes >= 3) {
-      setFaqAlert('Solo podés tener hasta 3 peticiones sin resolver al mismo tiempo. Esperá a que se libere un espacio para agregar una nueva.')
-      setTimeout(() => setFaqAlert(null), 5000)
+      setFaqAlert('límite')
       setSubmitting(false)
       return
     }
@@ -461,16 +460,24 @@ export default function PeticionForm() {
         </div>
       </div>
 
-      {/* FAQ-style limit alert */}
+      {/* Modal límite FAQ-style rojo */}
       {faqAlert && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-[#1a1a1a] rounded-xl border border-zinc-800 p-5 shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-2">
-          <p className="text-sm text-zinc-100 leading-relaxed">{faqAlert}</p>
-          <button
-            onClick={() => setFaqAlert(null)}
-            className="mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            Cerrar
-          </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-sm bg-[#1a1a1a] rounded-xl border border-red-800/60 p-6 shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+              <span className="text-xl">⚠️</span>
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Límite alcanzado</h3>
+            <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+              Solo podés tener hasta 3 peticiones sin resolver al mismo tiempo. Esperá a que se libere un espacio para agregar una nueva petición.
+            </p>
+            <button
+              onClick={() => setFaqAlert(null)}
+              className="w-full rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-5 py-3 text-sm font-bold text-white transition-all duration-200 hover:from-red-500 hover:to-red-400"
+            >
+              LO ENTIENDO
+            </button>
+          </div>
         </div>
       )}
 
