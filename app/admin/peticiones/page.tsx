@@ -112,7 +112,11 @@ export default function AdminPeticionesPage() {
       if (res.ok) {
         setSuccess('Guardado')
         setEditando(null)
-        fetchAll()
+        if (editEstado !== 'pendiente') {
+          setPeticiones((prev) => prev.filter((p) => p.id !== editando))
+        } else {
+          fetchAll()
+        }
       } else {
         const data = await res.json()
         setError(data.error || 'Error al guardar')
