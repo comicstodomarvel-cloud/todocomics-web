@@ -1,11 +1,47 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Sparkles, AlertTriangle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Sparkles, AlertTriangle, Users } from 'lucide-react'
 import FaqSection from '@/components/FaqSection'
 
-export default function FaqInteractive() {
+const CATEGORY_LABELS: Record<string, string> = {
+  Comic: 'C&oacute;mics',
+  Manga: 'Mangas',
+  Pelicula: 'Pel&iacute;culas',
+  Serie: 'Series',
+  Libro: 'Libros',
+}
+
+const CATEGORY_ORDER = ['Comic', 'Serie', 'Pelicula', 'Manga', 'Libro']
+
+export default function FaqInteractive({
+  stats,
+}: {
+  stats: { total: number; byCategory: Record<string, number> } | null
+}) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [online, setOnline] = useState<number | null>(null)
+
+  useEffect(() => {
+    async function fetchOnline() {
+      try {
+        const res = await fetch('/api/presencia')
+        if (res.ok) {
+          const data = await res.json()
+          setOnline(data.online)
+        }
+      } catch {
+        /* silencio */
+      }
+    }
+    fetchOnline()
+    const interval = setInterval(fetchOnline, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const sortedCategories = CATEGORY_ORDER.filter(
+    (cat) => (stats?.byCategory[cat] ?? 0) > 0
+  )
 
   return (
     <>
@@ -115,20 +151,40 @@ export default function FaqInteractive() {
                 </h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                    <span className="text-zinc-400">C&oacute;mics</span>
-                    <span className="text-white font-bold">500+</span>
+                    <span className="text-zinc-400">Total</span>
+                    <span className="text-white font-bold">
+                      {stats ? `${stats.total.toLocaleString()}+` : '...'}
+                    </span>
                   </div>
-                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                    <span className="text-zinc-400">Series</span>
-                    <span className="text-white font-bold">50+</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                    <span className="text-zinc-400">Pel&iacute;culas</span>
-                    <span className="text-white font-bold">100+</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-zinc-400">Usuarios activos</span>
-                    <span className="text-white font-bold">[Mete aqu&iacute; tus n&uacute;meros]</span>
+                  {sortedCategories.map((cat) => (
+                    <div
+                      key={cat}
+                      className="flex justify-between items-center border-b border-zinc-800 pb-2 last:border-b-0"
+                    >
+                      <span
+                        className="text-zinc-400"
+                        dangerouslySetInnerHTML={{ __html: CATEGORY_LABELS[cat] || cat }}
+                      />
+                      <span className="text-white font-bold">
+                        {stats?.byCategory[cat].toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-zinc-400 flex items-center gap-1.5">
+                      <Users size={14} className="text-zinc-500" />
+                      Usuarios activos
+                    </span>
+                    <span className="text-white font-bold flex items-center gap-1.5">
+                      {online !== null ? (
+                        <>
+                          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                          {online}
+                        </>
+                      ) : (
+                        <span className="text-zinc-600">...</span>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>

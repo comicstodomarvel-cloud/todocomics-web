@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import FaqInteractive from '@/components/FaqInteractive'
+import { getCatalogStats } from '@/lib/data'
+
+export const revalidate = 120
 
 export const metadata: Metadata = {
   title: 'FAQ - Preguntas Frecuentes | TodoComics',
@@ -7,10 +10,12 @@ export const metadata: Metadata = {
     'Respuestas a las preguntas más frecuentes sobre TodoComics: contraseñas, descargas, reportes de enlaces caídos y más.',
 }
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const stats = await getCatalogStats()
+
   return (
     <div className="min-h-screen bg-black text-zinc-100">
-      <FaqInteractive />
+      <FaqInteractive stats={stats} />
 
       <section className="bg-gradient-to-r from-[#ff8c00] to-orange-600 py-14 md:py-18">
         <div className="max-w-3xl mx-auto px-4 text-center">
