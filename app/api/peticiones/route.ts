@@ -26,18 +26,42 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data ?? [])
   }
 
-  // Usuario: devolver solo sus peticiones
-  const { data, error } = await supabase
+  // Usuario: devolver solo sus peticiones, paginadas
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '10', 10)))
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
+  const countQuery = supabase
+    .from('peticiones')
+    .select('*', { count: 'exact', head: true })
+    .eq('session_id', sessionId)
+
+  const pendientesQuery = supabase
+    .from('peticiones')
+    .select('*', { count: 'exact', head: true })
+    .eq('session_id', sessionId)
+    .eq('estado', 'pendiente')
+
+  const dataQuery = supabase
     .from('peticiones')
     .select('*')
     .eq('session_id', sessionId)
     .order('fecha_creacion', { ascending: false })
+    .range(from, to)
+
+  const [{ count }, { count: pendientes }, { data, error }] = await Promise.all([countQuery, pendientesQuery, dataQuery])
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data ?? [])
+  return NextResponse.json({
+    data: data ?? [],
+    total: count ?? 0,
+    pendientes: pendientes ?? 0,
+    hasMore: count !== null ? from + limit < count : false,
+  })
 }
 
 export async function POST(request: NextRequest) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ChevronRight, Check, Send, HelpCircle } from 'lucide-react'
 
@@ -46,30 +46,63 @@ export default function PeticionForm() {
   const [form, setForm] = useState({ editorial: '', nombre_comic: '', numero_volumen: '', link_portada: '', comentarios: '' })
   const [submitting, setSubmitting] = useState(false)
   const [peticiones, setPeticiones] = useState<Peticion[]>([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [totalPeticiones, setTotalPeticiones] = useState(0)
+  const [pendientesCount, setPendientesCount] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
   const [faqAlert, setFaqAlert] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const [successEnviado, setSuccessEnviado] = useState(false)
 
   useEffect(() => {
     setSessionId(getSessionId())
   }, [])
 
-  const fetchPeticiones = useCallback(async () => {
+  const fetchPeticiones = useCallback(async (pageNum: number = 1, append: boolean = false) => {
     if (!sessionId) return
+    if (pageNum > 1) setLoadingMore(true)
     try {
-      const res = await fetch(`/api/peticiones?session_id=${sessionId}`)
-      if (res.ok) setPeticiones(await res.json())
+      const res = await fetch(`/api/peticiones?session_id=${sessionId}&page=${pageNum}&limit=10`)
+      if (res.ok) {
+        const json = await res.json()
+        if (append) {
+          setPeticiones((prev) => [...prev, ...json.data])
+        } else {
+          setPeticiones(json.data)
+        }
+        setHasMore(json.hasMore)
+        setTotalPeticiones(json.total)
+        setPendientesCount(json.pendientes)
+        setPage(pageNum)
+      }
     } catch { /* silencio */ }
+    finally { if (pageNum > 1) setLoadingMore(false) }
   }, [sessionId])
 
   useEffect(() => {
-    if (sessionId) fetchPeticiones()
+    if (sessionId) fetchPeticiones(1, false)
   }, [sessionId, fetchPeticiones])
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(null), 4000)
-  }
+  const loadMore = useCallback(() => {
+    if (!hasMore || loadingMore) return
+    fetchPeticiones(page + 1, true)
+  }, [page, hasMore, loadingMore, fetchPeticiones])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) loadMore()
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, hasMore, loadingMore])
 
   function updateField(key: string, value: string) {
     const next = { ...form, [key]: value }
@@ -136,10 +169,10 @@ export default function PeticionForm() {
       })
 
       if (res.ok) {
-        showToast('¡Gracias por tu petición! Haremos lo posible por ubicarlo pero no aseguramos encontrarlo.')
+        setSuccessEnviado(true)
         setForm({ editorial: '', nombre_comic: '', numero_volumen: '', link_portada: '', comentarios: '' })
         setCurrentStep(1)
-        fetchPeticiones()
+        fetchPeticiones(1, false)
       } else {
         const data = await res.json()
         setError(data.error || 'Error al enviar la petición')
@@ -151,7 +184,7 @@ export default function PeticionForm() {
     }
   }
 
-  const totalPendientes = peticiones.filter((p) => p.estado === 'pendiente').length
+  const totalPendientes = pendientesCount
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
@@ -236,7 +269,7 @@ export default function PeticionForm() {
             <div className="border-t border-zinc-800 pt-4">
               <h3 className="text-sm font-bold text-amber-400 mb-2">Tus Peticiones</h3>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-white">{peticiones.length}</span>
+                <span className="text-2xl font-bold text-white">{totalPeticiones}</span>
                 <span className="text-xs text-zinc-500">total</span>
               </div>
               {totalPendientes > 0 && (
@@ -365,45 +398,65 @@ export default function PeticionForm() {
           {/* Mis Peticiones */}
           <section>
             <h2 className="text-xl font-bold text-white mb-4">Mis Peticiones</h2>
-            {peticiones.length === 0 ? (
-              <p className="text-sm text-zinc-500">Aún no realizaste ninguna petición.</p>
-            ) : (
-              <div className="space-y-3">
-                {peticiones.map((p) => {
-                  const st = ESTADOS[p.estado] || ESTADOS.pendiente
-                  return (
-                    <div key={p.id} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-5">
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-white truncate">{p.nombre_comic}</h3>
-                            {p.numero_volumen && (
-                              <span className="shrink-0 text-xs text-zinc-500">({p.numero_volumen})</span>
+            <div className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+              {totalPeticiones === 0 ? (
+                <p className="text-sm text-zinc-500">Aún no realizaste ninguna petición.</p>
+              ) : (
+                <div className="space-y-3">
+                  {peticiones.map((p) => {
+                    const st = ESTADOS[p.estado] || ESTADOS.pendiente
+                    return (
+                      <div key={p.id} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-5">
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-white truncate">{p.nombre_comic}</h3>
+                              {p.numero_volumen && (
+                                <span className="shrink-0 text-xs text-zinc-500">({p.numero_volumen})</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-zinc-500 mb-1">{p.editorial}</p>
+                            {p.respuesta_admin && (
+                              <p className="mt-2 text-sm text-zinc-400 italic border-l-2 border-zinc-700 pl-3">
+                                {p.respuesta_admin}
+                              </p>
                             )}
                           </div>
-                          <p className="text-xs text-zinc-500 mb-1">{p.editorial}</p>
-                          {p.respuesta_admin && (
-                            <p className="mt-2 text-sm text-zinc-400 italic border-l-2 border-zinc-700 pl-3">
-                              {p.respuesta_admin}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${st.class}`}>
-                            {st.label}
-                          </span>
-                          <span className="text-[11px] text-zinc-600 whitespace-nowrap">
-                            {new Date(p.fecha_creacion).toLocaleDateString('es-ES', {
-                              day: 'numeric', month: 'short', year: 'numeric',
-                            })}
-                          </span>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${st.class}`}>
+                              {st.label}
+                            </span>
+                            <span className="text-[11px] text-zinc-600 whitespace-nowrap">
+                              {new Date(p.fecha_creacion).toLocaleDateString('es-ES', {
+                                day: 'numeric', month: 'short', year: 'numeric',
+                              })}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                    )
+                  })}
+
+                  {/* Sentinel para IntersectionObserver */}
+                  <div ref={sentinelRef} className="h-4" />
+
+                  {/* Spinner cargando más */}
+                  {loadingMore && (
+                    <div className="py-4 text-center">
+                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-zinc-600 border-t-amber-500" />
+                      <p className="mt-2 text-xs text-zinc-500">Cargando más...</p>
                     </div>
-                  )
-                })}
-              </div>
-            )}
+                  )}
+
+                  {/* Mensaje final */}
+                  {!hasMore && peticiones.length > 0 && (
+                    <p className="py-4 text-center text-xs text-zinc-600">
+                      Llegaste al final de tus peticiones
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </section>
         </div>
       </div>
@@ -426,6 +479,28 @@ export default function PeticionForm() {
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-lg bg-zinc-800 px-5 py-3.5 text-sm text-zinc-100 shadow-lg border border-zinc-700 animate-in slide-in-from-bottom-2 max-w-sm">
           <span className="shrink-0">✅</span>
           <span>{toast}</span>
+        </div>
+      )}
+
+      {/* Modal éxito FAQ-style */}
+      {successEnviado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-sm bg-[#1a1a1a] rounded-xl border border-zinc-800 p-6 shadow-2xl transition-all duration-300 animate-in fade-in zoom-in-95 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+              <Send size={20} className="text-amber-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">¡Petición enviada!</h3>
+            <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+              Recibimos tu solicitud correctamente. Haremos todo lo posible por agregar el cómic al catálogo,
+              pero <strong className="text-zinc-300">no podemos asegurar</strong> que se publique.
+            </p>
+            <button
+              onClick={() => setSuccessEnviado(false)}
+              className="w-full rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-sm font-bold text-black transition-all duration-200 hover:from-amber-400 hover:to-orange-400"
+            >
+              LO ENTIENDO
+            </button>
+          </div>
         </div>
       )}
     </div>
