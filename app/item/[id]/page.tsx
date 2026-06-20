@@ -11,6 +11,7 @@ import RatingWidget from '@/components/RatingWidget'
 import CommentSection from '@/components/CommentSection'
 import ReportBrokenLink from '@/components/ReportBrokenLink'
 import ShareButton from '@/components/ShareButton'
+import LikeButton from '@/components/LikeButton'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -105,6 +106,10 @@ export default async function ItemPage({
             </div>
 
             <RatingWidget contenidoId={item.id} />
+
+            <div className="mb-4">
+              <LikeButton contenidoId={item.id} />
+            </div>
 
             <div className="flex flex-wrap items-center gap-4">
               <a
