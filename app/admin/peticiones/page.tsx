@@ -29,6 +29,7 @@ export default function AdminPeticionesPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [activeTab, setActiveTab] = useState<'pendientes' | 'resueltas'>('pendientes')
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -56,33 +57,6 @@ export default function AdminPeticionesPage() {
   useEffect(() => {
     if (adminKey) fetchAll()
   }, [adminKey, fetchAll])
-
-  // GET sin session_id con admin key devuelve todas
-  // Necesito modificar la API route para soportar esto... 
-  // En realidad el GET actual requiere session_id. Para admin,
-  // voy a usar el mismo endpoint pero permitir omitir session_id si hay x-admin-key.
-  // Por ahora, asumamos que el GET sin session_id + x-admin-key devuelve todo.
-
-  // Actually, let me just re-fetch using a different approach -
-  // I'll call the API with the admin key to get all peticiones.
-
-  // Wait - my GET API requires session_id. I need to also handle the admin case.
-  // Let me modify the approach: I'll create a separate fetch for admin that
-  // passes the admin key and the API will return all if admin key is valid.
-
-  // But I already wrote the API route to require session_id for GET.
-  // Let me update the API to also accept x-admin-key for the GET case.
-
-  // For now, let me just handle it by making a fetch and including the admin key.
-  // I need to update the API route to support this.
-
-  // Actually, looking at the existing code patterns, the simplest approach is:
-  // GET /api/peticiones with x-admin-key header → returns all peticiones
-  // GET /api/peticiones?session_id=xxx → returns user's peticiones
-
-  // Let me update peticiones/route.ts GET to handle both cases.
-
-  // For now, let me just implement this page assuming the API works.
 
   async function startEdit(p: Peticion) {
     setEditando(p.id)
@@ -112,11 +86,7 @@ export default function AdminPeticionesPage() {
       if (res.ok) {
         setSuccess('Guardado')
         setEditando(null)
-        if (editEstado !== 'pendiente') {
-          setPeticiones((prev) => prev.filter((p) => p.id !== editando))
-        } else {
-          fetchAll()
-        }
+        fetchAll()
       } else {
         const data = await res.json()
         setError(data.error || 'Error al guardar')
@@ -151,19 +121,53 @@ export default function AdminPeticionesPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">Peticiones de Cómics</h1>
-        <Link href={`/admin?key=${adminKey}`} className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
-          ← Volver al panel
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">
+            ← Volver al panel
+          </Link>
+          <div className="flex rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden">
+            <button
+              onClick={() => setActiveTab('pendientes')}
+              className={`px-4 py-2 text-xs font-semibold transition-colors ${
+                activeTab === 'pendientes'
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              Pendientes ({peticiones.filter((p) => p.estado === 'pendiente').length})
+            </button>
+            <button
+              onClick={() => setActiveTab('resueltas')}
+              className={`px-4 py-2 text-xs font-semibold transition-colors ${
+                activeTab === 'resueltas'
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              Resueltas ({peticiones.filter((p) => p.estado !== 'pendiente').length})
+            </button>
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold shrink-0">Peticiones</h1>
       </div>
 
       {loading ? (
         <p className="text-zinc-500">Cargando...</p>
-      ) : peticiones.length === 0 ? (
-        <p className="text-zinc-500">No hay peticiones aún.</p>
       ) : (
-        <div className="space-y-4">
-          {peticiones.map((p) => (
+        (() => {
+          const filtered = peticiones.filter((p) =>
+            activeTab === 'pendientes' ? p.estado === 'pendiente' : p.estado !== 'pendiente'
+          )
+          if (filtered.length === 0) {
+            return (
+              <p className="text-zinc-500">
+                {activeTab === 'pendientes' ? 'No hay peticiones pendientes.' : 'No hay peticiones resueltas.'}
+              </p>
+            )
+          }
+          return (
+            <div className="space-y-4">
+              {filtered.map((p) => (
             <div key={p.id} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-5">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
                 <div className="flex-1 min-w-0">
@@ -259,6 +263,8 @@ export default function AdminPeticionesPage() {
             </div>
           ))}
         </div>
+      )
+        })()
       )}
 
       {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
