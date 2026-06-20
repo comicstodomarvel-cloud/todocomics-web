@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { HASHTAG_CATEGORIA } from '@/lib/hashtags'
 
@@ -123,6 +124,103 @@ export async function PATCH(
     return NextResponse.json(response)
   } catch (err) {
     console.error('[api/contenido/[id]] Error:', err)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const adminKey = request.headers.get('x-admin-key')
+    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const { id } = await params
+    const eliminarPortada = request.nextUrl.searchParams.get('eliminar_portada') === 'true'
+
+    const admin = getSupabaseAdmin()
+
+    const { data: post, error: getError } = await admin
+      .from('contenido')
+      .select('id, url_portada')
+      .eq('id', id)
+      .single()
+
+    if (getError) {
+      if (getError.code === 'PGRST116') {
+        return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+      }
+      console.error('[api/contenido/[id]] Error al obtener post:', getError.message)
+      return NextResponse.json({ error: getError.message }, { status: 500 })
+    }
+
+    const portadaResult: {
+      presente: boolean
+      compartida: boolean
+      count: number
+      eliminada: boolean
+    } = {
+      presente: false,
+      compartida: false,
+      count: 0,
+      eliminada: false,
+    }
+
+    const esPortadaStorage =
+      post.url_portada &&
+      post.url_portada.includes('supabase.co/storage/v1/object/public/portadas/')
+
+    if (esPortadaStorage) {
+      portadaResult.presente = true
+
+      const { count, error: countError } = await admin
+        .from('contenido')
+        .select('id', { count: 'exact', head: true })
+        .eq('url_portada', post.url_portada)
+        .neq('id', id)
+
+      const sharedCount = count ?? 0
+      portadaResult.count = sharedCount
+      portadaResult.compartida = sharedCount > 0
+
+      const debeEliminarPortada = eliminarPortada || !portadaResult.compartida
+
+      if (debeEliminarPortada) {
+        const parts = post.url_portada.split('/portadas/')
+        if (parts.length > 1) {
+          const filePath = parts[1].split('?')[0]
+          const { error: storageError } = await admin.storage
+            .from('portadas')
+            .remove([filePath])
+
+          if (storageError) {
+            console.error('[api/contenido/[id]] Error al eliminar portada:', storageError.message)
+          } else {
+            portadaResult.eliminada = true
+          }
+        }
+      }
+    }
+
+    const { error: deleteError } = await admin
+      .from('contenido')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) {
+      console.error('[api/contenido/[id]] Error al eliminar:', deleteError.message)
+      return NextResponse.json({ error: deleteError.message }, { status: 500 })
+    }
+
+    revalidatePath('/')
+    revalidatePath('/item/[id]', 'page')
+
+    return NextResponse.json({ ok: true, portada: portadaResult })
+  } catch (err) {
+    console.error('[api/contenido/[id]] Error en DELETE:', err)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

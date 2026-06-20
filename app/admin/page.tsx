@@ -80,6 +80,17 @@ export default function AdminPage() {
             Modificar título, descripción, link o portada de un post existente
           </p>
         </Link>
+
+        <Link
+          href={`/admin/eliminar?key=${adminKey}`}
+          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-red-700 transition-colors"
+        >
+          <div className="text-3xl mb-3">🗑️</div>
+          <h2 className="text-lg font-semibold text-white mb-1">Eliminar post</h2>
+          <p className="text-sm text-zinc-400">
+            Eliminar un post y su imagen de portada del almacenamiento
+          </p>
+        </Link>
       </div>
     </div>
   )
