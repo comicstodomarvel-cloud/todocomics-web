@@ -27,6 +27,7 @@ Thumbs.db
 # Archivos de IA
 AGENTS.md
 CLAUDE.md
+.opencode/
 
 # Build artifacts
 *.tsbuildinfo

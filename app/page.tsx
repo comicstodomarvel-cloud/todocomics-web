@@ -14,7 +14,7 @@ import RandomRecommendation from '@/components/RandomRecommendation';
 import FavoriteBadge from '@/components/FavoriteBadge';
 import ReadLaterSection from '@/components/ReadLaterSection';
 import CatalogStats from '@/components/CatalogStats';
-import FavoritosSection from '@/components/FavoritosSection';
+
 import Link from 'next/link';
 
 // Revalidar cada 5 minutos (300 segundos)
@@ -174,14 +174,6 @@ export default async function HomePage({
 
       {/* Leer más tarde */}
       <ReadLaterSection />
-
-      {/* Favoritos */}
-      <FavoritosSection
-        viewMode={viewMode}
-        updateDates={updateDates}
-        brokenIds={[...brokenIds]}
-        reportedIds={[...reportedIds]}
-      />
 
       {/* Grid de contenido */}
       <section className="container mx-auto px-4 py-8">

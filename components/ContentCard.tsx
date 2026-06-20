@@ -2,7 +2,7 @@ import Link from 'next/link'
 import ImageWithFallback from './ImageWithFallback'
 import UpdateBadge from './updates/UpdateBadge'
 import ReadLaterButton from './ReadLaterButton'
-import FavoritoButton from './FavoritoButton'
+import LikeButton from './LikeButton'
 import ReportBadge from './ReportBadge'
 import ReportedBadge from './ReportedBadge'
 import type { ContentItem } from '@/lib/data'
@@ -47,7 +47,7 @@ export default function ContentCard({ item, lastUpdateDate, linkCaido, linkRepor
 
       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <ReadLaterButton contenidoId={item.id} />
-        <FavoritoButton contenidoId={item.id} />
+        <LikeButton contenidoId={item.id} />
       </div>
     </div>
   )
