@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Send, Pencil, Trash2, Check, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Send, Pencil, Trash2, Check, ThumbsUp, ThumbsDown, User } from 'lucide-react'
 
 interface Comment {
   id: string
@@ -205,41 +205,54 @@ export default function CommentSection({ contenidoId }: { contenidoId: string })
         Comentarios {comments.length > 0 && `(${comments.length})`}
       </h3>
 
-      <form onSubmit={handleSubmit} className="mb-8 space-y-3">
-        <input
-          type="text"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          placeholder="Tu nickname"
-          maxLength={50}
-          required
-          className="w-full max-w-xs rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-        />
-        <div className="relative">
-          <textarea
-            value={contenido}
-            onChange={(e) => setContenido(e.target.value)}
-            placeholder="Escribe un comentario..."
-            maxLength={300}
+      <form onSubmit={handleSubmit} className="mb-8">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <input
+            type="text"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder="Tu nickname"
+            maxLength={50}
             required
-            rows={3}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 pr-16 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none"
+            className="w-full max-w-[180px] rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
           />
-          <span className="absolute bottom-2 right-3 text-[10px] text-zinc-500">
+          <span className="text-[11px] text-zinc-500 shrink-0">
             {contenido.length}/300
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={submitting || !nickname.trim() || !contenido.trim()}
-            className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-4 py-2 text-xs font-semibold text-black transition-colors hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Send size={14} />
-            {submitting ? 'Enviando...' : 'Enviar'}
-          </button>
-          {error && <span className="text-xs text-red-400">{error}</span>}
+
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 mt-1 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-zinc-800">
+            <User size={16} className="text-zinc-500" />
+          </div>
+
+          <div className="relative flex-1">
+            <textarea
+              value={contenido}
+              onChange={(e) => setContenido(e.target.value)}
+              placeholder="Escribe un comentario..."
+              maxLength={300}
+              required
+              rows={2}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 pr-11 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all duration-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none"
+            />
+            <button
+              type="submit"
+              disabled={submitting || !nickname.trim() || !contenido.trim()}
+              className="absolute bottom-2 right-2 rounded-md p-1.5 text-zinc-400 transition-all duration-200 hover:bg-amber-500/20 hover:text-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400"
+              aria-label="Enviar comentario"
+            >
+              <Send
+                size={16}
+                className={`transition-transform duration-200 ${submitting ? 'animate-pulse' : ''}`}
+              />
+            </button>
+          </div>
         </div>
+
+        {error && (
+          <p className="mt-2 pl-12 text-xs text-red-400">{error}</p>
+        )}
       </form>
 
       {loading ? (
