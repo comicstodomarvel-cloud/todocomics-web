@@ -102,6 +102,17 @@ export default function AdminPage() {
             Eliminar un post y su imagen de portada del almacenamiento
           </p>
         </Link>
+
+        <Link
+          href={`/admin/peticiones?key=${adminKey}`}
+          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-amber-700 transition-colors"
+        >
+          <div className="text-3xl mb-3">📩</div>
+          <h2 className="text-lg font-semibold text-white mb-1">Peticiones</h2>
+          <p className="text-sm text-zinc-400">
+            Gestionar solicitudes de cómics de los usuarios
+          </p>
+        </Link>
       </div>
     </div>
   )
