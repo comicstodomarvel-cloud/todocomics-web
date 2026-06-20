@@ -100,8 +100,8 @@ export default function FaqSection({ searchQuery = '' }: { searchQuery?: string 
               />
             </button>
             <div
-              className={`overflow-hidden transition-all duration-300 ${
-                isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+              className={`overflow-y-auto transition-all duration-300 ${
+                isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
               }`}
             >
               <div className="px-5 pb-5 text-zinc-400 text-sm sm:text-base leading-relaxed [&_strong]:text-[#ff8c00] [&_br]:block [&_br]:content-['']">
