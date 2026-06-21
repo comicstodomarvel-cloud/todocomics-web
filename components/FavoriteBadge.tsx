@@ -11,11 +11,19 @@ export default async function FavoriteBadge({ variant = 'default' }: { variant?:
     return (
       <Link
         href={`/item/${favorite.item.id}`}
-        className="group relative flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 text-xs hover:border-amber-500/60 hover:bg-amber-500/15 transition-all duration-200 shrink-0"
+        className="group relative flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 text-xs hover:border-amber-500/60 hover:bg-amber-500/15 transition-all duration-200 shrink-0"
       >
         <Crown size={14} className="text-amber-400 shrink-0" />
-        <span className="text-zinc-200 font-medium truncate max-w-[90px] leading-tight">
-          {favorite.item.titulo}
+        <div className="flex flex-col leading-none">
+          <span className="text-[9px] uppercase tracking-wider text-amber-400/70 font-semibold leading-tight">
+            Favorito del Mes
+          </span>
+          <span className="text-zinc-200 font-medium truncate max-w-[220px] leading-tight">
+            {favorite.item.titulo}
+          </span>
+        </div>
+        <span className="text-[9px] text-zinc-500 ml-0.5 shrink-0">
+          {favorite.visits}
         </span>
         <span className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 animate-fade-in bg-zinc-900 border border-zinc-800 text-zinc-200 text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
           Favorito del Mes
