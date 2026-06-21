@@ -1,7 +1,5 @@
 import { getLatestContent, searchContent, getContentByCategoria, getContentByHashtag, getLatestUpdateDates, getBrokenLinkIds, getReportStatus } from '@/lib/data';
 import type { ContentItem } from '@/lib/data';
-import ContentCard from '@/components/ContentCard';
-import ContentListItem from '@/components/ContentListItem';
 import ViewModeToggle from '@/components/ViewModeToggle';
 import LoadMoreButton from '@/components/LoadMoreButton';
 import OnlineCounter from '@/components/OnlineCounter';
@@ -217,21 +215,9 @@ export default async function HomePage({
           <h2 className="text-2xl font-bold">Continúa explorando</h2>
           <ViewModeToggle />
         </div>
-        {viewMode === 'lista' ? (
-          <div className="space-y-3">
-            {gridItems.map((item) => (
-              <ContentListItem key={item.id} item={item} lastUpdateDate={updateDates[item.id]} linkCaido={brokenIds.has(item.id)} linkReportado={reportedIds.has(item.id)} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
-            {gridItems.map((item) => (
-              <ContentCard key={item.id} item={item} lastUpdateDate={updateDates[item.id]} linkCaido={brokenIds.has(item.id)} linkReportado={reportedIds.has(item.id)} />
-            ))}
-          </div>
-        )}
-
         <LoadMoreButton
+          initialItems={gridItems}
+          hasMorePages={!busqueda && !categoria && !hashtag}
           viewMode={viewMode}
           updateDates={updateDates}
           brokenIds={[...brokenIds]}

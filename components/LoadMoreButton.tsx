@@ -7,7 +7,8 @@ import ContentCard from './ContentCard'
 import ContentListItem from './ContentListItem'
 
 interface LoadMoreButtonProps {
-  initialPage?: number
+  initialItems?: ContentItem[]
+  hasMorePages?: boolean
   viewMode?: 'grid' | 'lista'
   updateDates: Record<string, string>
   brokenIds: string[]
@@ -15,14 +16,15 @@ interface LoadMoreButtonProps {
 }
 
 export default function LoadMoreButton({
-  initialPage = 1,
+  initialItems = [],
+  hasMorePages = false,
   viewMode = 'grid',
   updateDates,
   brokenIds,
   reportedIds,
 }: LoadMoreButtonProps) {
   const searchParams = useSearchParams()
-  const [page, setPage] = useState(initialPage)
+  const [page, setPage] = useState(1)
   const [items, setItems] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -32,8 +34,10 @@ export default function LoadMoreButton({
   const brokenSet = new Set(brokenIds)
   const reportedSet = new Set(reportedIds)
 
+  const allItems = [...initialItems, ...items]
+
   const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return
+    if (loading || !hasMore || !hasMorePages) return
     setLoading(true)
     setError('')
     const nextPage = page + 1
@@ -55,7 +59,15 @@ export default function LoadMoreButton({
     } finally {
       setLoading(false)
     }
-  }, [page, searchParams, loading, hasMore])
+  }, [page, searchParams, loading, hasMore, hasMorePages])
+
+  useEffect(() => {
+    setItems([])
+    setPage(1)
+    setHasMore(true)
+    setLoaded(false)
+    setError('')
+  }, [searchParams])
 
   useEffect(() => {
     const sentinel = sentinelRef.current
@@ -63,7 +75,7 @@ export default function LoadMoreButton({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
+        if (entries[0].isIntersecting && hasMore && hasMorePages && !loading) {
           loadMore()
         }
       },
@@ -72,15 +84,13 @@ export default function LoadMoreButton({
 
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [loadMore, hasMore, loading])
-
-  if (!hasMore && loaded && items.length === 0) return null
+  }, [loadMore, hasMore, hasMorePages, loading])
 
   return (
     <>
       {viewMode === 'lista' ? (
         <div className="space-y-3">
-          {items.map((item) => (
+          {allItems.map((item) => (
             <ContentListItem
               key={item.id}
               item={item}
@@ -92,7 +102,7 @@ export default function LoadMoreButton({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
-          {items.map((item) => (
+          {allItems.map((item) => (
             <ContentCard
               key={item.id}
               item={item}
@@ -116,7 +126,7 @@ export default function LoadMoreButton({
         </>
       )}
 
-      {!hasMore && loaded && (
+      {allItems.length > 0 && !hasMore && loaded && hasMorePages && (
         <p className="mt-8 text-center text-sm text-zinc-600">
           Llegaste al final del catálogo
         </p>
