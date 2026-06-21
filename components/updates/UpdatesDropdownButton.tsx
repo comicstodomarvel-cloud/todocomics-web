@@ -43,7 +43,7 @@ export default function UpdatesDropdownButton({ variant = 'sidebar' }: { variant
   }, [isOpen])
 
   return (
-    <div className={variant === 'toolbar' ? 'relative' : ''}>
+    <div className={variant === 'toolbar' ? 'relative group' : ''}>
       <button
         onClick={handleToggle}
         className={`relative flex items-center gap-2 font-bold transition-all duration-200 ${
@@ -57,6 +57,11 @@ export default function UpdatesDropdownButton({ variant = 'sidebar' }: { variant
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
         {variant === 'sidebar' && <span className="text-sm">Updates</span>}
+        {variant === 'toolbar' && (
+          <span className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 animate-fade-in bg-zinc-900 border border-zinc-800 text-zinc-200 text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
+            Novedades Semanales
+          </span>
+        )}
 
         {hasUnread && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse font-bold">

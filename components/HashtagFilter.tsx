@@ -27,7 +27,7 @@ export default function HashtagFilter({ variant = 'sidebar' }: { variant?: 'side
   }
 
   return (
-    <div className={variant === 'toolbar' ? 'relative' : ''}>
+    <div className={variant === 'toolbar' ? 'relative group' : ''}>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className={`relative flex items-center gap-2 font-bold transition-all duration-200 ${
@@ -45,6 +45,11 @@ export default function HashtagFilter({ variant = 'sidebar' }: { variant?: 'side
       >
         <Filter size={18} />
         {variant === 'sidebar' && <span className="text-sm">Filtros</span>}
+        {variant === 'toolbar' && (
+          <span className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 animate-fade-in bg-zinc-900 border border-zinc-800 text-zinc-200 text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
+            Filtrar Catálogo
+          </span>
+        )}
         {activeHashtag && (
           <span className={`w-2 h-2 rounded-full bg-amber-500 animate-pulse ${variant === 'toolbar' ? 'absolute -top-0.5 -right-0.5' : ''}`} />
         )}

@@ -11,9 +11,15 @@ export default async function FavoriteBadge({ variant = 'default' }: { variant?:
     return (
       <Link
         href={`/item/${favorite.item.id}`}
-        className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:-translate-y-0.5 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/40 transition-all duration-200"
+        className="group relative flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 text-xs hover:border-amber-500/60 hover:bg-amber-500/15 transition-all duration-200 shrink-0"
       >
-        <Crown size={18} className="text-amber-400" />
+        <Crown size={14} className="text-amber-400 shrink-0" />
+        <span className="text-zinc-200 font-medium truncate max-w-[90px] leading-tight">
+          {favorite.item.titulo}
+        </span>
+        <span className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 animate-fade-in bg-zinc-900 border border-zinc-800 text-zinc-200 text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
+          Favorito del Mes
+        </span>
       </Link>
     )
   }
