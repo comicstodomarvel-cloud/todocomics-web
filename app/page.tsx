@@ -8,6 +8,7 @@ import UpdatesWidget from '@/components/updates/UpdatesWidget';
 import RandomRecommendation from '@/components/RandomRecommendation';
 import FavoriteBadge from '@/components/FavoriteBadge';
 import ReadLaterSection from '@/components/ReadLaterSection';
+import TopWeekly from '@/components/TopWeekly';
 import CatalogStats from '@/components/CatalogStats';
 
 import type { Metadata } from 'next';
@@ -201,7 +202,12 @@ export default async function HomePage({
 
       {/* Recomendación aleatoria */}
       <section className="container mx-auto px-4 py-8">
-        <RandomRecommendation />
+        <div className="flex gap-6">
+          <TopWeekly />
+          <div className="flex-1 min-w-0">
+            <RandomRecommendation />
+          </div>
+        </div>
       </section>
 
 

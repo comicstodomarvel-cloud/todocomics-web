@@ -41,7 +41,7 @@ export default function TopWeekly() {
   if (items.length === 0) return null
 
   return (
-    <aside className="fixed left-4 top-20 z-40 hidden xl:flex flex-col w-52 max-h-[calc(100vh-6rem)] overflow-y-auto">
+    <aside className="hidden xl:flex flex-col w-52 shrink-0">
       <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-xl p-3 shadow-lg">
         <div className="flex items-center gap-1.5 mb-2.5 px-1">
           <TrendingUp size={15} className="text-amber-400" />
