@@ -6,8 +6,12 @@ import RegisterSW from "@/components/RegisterSW";
 import HeartbeatPing from "@/components/HeartbeatPing";
 import { getPlaylist } from "@/lib/musicData";
 import { getDiscordData } from "@/lib/discordData";
-import MusicPlayerShell from "@/components/MusicPlayer/MusicPlayerShell";
-import DiscordWidgetShell from "@/components/DiscordWidget/DiscordWidgetShell";
+import { Suspense } from "react";
+import { PlayerProvider } from "@/lib/playerStore";
+import YouTubeBridge from "@/components/MusicPlayer/YouTubeBridge";
+import DesktopPanel from "@/components/MusicPlayer/DesktopPanel";
+import MobileSheet from "@/components/MusicPlayer/MobileSheet";
+import MobileBottomBar from "@/components/MobileBottomBar";
 import SidebarWidgets from "@/components/SidebarWidgets";
 
 const geistSans = Geist({
@@ -101,11 +105,16 @@ export default async function RootLayout({
         />
         <HeartbeatPing />
         <RegisterSW />
-        <SidebarWidgets discordData={discordData} />
-        <DiscordWidgetShell />
-        <MusicPlayerShell playlist={playlist}>
+        <PlayerProvider playlist={playlist}>
+          <YouTubeBridge />
+          <SidebarWidgets discordData={discordData} />
           {children}
-        </MusicPlayerShell>
+          <DesktopPanel />
+          <MobileSheet />
+          <Suspense fallback={null}>
+            <MobileBottomBar />
+          </Suspense>
+        </PlayerProvider>
       </body>
     </html>
   );

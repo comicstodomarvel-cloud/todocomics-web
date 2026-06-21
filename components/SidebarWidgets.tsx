@@ -10,7 +10,7 @@ export default function SidebarWidgets({
   discordData: DiscordData | null
 }) {
   return (
-    <div className="fixed left-4 top-4 z-50 safe-top safe-left flex flex-col gap-2">
+    <div className="fixed left-4 top-4 z-50 safe-top safe-left hidden lg:flex flex-col gap-2">
       <Suspense fallback={null}>
         <HashtagFilter />
       </Suspense>
