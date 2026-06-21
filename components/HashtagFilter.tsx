@@ -30,14 +30,16 @@ export default function HashtagFilter({ variant = 'sidebar' }: { variant?: 'side
     <div className={variant === 'toolbar' ? 'relative' : ''}>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`relative flex items-center gap-2 font-bold transition-all duration-300 ${
-          variant === 'sidebar' ? 'px-4 py-2.5 min-h-[44px] rounded-full shadow-lg hover:scale-105' : 'w-9 h-9 rounded-lg justify-center'
+        className={`relative flex items-center gap-2 font-bold transition-all duration-200 ${
+          variant === 'sidebar' ? 'px-4 py-2.5 min-h-[44px] rounded-full shadow-lg hover:scale-105' : 'w-10 h-10 rounded-full justify-center hover:-translate-y-0.5'
         } ${
           activeHashtag
             ? variant === 'sidebar'
               ? 'bg-amber-500 text-black shadow-xl shadow-amber-500/30'
-              : 'bg-zinc-800 text-amber-500 border border-amber-500/50'
-            : 'bg-zinc-800 text-zinc-100 border border-zinc-700 hover:bg-zinc-700'
+              : 'text-[#ff8c00] hover:bg-zinc-800/50'
+            : variant === 'sidebar'
+              ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 hover:bg-zinc-700'
+              : 'text-zinc-400 hover:text-[#ff8c00] hover:bg-zinc-800/50'
         }`}
         title="Filtros"
       >

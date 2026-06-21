@@ -46,10 +46,10 @@ export default function UpdatesDropdownButton({ variant = 'sidebar' }: { variant
     <div className={variant === 'toolbar' ? 'relative' : ''}>
       <button
         onClick={handleToggle}
-        className={`relative flex items-center gap-2 font-bold transition-all duration-300 ${
+        className={`relative flex items-center gap-2 font-bold transition-all duration-200 ${
           variant === 'sidebar'
             ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black px-4 py-2.5 min-h-[44px] rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:scale-105'
-            : 'w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-100 justify-center'
+            : 'w-10 h-10 rounded-full justify-center text-zinc-400 hover:text-[#ff8c00] hover:-translate-y-0.5 hover:bg-zinc-800/50'
         }`}
         title="Updates"
       >
@@ -59,7 +59,7 @@ export default function UpdatesDropdownButton({ variant = 'sidebar' }: { variant
         {variant === 'sidebar' && <span className="text-sm">Updates</span>}
 
         {hasUnread && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-pulse font-bold">
             !
           </span>
         )}
