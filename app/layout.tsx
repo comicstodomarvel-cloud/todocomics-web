@@ -4,15 +4,15 @@ import "./globals.css";
 import JsonLd from "@/components/JsonLd";
 import RegisterSW from "@/components/RegisterSW";
 import HeartbeatPing from "@/components/HeartbeatPing";
+import TeraboxNotification from "@/components/TeraboxNotification";
+import DesktopToolbar from "@/components/DesktopToolbar";
 import { getPlaylist } from "@/lib/musicData";
-import { getDiscordData } from "@/lib/discordData";
 import { Suspense } from "react";
 import { PlayerProvider } from "@/lib/playerStore";
 import YouTubeBridge from "@/components/MusicPlayer/YouTubeBridge";
 import DesktopPanel from "@/components/MusicPlayer/DesktopPanel";
 import MobileSheet from "@/components/MusicPlayer/MobileSheet";
 import MobileBottomBar from "@/components/MobileBottomBar";
-import SidebarWidgets from "@/components/SidebarWidgets";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,9 +77,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [playlist, discordData] = await Promise.all([
+  const [playlist] = await Promise.all([
     getPlaylist(),
-    getDiscordData(),
   ]);
 
   return (
@@ -87,7 +86,7 @@ export default async function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-zinc-950 text-zinc-100 pb-16 lg:pb-0 overflow-x-hidden">
+      <body className="min-h-full bg-zinc-950 text-zinc-100 pb-16 lg:pb-0 lg:pt-14 overflow-x-hidden">
         <JsonLd
           data={{
             "@context": "https://schema.org",
@@ -107,10 +106,11 @@ export default async function RootLayout({
           }}
         />
         <HeartbeatPing />
+        <TeraboxNotification />
         <RegisterSW />
         <PlayerProvider playlist={playlist}>
+          <DesktopToolbar />
           <YouTubeBridge />
-          <SidebarWidgets discordData={discordData} />
           {children}
           <DesktopPanel />
           <MobileSheet />

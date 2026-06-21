@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from './supabase-admin'
+import sharp from 'sharp'
 
 const MAX_INTENTOS = 3
 
@@ -8,13 +9,31 @@ export async function uploadImageBytesToSupabase(
 ): Promise<string> {
   const supabase = getSupabaseAdmin()
 
+  let uploadBuffer: Buffer
+  let contentType: string
+  let filePath: string
+
+  try {
+    const source = imageBuffer instanceof ArrayBuffer
+      ? new Uint8Array(imageBuffer)
+      : imageBuffer
+    uploadBuffer = await sharp(source)
+      .webp({ quality: 85 })
+      .toBuffer()
+    contentType = 'image/webp'
+    filePath = `${Date.now()}-${filename}`.replace(/\.\w+$/, '.webp')
+  } catch {
+    uploadBuffer = Buffer.from(imageBuffer instanceof ArrayBuffer ? new Uint8Array(imageBuffer) : imageBuffer)
+    contentType = 'image/jpeg'
+    filePath = `${Date.now()}-${filename}`
+  }
+
   for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
     try {
-      const filePath = `${Date.now()}-${filename}`
       const { data, error } = await supabase.storage
         .from('portadas')
-        .upload(filePath, imageBuffer, {
-          contentType: 'image/jpeg',
+        .upload(filePath, uploadBuffer, {
+          contentType,
           upsert: false,
         })
 
