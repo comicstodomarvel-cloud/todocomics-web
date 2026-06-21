@@ -203,6 +203,11 @@ export default async function HomePage({
 
       {/* Recomendación aleatoria */}
       <section className="container mx-auto px-4 py-8">
+        {/* Acciones rápidas para móvil */}
+        <div className="lg:hidden mb-4">
+          <MobileActionBar />
+        </div>
+
         <div className="flex gap-6">
           <TopWeekly />
           <div className="flex-1 min-w-0">
@@ -210,13 +215,6 @@ export default async function HomePage({
           </div>
         </div>
       </section>
-
-
-
-      {/* Acciones rápidas para móvil */}
-      <div className="lg:hidden">
-        <MobileActionBar />
-      </div>
 
       {/* Leer más tarde */}
       <ReadLaterSection />
