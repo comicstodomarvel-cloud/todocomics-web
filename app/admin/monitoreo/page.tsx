@@ -287,8 +287,10 @@ export default function MonitoreoPage() {
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_request_logs_ip ON request_logs(ip);
-CREATE INDEX idx_request_logs_created ON request_logs(created_at);`}
+CREATE INDEX IF NOT EXISTS idx_request_logs_ip ON request_logs(ip);
+CREATE INDEX IF NOT EXISTS idx_request_logs_created ON request_logs(created_at);
+
+ALTER TABLE request_logs ENABLE ROW LEVEL SECURITY;`}
                   </pre>
                   <button
                     onClick={() => {
@@ -302,8 +304,10 @@ CREATE INDEX idx_request_logs_created ON request_logs(created_at);`}
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_request_logs_ip ON request_logs(ip);
-CREATE INDEX idx_request_logs_created ON request_logs(created_at);`)
+CREATE INDEX IF NOT EXISTS idx_request_logs_ip ON request_logs(ip);
+CREATE INDEX IF NOT EXISTS idx_request_logs_created ON request_logs(created_at);
+
+ALTER TABLE request_logs ENABLE ROW LEVEL SECURITY;`)
                     }}
                     className="mt-2 text-[10px] text-amber-500 hover:text-amber-400 transition-colors"
                   >
