@@ -242,6 +242,19 @@ export default async function HomePage({
       <footer className="bg-zinc-900 text-zinc-400 py-8 mt-16">
         <div className="container mx-auto px-4 text-center">
           <CatalogStats />
+
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 text-xs">
+            <Link href="/dmca" className="text-zinc-500 hover:text-amber-400 transition-colors">
+              DMCA
+            </Link>
+            <Link href="/faq" className="text-zinc-500 hover:text-amber-400 transition-colors">
+              FAQ
+            </Link>
+            <Link href="/peticiones" className="text-zinc-500 hover:text-amber-400 transition-colors">
+              Solicitar Cómic
+            </Link>
+          </div>
+
           <p>© 2026 TodoComics. Todos los derechos reservados.</p>
           <p className="text-xs text-zinc-500 mt-3 max-w-2xl mx-auto leading-relaxed">
             TodoComics es un sitio web que recopila y organiza enlaces de contenido

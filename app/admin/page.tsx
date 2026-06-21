@@ -121,6 +121,17 @@ export default function AdminPage() {
             Gestionar solicitudes de cómics de los usuarios
           </p>
         </Link>
+
+        <Link
+          href={`/admin/monitoreo?key=${adminKey}`}
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#22d3ee]/20 hover:border-[#22d3ee] group"
+        >
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">📊</div>
+          <h2 className="text-lg font-semibold text-white mb-1">Monitoreo</h2>
+          <p className="text-sm text-[#94a3b8]">
+            Estadísticas en vivo, visitas, online, reportes y detección de amenazas
+          </p>
+        </Link>
       </div>
     </div>
   )
