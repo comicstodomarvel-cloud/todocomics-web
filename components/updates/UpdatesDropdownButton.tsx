@@ -49,7 +49,7 @@ export default function UpdatesDropdownButton({ variant = 'sidebar' }: { variant
         className={`relative flex items-center gap-2 font-bold transition-all duration-200 ${
           variant === 'sidebar'
             ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black px-4 py-2.5 min-h-[44px] rounded-full shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:scale-105'
-            : 'w-10 h-10 rounded-full justify-center text-zinc-400 hover:text-[#ff8c00] hover:-translate-y-0.5 hover:bg-zinc-800/50'
+            : 'w-10 h-10 rounded-full justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/50'
         }`}
         title="Updates"
       >

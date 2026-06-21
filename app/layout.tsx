@@ -33,8 +33,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   manifest: "/manifest.json",
   icons: {
-    icon: "https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/MTC.png",
-    apple: "https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/MTC.png",
+    icon: "https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/MTC%20ICO.ico",
+    apple: "https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/MTC%20ICO.ico",
   },
   appleWebApp: {
     capable: true,

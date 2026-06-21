@@ -77,7 +77,7 @@ export default function DesktopToolbar() {
           <img
             src="https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/MTC.png"
             alt="TodoComics"
-            className="w-8 h-8 rounded-lg"
+            className="w-8 h-8 rounded-lg object-cover"
           />
           <span className="text-lg font-bold tracking-tight">
             <span className="text-amber-500">TODO</span><span className="text-red-500">COMICS</span>
@@ -100,7 +100,7 @@ export default function DesktopToolbar() {
             href="https://discord.gg/nKTnYSTRHE"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:-translate-y-0.5 hover:bg-zinc-800/50 transition-all duration-200"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/50 transition-all duration-200"
             title="Discord"
           >
             <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">

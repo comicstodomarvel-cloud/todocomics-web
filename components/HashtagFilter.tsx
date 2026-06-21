@@ -31,7 +31,7 @@ export default function HashtagFilter({ variant = 'sidebar' }: { variant?: 'side
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className={`relative flex items-center gap-2 font-bold transition-all duration-200 ${
-          variant === 'sidebar' ? 'px-4 py-2.5 min-h-[44px] rounded-full shadow-lg hover:scale-105' : 'w-10 h-10 rounded-full justify-center hover:-translate-y-0.5'
+          variant === 'sidebar' ? 'px-4 py-2.5 min-h-[44px] rounded-full shadow-lg hover:scale-105' : 'w-10 h-10 rounded-full justify-center hover:scale-110 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)]'
         } ${
           activeHashtag
             ? variant === 'sidebar'
