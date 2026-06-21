@@ -58,66 +58,66 @@ export default function AdminPage() {
       <div className="grid gap-6 sm:grid-cols-2 max-w-2xl">
         <Link
           href={`/admin/importar?key=${adminKey}`}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-amber-700 transition-colors"
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#00bcd4]/20 hover:border-[#00bcd4] group"
         >
-          <div className="text-3xl mb-3">📥</div>
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">📥</div>
           <h2 className="text-lg font-semibold text-white mb-1">Importar post</h2>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-[#94a3b8]">
             Pegar texto de un post de Discord y subirlo directamente a la web
           </p>
         </Link>
 
         <Link
           href={`/admin/reportes?key=${adminKey}`}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-amber-700 transition-colors"
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#ff9e64]/20 hover:border-[#ff9e64] group"
         >
-          <div className="text-3xl mb-3">📋</div>
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">📋</div>
           <h2 className="text-lg font-semibold text-white mb-1">Reportes</h2>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-[#94a3b8]">
             Gestionar reportes de links caídos enviados por usuarios
           </p>
         </Link>
 
         <Link
           href={`/admin/faq?key=${adminKey}`}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-amber-700 transition-colors"
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#00bcd4]/20 hover:border-[#00bcd4] group"
         >
-          <div className="text-3xl mb-3">❓</div>
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">❓</div>
           <h2 className="text-lg font-semibold text-white mb-1">FAQ</h2>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-[#94a3b8]">
             Agregar, editar o eliminar preguntas frecuentes de la web
           </p>
         </Link>
 
         <Link
           href={`/admin/editar?key=${adminKey}`}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-amber-700 transition-colors"
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#00bcd4]/20 hover:border-[#00bcd4] group"
         >
-          <div className="text-3xl mb-3">✏️</div>
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">✏️</div>
           <h2 className="text-lg font-semibold text-white mb-1">Editar post</h2>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-[#94a3b8]">
             Modificar título, descripción, link o portada de un post existente
           </p>
         </Link>
 
         <Link
           href={`/admin/eliminar?key=${adminKey}`}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-red-700 transition-colors"
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#ff4d4d]/20 hover:border-[#ff4d4d] group"
         >
-          <div className="text-3xl mb-3">🗑️</div>
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">🗑️</div>
           <h2 className="text-lg font-semibold text-white mb-1">Eliminar post</h2>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-[#94a3b8]">
             Eliminar un post y su imagen de portada del almacenamiento
           </p>
         </Link>
 
         <Link
           href={`/admin/peticiones?key=${adminKey}`}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:bg-zinc-900 hover:border-amber-700 transition-colors"
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#00bcd4]/20 hover:border-[#00bcd4] group"
         >
-          <div className="text-3xl mb-3">📩</div>
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">📩</div>
           <h2 className="text-lg font-semibold text-white mb-1">Peticiones</h2>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-[#94a3b8]">
             Gestionar solicitudes de cómics de los usuarios
           </p>
         </Link>
