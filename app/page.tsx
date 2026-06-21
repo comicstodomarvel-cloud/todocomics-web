@@ -210,7 +210,7 @@ export default async function HomePage({
       {/* Buscador y Favorito del Mes */}
       <section className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-          <SearchBar />
+          <div className="hidden lg:block w-full"><SearchBar /></div>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <FavoriteBadge />
             <OnlineCounter />
