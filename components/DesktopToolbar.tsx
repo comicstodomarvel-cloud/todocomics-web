@@ -3,7 +3,7 @@
 import { Suspense } from 'react'
 import HashtagFilter from './HashtagFilter'
 import UpdatesDropdownButton from './updates/UpdatesDropdownButton'
-import { Search, X } from 'lucide-react'
+import { Search, X, Gift } from 'lucide-react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -54,7 +54,7 @@ function ToolbarSearch() {
         value={value}
         onChange={handleChange}
         placeholder="Buscar cómics, películas, series..."
-        className="w-full rounded-full bg-zinc-900/60 border border-zinc-800 py-1.5 pl-9 pr-8 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors focus:border-[#ff8c00] focus:ring-1 focus:ring-[#ff8c00]/30"
+        className="w-full rounded-full bg-zinc-900/50 border border-zinc-800 py-1.5 pl-9 pr-8 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-colors focus:border-[#ff8c00] focus:ring-2 focus:ring-[#ff8c00]/20 focus:shadow-[0_0_12px_rgba(255,140,0,0.12)]"
       />
       {value && (
         <button
@@ -71,7 +71,7 @@ function ToolbarSearch() {
 
 export default function DesktopToolbar() {
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-black/80 backdrop-blur-md border-b border-zinc-800 hidden lg:block safe-top safe-left safe-right">
+    <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-black/75 backdrop-blur-md border-b border-zinc-900 hidden lg:block safe-top safe-left safe-right">
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-6">
         <a href="/" className="flex items-center gap-2.5 shrink-0">
           <img
@@ -90,22 +90,46 @@ export default function DesktopToolbar() {
           </Suspense>
         </div>
 
-        <div className="flex items-center gap-4 shrink-0">
-          <Suspense fallback={null}>
-            <HashtagFilter variant="toolbar" />
-          </Suspense>
-          <UpdatesDropdownButton variant="toolbar" />
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="relative group">
+            <Suspense fallback={null}>
+              <HashtagFilter variant="toolbar" />
+            </Suspense>
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-900 text-zinc-300 text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[60]">
+              Filtros
+            </span>
+          </div>
+          <div className="relative group">
+            <UpdatesDropdownButton variant="toolbar" />
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-900 text-zinc-300 text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[60]">
+              Novedades
+            </span>
+          </div>
+
+          <div className="relative group">
+            <a
+              href="https://discord.gg/nKTnYSTRHE"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:-translate-y-0.5 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/40 transition-all duration-200"
+            >
+              <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" />
+              </svg>
+            </a>
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-900 text-zinc-300 text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[60]">
+              Discord
+            </span>
+          </div>
 
           <a
-            href="https://discord.gg/nKTnYSTRHE"
+            href="https://www.terabox.com/referral/4401765338615"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/50 transition-all duration-200"
-            title="Discord"
+            className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold px-3 py-1.5 rounded-full text-xs transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-amber-500/30 shrink-0 ml-2"
           >
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" />
-            </svg>
+            <Gift size={14} />
+            <span>1TB GRATIS</span>
           </a>
         </div>
       </div>
