@@ -1,9 +1,10 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import HashtagFilter from './HashtagFilter'
 import UpdatesDropdownButton from './updates/UpdatesDropdownButton'
-import { Search, X, Gift } from 'lucide-react'
+import OnlineCounter from './OnlineCounter'
+import { Search, X, Gift, HelpCircle, Pencil } from 'lucide-react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -69,7 +70,7 @@ function ToolbarSearch() {
   )
 }
 
-export default function DesktopToolbar() {
+export default function DesktopToolbar({ children }: { children?: ReactNode }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-black/75 backdrop-blur-md border-b border-zinc-900 hidden lg:block safe-top safe-left safe-right">
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-6">
@@ -105,6 +106,41 @@ export default function DesktopToolbar() {
               Novedades
             </span>
           </div>
+
+          <div className="relative group">
+            <a
+              href="/faq"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:-translate-y-0.5 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/40 transition-all duration-200"
+            >
+              <HelpCircle size={18} />
+            </a>
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-900 text-zinc-300 text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[60]">
+              FAQ
+            </span>
+          </div>
+
+          <div className="relative group">
+            <a
+              href="/peticiones"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:-translate-y-0.5 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/40 transition-all duration-200"
+            >
+              <Pencil size={18} />
+            </a>
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-900 text-zinc-300 text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[60]">
+              Pedir
+            </span>
+          </div>
+
+          <OnlineCounter variant="toolbar" />
+
+          {children && (
+            <div className="relative group">
+              {children}
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-900 text-zinc-300 text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[60]">
+                Favorito del Mes
+              </span>
+            </div>
+          )}
 
           <div className="relative group">
             <a

@@ -206,33 +206,7 @@ export default async function HomePage({
         <RandomRecommendation />
       </section>
 
-      {/* Buscador y Favorito del Mes */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <FavoriteBadge />
-            <OnlineCounter />
-            <Link
-              href="/peticiones"
-              className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-bold px-4 py-2 rounded-full text-sm transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span>Pedir cómic</span>
-            </Link>
-            <Link
-              href="/faq"
-              className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold px-4 py-2 rounded-full text-sm transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-              </svg>
-              <span>FAQ</span>
-            </Link>
-          </div>
-        </div>
-      </section>
+
 
       {/* Leer más tarde */}
       <ReadLaterSection />

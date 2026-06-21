@@ -2,10 +2,21 @@ import Link from 'next/link'
 import { getFavoriteOfMonth } from '@/lib/data'
 import { Crown } from 'lucide-react'
 
-export default async function FavoriteBadge() {
+export default async function FavoriteBadge({ variant = 'default' }: { variant?: 'default' | 'toolbar' }) {
   const favorite = await getFavoriteOfMonth()
 
   if (!favorite) return null
+
+  if (variant === 'toolbar') {
+    return (
+      <Link
+        href={`/item/${favorite.item.id}`}
+        className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:-translate-y-0.5 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/40 transition-all duration-200"
+      >
+        <Crown size={18} className="text-amber-400" />
+      </Link>
+    )
+  }
 
   return (
     <Link

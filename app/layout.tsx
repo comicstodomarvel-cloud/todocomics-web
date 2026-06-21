@@ -6,6 +6,7 @@ import RegisterSW from "@/components/RegisterSW";
 import HeartbeatPing from "@/components/HeartbeatPing";
 import TeraboxNotification from "@/components/TeraboxNotification";
 import DesktopToolbar from "@/components/DesktopToolbar";
+import FavoriteBadge from "@/components/FavoriteBadge";
 import { getPlaylist } from "@/lib/musicData";
 import { Suspense } from "react";
 import { PlayerProvider } from "@/lib/playerStore";
@@ -109,7 +110,9 @@ export default async function RootLayout({
         <TeraboxNotification />
         <RegisterSW />
         <PlayerProvider playlist={playlist}>
-          <DesktopToolbar />
+          <DesktopToolbar>
+            <FavoriteBadge variant="toolbar" />
+          </DesktopToolbar>
           <YouTubeBridge />
           {children}
           <DesktopPanel />
