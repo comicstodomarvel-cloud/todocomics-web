@@ -69,10 +69,6 @@ export default function TeraboxNotification() {
             </li>
             <li className="flex items-center gap-2">
               <span className="text-[#ff8c00]">✅</span>
-              <span>Sin límite de velocidad</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-[#ff8c00]">✅</span>
               <span>Guarda todo el contenido de la web</span>
             </li>
           </ul>

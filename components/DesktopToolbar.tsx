@@ -47,7 +47,7 @@ function ToolbarSearch() {
   }
 
   return (
-    <div className="relative flex-1 max-w-md">
+    <div className="relative max-w-md w-full">
       <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
       <input
         ref={inputRef}
@@ -74,18 +74,25 @@ export default function DesktopToolbar() {
   const { toggleDesktopCollapsed, isDesktopCollapsed } = usePlayer()
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800 hidden lg:flex items-center gap-3 px-4 safe-top safe-left safe-right">
-      <a href="/" className="flex items-center gap-2 shrink-0 mr-2">
-        <span className="text-lg font-bold text-white">TodoComics</span>
+    <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800 hidden lg:grid grid-cols-3 items-center px-4 safe-top safe-left safe-right">
+      <a href="/" className="flex items-center gap-2.5 shrink-0 justify-self-start">
+        <img
+          src="https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/MTC.png"
+          alt="TodoComics"
+          className="w-8 h-8 rounded-lg"
+        />
+        <span className="text-lg font-bold tracking-tight">
+          <span className="text-amber-500">TODO</span><span className="text-red-500">COMICS</span>
+        </span>
       </a>
 
-      <Suspense fallback={null}>
-        <ToolbarSearch />
-      </Suspense>
+      <div className="flex justify-center">
+        <Suspense fallback={null}>
+          <ToolbarSearch />
+        </Suspense>
+      </div>
 
-      <div className="flex-1" />
-
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 justify-self-end">
         <Suspense fallback={null}>
           <HashtagFilter variant="toolbar" />
         </Suspense>
