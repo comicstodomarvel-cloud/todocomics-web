@@ -6,10 +6,8 @@ import ViewModeToggle from '@/components/ViewModeToggle';
 import LoadMoreButton from '@/components/LoadMoreButton';
 import SearchBar from '@/components/SearchBar';
 import OnlineCounter from '@/components/OnlineCounter';
-import HashtagFilter from '@/components/HashtagFilter';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import UpdatesWidget from '@/components/updates/UpdatesWidget';
-import UpdatesDropdownButton from '@/components/updates/UpdatesDropdownButton';
 import RandomRecommendation from '@/components/RandomRecommendation';
 import FavoriteBadge from '@/components/FavoriteBadge';
 import ReadLaterSection from '@/components/ReadLaterSection';
@@ -100,8 +98,6 @@ export default async function HomePage({
   if (content.length === 0) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
-        <UpdatesDropdownButton />
-        <HashtagFilter />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">No hay contenido disponible</h1>
@@ -144,11 +140,6 @@ export default async function HomePage({
           })),
         }}
       />
-      {/* Botón dropdown de Updates */}
-      <UpdatesDropdownButton />
-      {/* Botón flotante de filtros por hashtag */}
-      <HashtagFilter />
-
       {/* Hero Section */}
       <section className="relative min-h-[50vh] md:h-[70vh] w-full overflow-hidden">
         {/* Imagen de fondo con gradiente */}

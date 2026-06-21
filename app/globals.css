@@ -18,8 +18,8 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Prevenir que elementos fijos se muevan en móvil */
-.fixed {
+/* Clase para GPU acceleration solo donde se necesite (no usar en fixed elements) */
+.gpu {
   will-change: transform;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);

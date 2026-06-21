@@ -8,6 +8,7 @@ import { getPlaylist } from "@/lib/musicData";
 import { getDiscordData } from "@/lib/discordData";
 import MusicPlayerShell from "@/components/MusicPlayer/MusicPlayerShell";
 import DiscordWidgetShell from "@/components/DiscordWidget/DiscordWidgetShell";
+import SidebarWidgets from "@/components/SidebarWidgets";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -100,7 +101,8 @@ export default async function RootLayout({
         />
         <HeartbeatPing />
         <RegisterSW />
-        <DiscordWidgetShell discordData={discordData} />
+        <SidebarWidgets discordData={discordData} />
+        <DiscordWidgetShell />
         <MusicPlayerShell playlist={playlist}>
           {children}
         </MusicPlayerShell>

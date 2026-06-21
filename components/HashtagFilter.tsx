@@ -31,7 +31,7 @@ export default function HashtagFilter() {
   }
 
   return (
-    <div className="fixed top-4 left-4 z-50 safe-top safe-left">
+    <div>
       <button
         onClick={handleToggle}
         className={`relative flex items-center gap-2 font-bold px-4 py-2.5 min-h-[44px] rounded-full shadow-lg transition-all duration-300 hover:scale-105 ${
@@ -61,7 +61,7 @@ export default function HashtagFilter() {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="fixed sm:absolute left-4 sm:left-0 top-20 sm:top-full sm:mt-2 w-[90vw] sm:w-[400px] max-w-[400px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in relative z-50">
+          <div className="fixed left-4 right-4 top-20 sm:absolute sm:left-full sm:top-0 sm:ml-2 w-auto sm:w-[400px] max-w-[400px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in z-50">
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-black px-4 py-3 flex items-center justify-between">
               <h3 className="font-bold text-lg">Filtrar por categoría</h3>
               <button
