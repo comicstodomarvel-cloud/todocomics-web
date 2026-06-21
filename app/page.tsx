@@ -9,6 +9,7 @@ import RandomRecommendation from '@/components/RandomRecommendation';
 import FavoriteBadge from '@/components/FavoriteBadge';
 import ReadLaterSection from '@/components/ReadLaterSection';
 import TopWeekly from '@/components/TopWeekly';
+import MobileActionBar from '@/components/MobileActionBar';
 import CatalogStats from '@/components/CatalogStats';
 
 import type { Metadata } from 'next';
@@ -211,6 +212,11 @@ export default async function HomePage({
       </section>
 
 
+
+      {/* Acciones rápidas para móvil */}
+      <div className="lg:hidden">
+        <MobileActionBar />
+      </div>
 
       {/* Leer más tarde */}
       <ReadLaterSection />
