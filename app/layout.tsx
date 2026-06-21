@@ -66,6 +66,9 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
   themeColor: "#121212",
 };
 
@@ -84,7 +87,7 @@ export default async function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-zinc-950 text-zinc-100">
+      <body className="min-h-full bg-zinc-950 text-zinc-100 pb-16 lg:pb-0">
         <JsonLd
           data={{
             "@context": "https://schema.org",

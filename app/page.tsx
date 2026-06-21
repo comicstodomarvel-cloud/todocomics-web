@@ -98,7 +98,7 @@ export default async function HomePage({
   if (content.length === 0) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">No hay contenido disponible</h1>
             <p className="text-zinc-400">

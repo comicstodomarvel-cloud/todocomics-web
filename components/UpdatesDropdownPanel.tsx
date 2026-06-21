@@ -67,7 +67,7 @@ export default function UpdatesDropdownPanel({
         <h3 className="font-bold text-lg">Últimas Actualizaciones</h3>
       </div>
 
-      <div className="max-h-[60vh] overflow-y-auto">
+      <div className="max-h-[60dvh] overflow-y-auto">
         {loading ? (
           <div className="p-4 space-y-3">
             {[1, 2, 3].map((i) => (

@@ -49,7 +49,7 @@ export default function MobileSheet() {
         className={`fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 rounded-t-2xl shadow-2xl
           lg:hidden flex flex-col
           transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]
-          max-h-[85vh] safe-bottom
+          max-h-[85dvh] safe-bottom
           ${isSheetOpen ? "translate-y-0" : "translate-y-full"}
         `}
       >

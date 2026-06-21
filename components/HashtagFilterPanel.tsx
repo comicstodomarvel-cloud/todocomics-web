@@ -14,6 +14,7 @@ export default function HashtagFilterPanel({
 }) {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+      <div className="max-h-[70dvh] overflow-y-auto">
       <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-black px-4 py-3 flex items-center justify-between">
         <h3 className="font-bold text-lg">Filtrar por categoría</h3>
         <button
@@ -50,6 +51,7 @@ export default function HashtagFilterPanel({
             </button>
           ))}
         </div>
+      </div>
       </div>
     </div>
   )
