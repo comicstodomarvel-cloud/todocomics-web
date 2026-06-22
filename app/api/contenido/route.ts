@@ -3,6 +3,15 @@ import { supabase } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { HASHTAG_FILTERS } from '@/lib/hashtags'
 
+function buildOrder(sort: string): { column: string; ascending: boolean } {
+  switch (sort) {
+    case 'antiguo': return { column: 'fecha_creacion', ascending: true }
+    case 'az': return { column: 'titulo', ascending: true }
+    case 'za': return { column: 'titulo', ascending: false }
+    default: return { column: 'fecha_creacion', ascending: false }
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get('page') ?? '1', 10)
@@ -10,6 +19,8 @@ export async function GET(request: NextRequest) {
   const categoria = searchParams.get('categoria')
   const hashtagId = searchParams.get('hashtag')
   const busqueda = searchParams.get('busqueda')
+  const orden = searchParams.get('orden') ?? 'reciente'
+  const order = buildOrder(orden)
   const offset = (page - 1) * limit
 
   // Log de peticiones asíncrono para detección de scraping (fire-and-forget)
@@ -53,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, error, count } = await query
-      .order('fecha_creacion', { ascending: false })
+      .order(order.column, { ascending: order.ascending })
       .range(offset, offset + limit - 1)
 
     if (error) {

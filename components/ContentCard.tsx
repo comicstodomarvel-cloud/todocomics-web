@@ -13,14 +13,25 @@ function getPublisher(hashtags: string[]): 'marvel' | 'dc' | null {
   return null
 }
 
+function highlightText(text: string, query: string) {
+  if (!query) return text
+  const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase()
+      ? <mark key={i} className="bg-amber-500/30 text-amber-200 rounded-sm px-0.5">{part}</mark>
+      : part
+  )
+}
+
 interface ContentCardProps {
   item: ContentItem
   lastUpdateDate?: string
   linkCaido?: boolean
   linkReportado?: boolean
+  searchQuery?: string
 }
 
-export default function ContentCard({ item, lastUpdateDate, linkCaido, linkReportado }: ContentCardProps) {
+export default function ContentCard({ item, lastUpdateDate, linkCaido, linkReportado, searchQuery = '' }: ContentCardProps) {
   const publisher = getPublisher(item.hashtags)
 
   return (
@@ -41,7 +52,7 @@ export default function ContentCard({ item, lastUpdateDate, linkCaido, linkRepor
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 card-overlay transition-opacity duration-300">
             <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
               <h3 className="text-sm sm:text-base font-bold text-white line-clamp-2 mb-1 sm:mb-2">
-                {item.titulo}
+                {highlightText(item.titulo, searchQuery)}
               </h3>
               <div className="flex items-center gap-2 text-xs text-zinc-300">
                 <span className="bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded text-xs min-h-[22px] flex items-center">

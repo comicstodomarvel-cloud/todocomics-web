@@ -1,5 +1,6 @@
 import { getLatestContent, searchContent, getContentByCategoria, getContentByHashtag, getLatestUpdateDates, getBrokenLinkIds, getReportStatus } from '@/lib/data';
-import type { ContentItem } from '@/lib/data';
+import type { ContentItem, SortOption } from '@/lib/data';
+import { HASHTAG_FILTERS } from '@/lib/hashtags';
 import ViewModeToggle from '@/components/ViewModeToggle';
 import LoadMoreButton from '@/components/LoadMoreButton';
 import OnlineCounter from '@/components/OnlineCounter';
@@ -24,7 +25,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todocomics.com';
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string; vista?: string }>;
+  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string; vista?: string; orden?: string }>;
 }): Promise<Metadata> {
   const params = await searchParams;
   const { busqueda, categoria, hashtag } = params;
@@ -73,10 +74,11 @@ export async function generateMetadata({
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string; vista?: string }>;
+  searchParams: Promise<{ busqueda?: string; categoria?: string; hashtag?: string; vista?: string; orden?: string }>;
 }) {
   const params = await searchParams;
-  const { busqueda, categoria, hashtag, vista } = params;
+  const { busqueda, categoria, hashtag, vista, orden } = params;
+  const sort: SortOption = (orden as SortOption) || 'reciente';
   const isFiltering = Boolean(busqueda || (categoria && categoria !== 'Todos') || hashtag);
   const viewMode = vista === 'lista' ? 'lista' : 'grid';
 
@@ -85,29 +87,61 @@ export default async function HomePage({
 
   // Obtener contenido según filtros
   if (hashtag) {
-    content = await getContentByHashtag(hashtag);
+    content = await getContentByHashtag(hashtag, sort);
   } else if (busqueda) {
-    content = await searchContent(busqueda);
+    content = await searchContent(busqueda, sort);
   } else if (categoria && categoria !== 'Todos') {
-    content = await getContentByCategoria(categoria);
+    content = await getContentByCategoria(categoria, sort);
   } else {
-    content = await getLatestContent(20);
+    content = await getLatestContent(20, sort);
   }
 
   // Manejar caso sin resultados
   if (content.length === 0) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
-        <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">No hay contenido disponible</h1>
-            <p className="text-zinc-400">
+        <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] px-4">
+          <div className="text-center max-w-lg">
+            <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Sin resultados</h1>
+            <p className="text-zinc-400 mb-6">
               {busqueda
-                ? `No encontramos resultados para "${busqueda}"`
+                ? `No encontramos nada para "${busqueda}"`
                 : hashtag
-                ? `No encontramos contenido con ese filtro`
+                ? `No hay contenido con ese filtro`
                 : 'Aún no hay contenido en esta categoría'}
             </p>
+            {busqueda && (
+              <div className="space-y-4">
+                <p className="text-sm text-zinc-500">Sugerencias:</p>
+                <ul className="text-sm text-zinc-500 space-y-1.5">
+                  <li>• Revisá la ortografía del término buscado</li>
+                  <li>• Probá con términos más generales</li>
+                  <li>• Usá el nombre en inglés del cómic/película</li>
+                </ul>
+              </div>
+            )}
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {HASHTAG_FILTERS.slice(0, 8).map((f) => (
+                <Link
+                  key={f.id}
+                  href={`/?hashtag=${f.id}`}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white px-3 py-1.5 rounded-full text-sm transition-colors"
+                >
+                  {f.label}
+                </Link>
+              ))}
+            </div>
+            <Link
+              href="/"
+              className="inline-block mt-6 bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-2.5 rounded-lg transition-colors text-sm"
+            >
+              Ver todo el catálogo
+            </Link>
           </div>
         </div>
       </div>
@@ -223,9 +257,57 @@ export default async function HomePage({
 
       {/* Grid de contenido */}
       <section className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Continúa explorando</h2>
-          <ViewModeToggle />
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold">
+              {isFiltering
+                ? busqueda
+                  ? <>Resultados para <span className="text-amber-400">"{busqueda}"</span></>
+                  : categoria && categoria !== 'Todos'
+                  ? <>Categoría: <span className="text-amber-400">{categoria}</span></>
+                  : <>Filtro aplicado</>
+                : 'Continúa explorando'}
+            </h2>
+            {isFiltering && (
+              <span className="text-sm text-zinc-500 bg-zinc-800 px-2.5 py-1 rounded-full">
+                {content.length} encontrados
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {isFiltering && (
+              <div className="flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 p-1 text-xs">
+                {[
+                  { value: 'reciente', label: 'Nuevos' },
+                  { value: 'antiguo', label: 'Antiguos' },
+                  { value: 'az', label: 'A-Z' },
+                  { value: 'za', label: 'Z-A' },
+                ].map((opt) => {
+                  const sp = new URLSearchParams()
+                  if (busqueda) sp.set('busqueda', busqueda)
+                  if (categoria && categoria !== 'Todos') sp.set('categoria', categoria)
+                  if (hashtag) sp.set('hashtag', hashtag)
+                  if (vista) sp.set('vista', vista)
+                  sp.set('orden', opt.value)
+                  return (
+                    <Link
+                      key={opt.value}
+                      href={`?${sp.toString()}`}
+                      replace
+                      className={`px-2.5 py-1.5 rounded-md transition-colors ${
+                        (sort === opt.value) || (!orden && opt.value === 'reciente')
+                          ? 'bg-amber-500 text-black font-bold'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      {opt.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+            <ViewModeToggle />
+          </div>
         </div>
         <LoadMoreButton
           initialItems={gridItems}
@@ -234,6 +316,8 @@ export default async function HomePage({
           updateDates={updateDates}
           brokenIds={[...brokenIds]}
           reportedIds={[...reportedIds]}
+          searchQuery={busqueda ?? ''}
+          orden={sort}
         />
       </section>
 

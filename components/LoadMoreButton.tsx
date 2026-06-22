@@ -13,6 +13,8 @@ interface LoadMoreButtonProps {
   updateDates: Record<string, string>
   brokenIds: string[]
   reportedIds: string[]
+  searchQuery?: string
+  orden?: string
 }
 
 export default function LoadMoreButton({
@@ -22,6 +24,8 @@ export default function LoadMoreButton({
   updateDates,
   brokenIds,
   reportedIds,
+  searchQuery = '',
+  orden = 'reciente',
 }: LoadMoreButtonProps) {
   const searchParams = useSearchParams()
   const [page, setPage] = useState(1)
@@ -44,6 +48,7 @@ export default function LoadMoreButton({
     const params = new URLSearchParams(searchParams.toString())
     params.set('page', String(nextPage))
     params.set('limit', '20')
+    params.set('orden', orden)
 
     try {
       const res = await fetch(`/api/contenido?${params.toString()}`)
@@ -97,6 +102,7 @@ export default function LoadMoreButton({
               lastUpdateDate={updateDates[item.id]}
               linkCaido={brokenSet.has(item.id)}
               linkReportado={reportedSet.has(item.id)}
+              searchQuery={searchQuery}
             />
           ))}
         </div>
@@ -109,6 +115,7 @@ export default function LoadMoreButton({
               lastUpdateDate={updateDates[item.id]}
               linkCaido={brokenSet.has(item.id)}
               linkReportado={reportedSet.has(item.id)}
+              searchQuery={searchQuery}
             />
           ))}
         </div>

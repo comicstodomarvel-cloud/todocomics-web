@@ -12,11 +12,23 @@ export interface ContentItem {
   fecha_creacion: string
 }
 
-export async function getLatestContent(limit = 10): Promise<ContentItem[]> {
+export type SortOption = 'reciente' | 'antiguo' | 'az' | 'za'
+
+function buildOrder(sort: SortOption): { column: string; ascending: boolean } {
+  switch (sort) {
+    case 'reciente': return { column: 'fecha_creacion', ascending: false }
+    case 'antiguo': return { column: 'fecha_creacion', ascending: true }
+    case 'az': return { column: 'titulo', ascending: true }
+    case 'za': return { column: 'titulo', ascending: false }
+  }
+}
+
+export async function getLatestContent(limit = 10, sort: SortOption = 'reciente'): Promise<ContentItem[]> {
+  const order = buildOrder(sort)
   const { data, error } = await supabase
     .from('contenido')
     .select('*')
-    .order('fecha_creacion', { ascending: false })
+    .order(order.column, { ascending: order.ascending })
     .limit(limit)
 
   if (error) {
@@ -44,13 +56,15 @@ export async function getContentById(id: string): Promise<ContentItem | null> {
 }
 
 export async function getContentByCategoria(
-  categoria: string
+  categoria: string,
+  sort: SortOption = 'reciente'
 ): Promise<ContentItem[]> {
+  const order = buildOrder(sort)
   const { data, error } = await supabase
     .from('contenido')
     .select('*')
     .eq('categoria', categoria)
-    .order('fecha_creacion', { ascending: false })
+    .order(order.column, { ascending: order.ascending })
 
   if (error) {
     console.error('Error al filtrar por categoría:', error.message)
@@ -60,12 +74,13 @@ export async function getContentByCategoria(
   return (data as ContentItem[]) ?? []
 }
 
-export async function searchContent(query: string): Promise<ContentItem[]> {
+export async function searchContent(query: string, sort: SortOption = 'reciente'): Promise<ContentItem[]> {
+  const order = buildOrder(sort)
   const { data, error } = await supabase
     .from('contenido')
     .select('*')
     .or(`titulo.ilike.%${query}%,descripcion.ilike.%${query}%`)
-    .order('fecha_creacion', { ascending: false })
+    .order(order.column, { ascending: order.ascending })
 
   if (error) {
     console.error('Error al buscar contenido:', error.message)
@@ -268,18 +283,19 @@ export async function checkDuplicates(
   return (data ?? []) as any
 }
 
-export async function getContentByHashtag(hashtagId: string): Promise<ContentItem[]> {
+export async function getContentByHashtag(hashtagId: string, sort: SortOption = 'reciente'): Promise<ContentItem[]> {
   const filterDef = HASHTAG_FILTERS.find((f) => f.id === hashtagId)
   if (!filterDef) {
     console.error('Hashtag filter not found:', hashtagId)
     return []
   }
 
+  const order = buildOrder(sort)
   const { data, error } = await supabase
     .from('contenido')
     .select('*')
     .overlaps('hashtags', filterDef.search)
-    .order('fecha_creacion', { ascending: false })
+    .order(order.column, { ascending: order.ascending })
 
   if (error) {
     console.error('Error al filtrar por hashtag:', error.message)
