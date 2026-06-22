@@ -63,7 +63,7 @@ export default function NotificationDropdown({ adminKey, onClose }: Notification
 
   async function marcarLeida(id: string) {
     try {
-      await fetch(`/api/admin/notificaciones/${id}`, {
+      const res = await fetch(`/api/admin/notificaciones/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -71,16 +71,21 @@ export default function NotificationDropdown({ adminKey, onClose }: Notification
         },
         body: JSON.stringify({ leida: true }),
       })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        console.error('[marcarLeida] Error:', res.status, errData)
+        return
+      }
       setItems((prev) => prev.filter((n) => n.id !== id))
-    } catch {
-      // silencio
+    } catch (err) {
+      console.error('[marcarLeida] Error:', err)
     }
   }
 
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50"
+      className="notif-dropdown absolute right-0 top-full mt-2 w-80 sm:w-96 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50"
     >
       <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
         <h3 className="text-sm font-bold text-zinc-100">Notificaciones</h3>
@@ -119,13 +124,15 @@ export default function NotificationDropdown({ adminKey, onClose }: Notification
                         {tiempoRelativo(notif.fecha_creacion)}
                       </span>
                       {notif.link && (
-                        <a
-                          href={notif.link}
-                          onClick={onClose}
-                          className="text-[10px] text-amber-500 hover:text-amber-400 flex items-center gap-0.5"
+                        <span
+                          onClick={() => {
+                            onClose()
+                            window.location.href = notif.link!
+                          }}
+                          className="cursor-pointer text-[10px] text-amber-500 hover:text-amber-400 flex items-center gap-0.5"
                         >
                           Atender <ExternalLink size={10} />
-                        </a>
+                        </span>
                       )}
                     </div>
                   </div>

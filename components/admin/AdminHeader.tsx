@@ -43,11 +43,13 @@ export default function AdminHeader({ children }: { children: React.ReactNode })
     }
   }, [fetchUnreadCount])
 
-  // Cerrar dropdown al hacer click fuera
+  // Cerrar dropdown al hacer click fuera (excepto dentro del dropdown)
   useEffect(() => {
     if (!dropdownOpen) return
     function handleClick(e: MouseEvent) {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      const isInsideDropdown = document.querySelector('.notif-dropdown')?.contains(target)
+      if (bellRef.current && !bellRef.current.contains(target) && !isInsideDropdown) {
         setDropdownOpen(false)
       }
     }
