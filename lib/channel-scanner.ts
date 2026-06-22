@@ -19,14 +19,28 @@ export interface ScanResult {
   totalFetched: number
 }
 
+function isImageMime(type: string): boolean {
+  return type.startsWith('image/')
+}
+
 async function downloadPhoto(client: any, msg: any): Promise<Buffer | undefined> {
   try {
     if (msg.media && msg.media.className === 'MessageMediaPhoto') {
       const buffer = await client.downloadMedia(msg.media, {})
       if (buffer) return Buffer.from(buffer)
     }
+    if (
+      msg.media &&
+      msg.media.className === 'MessageMediaDocument' &&
+      msg.media.document &&
+      msg.media.document.mime_type &&
+      isImageMime(msg.media.document.mime_type)
+    ) {
+      const buffer = await client.downloadMedia(msg.media, {})
+      if (buffer) return Buffer.from(buffer)
+    }
   } catch (err) {
-    console.error(`[scan] Error descargando foto del mensaje ${msg.id}:`, err)
+    console.error(`[scan] Error descargando imagen del mensaje ${msg.id}:`, err instanceof Error ? err.message : err)
   }
   return undefined
 }
@@ -47,12 +61,15 @@ function extractMessageData(msg: any, photoBytes?: Buffer): ScannedMessage {
 
   const msgEntities = (msg.entities as any[] | undefined) || []
   const entities = msgEntities
-    .map((e: any) => ({
-      offset: e.offset,
-      length: e.length,
-      type: e.className?.replace('MessageEntity', '').toLowerCase() || '',
-      url: e.url,
-    }))
+    .map((e: any) => {
+      const rawType = e.className?.replace('MessageEntity', '').toLowerCase() || ''
+      return {
+        offset: e.offset,
+        length: e.length,
+        type: rawType === 'texturl' ? 'text_link' : rawType,
+        url: e.url,
+      }
+    })
     .filter((e) => e.offset !== undefined)
 
   return {

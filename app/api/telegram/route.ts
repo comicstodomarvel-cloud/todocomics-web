@@ -59,7 +59,7 @@ interface ParsedContent {
 const PREFIJOS_DESCARGA = /^(descarga\s*(directa|gratis)|link|enlace|mega|mediafire)[:\s]*$/i
 
 const PATRON_LINK =
-  /https?:\/\/(?:www\.)?(?:[0-9]+terabox|terabox|teraboxapp|teraboxurl|freeterabox|videy|videyyy|freevidey|videynow|bit\.ly|bitly|mega\.nz|mega|drive\.google|mediafire|short\.url|tinyurl|ow\.ly|is\.gd)[^\s)"'\]]+/i
+  /https?:\/\/(?:www\.)?(?:[0-9]+terabox|terabox(?:app|url)?|freeterabox|videy{1,4}|freevidey|videynow|bit\.ly|tinyurl|short\.url|ow\.ly|is\.gd|mega(?:\.nz|\.io)?|drive\.google|mediafire|dropbox|pixeldrain|gofile(?:\.io)?|1fichier(?:\.com)?|send\.cm|buzzheavier|doodrive|racaty(?:\.net)?|uploadhaven|anonfiles|bayfiles|letsupload(?:\.co)?|solidfiles)[^\s)"'\]]+/i
 
 /**
  * Extrae el texto del mensaje.
@@ -82,8 +82,9 @@ function extraerHashtags(texto: string): string[] {
 /**
  * Extrae URLs de las entidades del mensaje (hyperlinks de Telegram).
  * Busca en caption_entities y entities.
+ * Soporta text_link (hyperlink con URL propia) y url (auto-detectado).
  */
-function extraerHyperlinks(msg: TelegramMessage): string[] {
+function extraerHyperlinks(msg: TelegramMessage, texto: string): string[] {
   const urls: string[] = []
 
   const entities = msg.caption_entities || msg.entities || []
@@ -92,6 +93,12 @@ function extraerHyperlinks(msg: TelegramMessage): string[] {
     if (entity.type === 'text_link' && entity.url) {
       console.log('[Hyperlink] Encontrado:', entity.url)
       urls.push(entity.url)
+    } else if (entity.type === 'url') {
+      const url = texto.substring(entity.offset, entity.offset + entity.length)
+      if (url) {
+        console.log('[Hyperlink] URL auto-detectada:', url)
+        urls.push(url)
+      }
     }
   }
 
@@ -103,7 +110,7 @@ function extraerHyperlinks(msg: TelegramMessage): string[] {
  */
 function extraerLinkDescargaMejorado(msg: TelegramMessage, texto: string): string {
   // 1. Primero buscar hyperlinks en entidades
-  const hyperlinks = extraerHyperlinks(msg)
+  const hyperlinks = extraerHyperlinks(msg, texto)
 
   const downloadLinks = hyperlinks.filter((url) => PATRON_LINK.test(url))
 

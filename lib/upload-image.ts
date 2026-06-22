@@ -22,7 +22,8 @@ export async function uploadImageBytesToSupabase(
       .toBuffer()
     contentType = 'image/webp'
     filePath = `${Date.now()}-${filename}`.replace(/\.\w+$/, '.webp')
-  } catch {
+  } catch (sharpErr) {
+    console.warn('[uploadImageBytes] Sharp falló al convertir a WebP, subiendo como JPEG:', sharpErr)
     uploadBuffer = Buffer.from(imageBuffer instanceof ArrayBuffer ? new Uint8Array(imageBuffer) : imageBuffer)
     contentType = 'image/jpeg'
     filePath = `${Date.now()}-${filename}`

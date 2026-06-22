@@ -69,6 +69,8 @@ export async function batchImport(
     if (!dryRun) {
       try {
         // Reconstruir un objeto compatible con parseTelegramContent
+        // No pasamos photo para evitar llamadas fallidas a la API de Telegram.
+        // La portada se sube desde msg.photoBytes (descargado vía MTProto) más abajo.
         const telegramMsg = {
           message_id: msg.id,
           chat: { id: -1001406494973, type: 'channel' },
@@ -76,7 +78,7 @@ export async function batchImport(
           caption: msg.caption || undefined,
           entities: msg.entities as any,
           caption_entities: msg.entities as any,
-          photo: msg.hasPhoto ? ([{ file_id: '', file_unique_id: '' }] as any) : undefined,
+          photo: undefined,
           date: msg.date,
         }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 interface ImageWithFallbackProps {
   src: string
@@ -10,6 +10,14 @@ interface ImageWithFallbackProps {
   className?: string
   sizes?: string
   priority?: boolean
+}
+
+function isSupabaseUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith('.supabase.co')
+  } catch {
+    return false
+  }
 }
 
 export default function ImageWithFallback({
@@ -21,6 +29,7 @@ export default function ImageWithFallback({
   priority,
 }: ImageWithFallbackProps) {
   const [error, setError] = useState(false)
+  const unoptimized = useMemo(() => src ? isSupabaseUrl(src) : false, [src])
 
   if (error || !src) {
     return (
@@ -55,6 +64,7 @@ export default function ImageWithFallback({
       className={className}
       sizes={sizes}
       priority={priority}
+      unoptimized={unoptimized}
       onError={() => setError(true)}
     />
   )

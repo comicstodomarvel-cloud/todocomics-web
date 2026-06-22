@@ -101,6 +101,17 @@ export default function AdminPage() {
         </Link>
 
         <Link
+          href={`/admin/revisar?key=${adminKey}`}
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#f97316]/20 hover:border-[#f97316] group"
+        >
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">🔍</div>
+          <h2 className="text-lg font-semibold text-white mb-1">Revisar contenido</h2>
+          <p className="text-sm text-[#94a3b8]">
+            Detectar posts con portada rota, link faltante o campos vacíos y corregirlos
+          </p>
+        </Link>
+
+        <Link
           href={`/admin/eliminar?key=${adminKey}`}
           className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#ff4d4d]/20 hover:border-[#ff4d4d] group"
         >
