@@ -31,7 +31,7 @@ export default function LoadMoreButton({
   const [page, setPage] = useState(1)
   const [items, setItems] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(hasMorePages)
   const [error, setError] = useState('')
   const [loaded, setLoaded] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -69,7 +69,7 @@ export default function LoadMoreButton({
   useEffect(() => {
     setItems([])
     setPage(1)
-    setHasMore(true)
+    setHasMore(hasMorePages)
     setLoaded(false)
     setError('')
   }, [searchParams])
