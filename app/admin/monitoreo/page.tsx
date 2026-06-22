@@ -8,6 +8,8 @@ type DayData = { date: string; count: number; label: string }
 type TopItem = { id: string; titulo: string; url_portada: string; categoria: string; visits: number }
 type RecentItem = { id: string; titulo: string }
 type ReportItem = { contenido_id: string; titulo: string; creado_en: string }
+type SuspiciousIp = { ip: string; count: number; pathsCount: number }
+type Recent404 = { path: string; user_agent: string; created_at: string; ip: string }
 
 type Stats = {
   online: number
@@ -18,6 +20,10 @@ type Stats = {
   topContent: TopItem[]
   recentContent: RecentItem[]
   recentReports: ReportItem[]
+  requestLogsActive: boolean
+  errors404Today: number
+  recent404s: Recent404[]
+  suspiciousIps: SuspiciousIp[]
 }
 
 const MAX_BAR = 100
@@ -129,7 +135,7 @@ export default function MonitoreoPage() {
         {stats && (
           <div className="space-y-6">
             {/* KPI Cards */}
-            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
               <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4">
                 <div className="flex items-center gap-2 text-green-400 mb-2">
                   <Users size={16} />
@@ -161,6 +167,16 @@ export default function MonitoreoPage() {
                 </div>
                 <p className="text-3xl font-bold text-white">{stats.pendingReports}</p>
               </div>
+
+              {stats.requestLogsActive && (
+                <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4">
+                  <div className="flex items-center gap-2 text-rose-400 mb-2">
+                    <span className="text-base font-bold">404</span>
+                    <span className="text-xs font-medium text-zinc-500">ERRORES HOY</span>
+                  </div>
+                  <p className="text-3xl font-bold text-white">{stats.errors404Today}</p>
+                </div>
+              )}
             </div>
 
             {/* Charts row */}
@@ -264,19 +280,24 @@ export default function MonitoreoPage() {
                 )}
               </div>
 
-              {/* Setup / Info */}
+              {/* Detección de amenazas */}
               <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-5">
                 <h2 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">
-                  <Shield size={15} className="text-zinc-500" />
+                  <Shield size={15} className={stats.requestLogsActive ? 'text-emerald-400' : 'text-zinc-500'} />
                   Detección de amenazas
+                  {stats.requestLogsActive && (
+                    <span className="ml-auto text-[10px] text-emerald-500 font-medium">● Activo</span>
+                  )}
                 </h2>
 
-                <div className="rounded-lg bg-zinc-800/50 border border-zinc-700/50 p-3 mb-3">
-                  <p className="text-xs text-zinc-400 leading-relaxed">
-                    Para habilitar detección de scraping y registro de errores 404,
-                    creá la siguiente tabla en el SQL Editor de Supabase:
-                  </p>
-                  <pre className="mt-2 text-[10px] text-zinc-500 bg-zinc-950 p-3 rounded-lg overflow-x-auto">
+                {!stats.requestLogsActive ? (
+                  <>
+                    <div className="rounded-lg bg-zinc-800/50 border border-zinc-700/50 p-3 mb-3">
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        Para habilitar detección de scraping y registro de errores 404,
+                        creá la siguiente tabla en el SQL Editor de Supabase:
+                      </p>
+                      <pre className="mt-2 text-[10px] text-zinc-500 bg-zinc-950 p-3 rounded-lg overflow-x-auto">
 {`CREATE TABLE IF NOT EXISTS request_logs (
   id BIGSERIAL PRIMARY KEY,
   ip TEXT NOT NULL,
@@ -291,10 +312,10 @@ CREATE INDEX IF NOT EXISTS idx_request_logs_ip ON request_logs(ip);
 CREATE INDEX IF NOT EXISTS idx_request_logs_created ON request_logs(created_at);
 
 ALTER TABLE request_logs ENABLE ROW LEVEL SECURITY;`}
-                  </pre>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS request_logs (
+                      </pre>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS request_logs (
   id BIGSERIAL PRIMARY KEY,
   ip TEXT NOT NULL,
   path TEXT NOT NULL,
@@ -308,18 +329,70 @@ CREATE INDEX IF NOT EXISTS idx_request_logs_ip ON request_logs(ip);
 CREATE INDEX IF NOT EXISTS idx_request_logs_created ON request_logs(created_at);
 
 ALTER TABLE request_logs ENABLE ROW LEVEL SECURITY;`)
-                    }}
-                    className="mt-2 text-[10px] text-amber-500 hover:text-amber-400 transition-colors"
-                  >
-                    Copiar SQL
-                  </button>
-                </div>
+                        }}
+                        className="mt-2 text-[10px] text-amber-500 hover:text-amber-400 transition-colors"
+                      >
+                        Copiar SQL
+                      </button>
+                    </div>
 
-                <p className="text-xs text-zinc-600 leading-relaxed">
-                  Una vez creada la tabla, el sistema registrará automáticamente
-                  los errores 404 y detectará patrones de scraping (más de 100
-                  requests/min desde una misma IP).
-                </p>
+                    <p className="text-xs text-zinc-600 leading-relaxed">
+                      Una vez creada la tabla, el sistema registrará automáticamente
+                      los errores 404 y detectará patrones de scraping (más de 100
+                      requests/min desde una misma IP).
+                    </p>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    {/* IPs sospechosas */}
+                    <div>
+                      <h3 className="text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        IPs sospechosas (últimos 15 min)
+                      </h3>
+                      {stats.suspiciousIps.length === 0 ? (
+                        <p className="text-xs text-zinc-600 pl-3">Sin actividad sospechosa detectada</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {stats.suspiciousIps.map((item) => (
+                            <div key={item.ip} className="flex items-center gap-2 text-xs bg-red-500/5 rounded-lg px-3 py-2">
+                              <code className="text-rose-400 font-mono text-[10px]">{item.ip}</code>
+                              <span className="text-zinc-500 ml-auto">
+                                {item.count} reqs ({item.pathsCount} rutas)
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Últimos 404 */}
+                    <div>
+                      <h3 className="text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Últimos errores 404
+                      </h3>
+                      {stats.recent404s.length === 0 ? (
+                        <p className="text-xs text-zinc-600 pl-3">Sin errores 404 recientes</p>
+                      ) : (
+                        <div className="space-y-1 max-h-28 overflow-y-auto">
+                          {stats.recent404s.map((err, i) => (
+                            <div key={i} className="flex items-center gap-2 text-[10px] text-zinc-500">
+                              <code className="text-zinc-400 truncate max-w-[180px]">{err.path}</code>
+                              <span className="text-zinc-600 shrink-0 ml-auto">
+                                {err.created_at ? new Date(err.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-[10px] text-zinc-600 leading-relaxed border-t border-zinc-800 pt-3">
+                      Se monitorean todas las peticiones a la API. IPs con más de 25 requests en 15 minutos son marcadas como sospechosas.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

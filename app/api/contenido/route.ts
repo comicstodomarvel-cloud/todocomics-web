@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { HASHTAG_FILTERS } from '@/lib/hashtags'
 
 export async function GET(request: NextRequest) {
@@ -10,6 +11,31 @@ export async function GET(request: NextRequest) {
   const hashtagId = searchParams.get('hashtag')
   const busqueda = searchParams.get('busqueda')
   const offset = (page - 1) * limit
+
+  // Log de peticiones asíncrono para detección de scraping (fire-and-forget)
+  try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
+    const userAgent = request.headers.get('user-agent') || ''
+    const urlObj = new URL(request.url)
+    const path = urlObj.pathname + urlObj.search
+
+    const supabaseAdmin = getSupabaseAdmin()
+    ;(async () => {
+      try {
+        await supabaseAdmin.from('request_logs').insert({
+          ip,
+          path: path.slice(0, 200),
+          method: 'GET',
+          user_agent: userAgent,
+          status: 200
+        })
+      } catch {
+        // Silencioso
+      }
+    })()
+  } catch (logErr) {
+    // Silencioso
+  }
 
   try {
     let query = supabase.from('contenido').select('*', { count: 'exact' })

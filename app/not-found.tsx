@@ -1,6 +1,19 @@
+'use client'
+
+import { useEffect } from 'react'
 import Link from 'next/link'
 
 export default function NotFound() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const path = window.location.pathname + window.location.search
+    fetch('/api/monitoreo/report-404', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    }).catch(() => {})
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-4">
       <span className="text-6xl font-bold text-zinc-700">404</span>
