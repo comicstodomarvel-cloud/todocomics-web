@@ -112,11 +112,9 @@ function extraerLinkDescargaMejorado(msg: TelegramMessage, texto: string): strin
   // 1. Primero buscar hyperlinks en entidades
   const hyperlinks = extraerHyperlinks(msg, texto)
 
-  const downloadLinks = hyperlinks.filter((url) => PATRON_LINK.test(url))
-
-  if (downloadLinks.length > 0) {
-    console.log('[Link] Hyperlink encontrado:', downloadLinks[0])
-    return downloadLinks[0]
+  if (hyperlinks.length > 0) {
+    console.log('[Link] Hyperlink encontrado:', hyperlinks[0])
+    return hyperlinks[0]
   }
 
   // 2. Fallback a texto plano
