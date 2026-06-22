@@ -76,9 +76,14 @@ export default function ContentListItem({ item, lastUpdateDate, linkCaido, linkR
             </span>
           ))}
         </div>
+
+        <div className="flex flex-row sm:hidden items-center gap-2 pt-1">
+          <ReadLaterButton contenidoId={item.id} />
+          <LikeButton contenidoId={item.id} />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-1.5 shrink-0">
+      <div className="hidden sm:flex flex-col gap-1.5 shrink-0">
         <ReadLaterButton contenidoId={item.id} />
         <LikeButton contenidoId={item.id} />
       </div>

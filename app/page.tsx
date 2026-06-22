@@ -1,6 +1,7 @@
 import { getLatestContent, searchContent, getContentByCategoria, getContentByHashtag, getLatestUpdateDates, getBrokenLinkIds, getReportStatus } from '@/lib/data';
 import type { ContentItem, SortOption } from '@/lib/data';
 import { HASHTAG_FILTERS } from '@/lib/hashtags';
+import SortSelect from '@/components/SortSelect';
 import ViewModeToggle from '@/components/ViewModeToggle';
 import LoadMoreButton from '@/components/LoadMoreButton';
 import OnlineCounter from '@/components/OnlineCounter';
@@ -276,35 +277,44 @@ export default async function HomePage({
           </div>
           <div className="flex items-center gap-2">
             {isFiltering && (
-              <div className="flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 p-1 text-xs">
-                {[
-                  { value: 'reciente', label: 'Nuevos' },
-                  { value: 'antiguo', label: 'Antiguos' },
-                  { value: 'az', label: 'A-Z' },
-                  { value: 'za', label: 'Z-A' },
-                ].map((opt) => {
-                  const sp = new URLSearchParams()
-                  if (busqueda) sp.set('busqueda', busqueda)
-                  if (categoria && categoria !== 'Todos') sp.set('categoria', categoria)
-                  if (hashtag) sp.set('hashtag', hashtag)
-                  if (vista) sp.set('vista', vista)
-                  sp.set('orden', opt.value)
-                  return (
-                    <Link
-                      key={opt.value}
-                      href={`?${sp.toString()}`}
-                      replace
-                      className={`px-2.5 py-1.5 rounded-md transition-colors ${
-                        (sort === opt.value) || (!orden && opt.value === 'reciente')
-                          ? 'bg-amber-500 text-black font-bold'
-                          : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                    >
-                      {opt.label}
-                    </Link>
-                  )
-                })}
-              </div>
+              <>
+                <div className="hidden sm:flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-800 p-1 text-xs">
+                  {[
+                    { value: 'reciente', label: 'Nuevos' },
+                    { value: 'antiguo', label: 'Antiguos' },
+                    { value: 'az', label: 'A-Z' },
+                    { value: 'za', label: 'Z-A' },
+                  ].map((opt) => {
+                    const sp = new URLSearchParams()
+                    if (busqueda) sp.set('busqueda', busqueda)
+                    if (categoria && categoria !== 'Todos') sp.set('categoria', categoria)
+                    if (hashtag) sp.set('hashtag', hashtag)
+                    if (vista) sp.set('vista', vista)
+                    sp.set('orden', opt.value)
+                    return (
+                      <Link
+                        key={opt.value}
+                        href={`?${sp.toString()}`}
+                        replace
+                        className={`px-2.5 py-1.5 rounded-md transition-colors ${
+                          (sort === opt.value) || (!orden && opt.value === 'reciente')
+                            ? 'bg-amber-500 text-black font-bold'
+                            : 'text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        {opt.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+                <SortSelect
+                  current={sort}
+                  busqueda={busqueda}
+                  categoria={categoria && categoria !== 'Todos' ? categoria : undefined}
+                  hashtag={hashtag}
+                  vista={vista}
+                />
+              </>
             )}
             <ViewModeToggle />
           </div>
