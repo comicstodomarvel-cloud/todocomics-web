@@ -77,6 +77,7 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   const { busqueda, categoria, hashtag, vista } = params;
+  const isFiltering = Boolean(busqueda || (categoria && categoria !== 'Todos') || hashtag);
   const viewMode = vista === 'lista' ? 'lista' : 'grid';
 
   // ✅ TIPO EXPLÍCITO para evitar error de TypeScript
@@ -201,20 +202,21 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* Recomendación aleatoria */}
-      <section className="container mx-auto px-4 py-8">
-        {/* Acciones rápidas para móvil */}
-        <div className="lg:hidden mb-4">
-          <MobileActionBar />
-        </div>
-
-        <div className="flex gap-6">
-          <TopWeekly />
-          <div className="flex-1 min-w-0">
-            <RandomRecommendation />
+      {!isFiltering && (
+        <section className="container mx-auto px-4 py-8">
+          {/* Acciones rápidas para móvil */}
+          <div className="lg:hidden mb-4">
+            <MobileActionBar />
           </div>
-        </div>
-      </section>
+
+          <div className="flex gap-6">
+            <TopWeekly />
+            <div className="flex-1 min-w-0">
+              <RandomRecommendation />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Leer más tarde */}
       <ReadLaterSection />

@@ -1,21 +1,24 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Gift, X } from 'lucide-react'
 
 const STORAGE_KEY = 'terabox_cta_shown'
 
 export default function TeraboxNotification() {
+  const pathname = usePathname()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (pathname.startsWith('/admin')) return
     const shown = sessionStorage.getItem(STORAGE_KEY)
     if (!shown) {
       setShow(true)
       sessionStorage.setItem(STORAGE_KEY, '1')
     }
-  }, [])
+  }, [pathname])
 
   if (!show) return null
 
