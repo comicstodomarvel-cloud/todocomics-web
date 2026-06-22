@@ -74,27 +74,23 @@ export async function GET(request: NextRequest) {
     for (const post of postsWithPortada.slice(0, 30)) {
       headPromises.push(async () => {
         try {
+          const url = post.url_portada!
+
+          // WebP files from old pipeline are corrupt even if HTTP 200
+          if (url.endsWith('.webp')) {
+            portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
+            return
+          }
+
           const controller = new AbortController()
           const timeout = setTimeout(() => controller.abort(), 3000)
-          const res = await fetch(post.url_portada!, {
-            method: 'HEAD',
-            signal: controller.signal,
-          })
+          const res = await fetch(url, { method: 'HEAD', signal: controller.signal })
           clearTimeout(timeout)
           if (!res.ok || !res.headers.get('content-type')?.startsWith('image/')) {
-            const campos = !post.titulo?.trim() ? ['url_portada'] : ['url_portada']
-            portadaRota.push({
-              ...post,
-              campos_vacios: campos,
-              portada_valida: false,
-            })
+            portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
           }
         } catch {
-          portadaRota.push({
-            ...post,
-            campos_vacios: ['url_portada'],
-            portada_valida: false,
-          })
+          portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
         }
       })
     }
