@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     }
 
     const postsWithPortada = posts.filter((p) => p.url_portada?.trim())
-    for (const post of postsWithPortada.slice(0, 30)) {
+    for (const post of postsWithPortada.slice(0, 100)) {
       headPromises.push(async () => {
         try {
           const url = post.url_portada!
