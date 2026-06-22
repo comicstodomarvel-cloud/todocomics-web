@@ -116,6 +116,37 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Notificar portadas rotas nuevas
+    if (portadaRota.length > 0) {
+      ;(async () => {
+        try {
+          const admin = getSupabaseAdmin()
+          const { data: existentes } = await admin
+            .from('admin_notificaciones')
+            .select('metadata')
+            .eq('tipo', 'portada_rota')
+            .eq('leida', false)
+
+          const idsConNotif = new Set(
+            (existentes ?? []).map((n: any) => n.metadata?.contenido_id).filter(Boolean)
+          )
+
+          for (const rota of portadaRota) {
+            if (idsConNotif.has(rota.id)) continue
+            await admin.from('admin_notificaciones').insert({
+              tipo: 'portada_rota',
+              titulo: `🖼️ Portada rota: ${rota.titulo ?? 'sin título'}`,
+              detalle: 'La portada no está accesible o está corrupta',
+              link: `/admin/revisar?key=${process.env.ADMIN_KEY}`,
+              metadata: { contenido_id: rota.id },
+            })
+          }
+        } catch {
+          // silencio
+        }
+      })()
+    }
+
     return NextResponse.json({
       total: count ?? posts.length,
       con_issues: allIssues.length,

@@ -135,6 +135,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error al reportar' }, { status: 500 })
     }
 
+    // Notificar al admin
+    ;(async () => {
+      try {
+        const { data: contenido } = await supabase
+          .from('contenido')
+          .select('titulo')
+          .eq('id', contenidoId)
+          .single()
+        const tituloPost = contenido?.titulo ?? 'contenido'
+        await getSupabaseAdmin().from('admin_notificaciones').insert({
+          tipo: 'reporte',
+          titulo: `🔗 Nuevo reporte: ${tituloPost}`,
+          detalle: comentario ? `"${comentario.slice(0, 100)}"` : 'Link caído reportado por un usuario',
+          link: `/admin/reportes?key=${process.env.ADMIN_KEY}`,
+          metadata: { contenido_id: contenidoId },
+        })
+      } catch {
+        // silencio
+      }
+    })()
+
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (e) {
     console.error('POST reportes error:', e)

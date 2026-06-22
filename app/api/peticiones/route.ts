@@ -108,6 +108,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Notificar al admin
+    ;(async () => {
+      try {
+        await getSupabaseAdmin().from('admin_notificaciones').insert({
+          tipo: 'peticion',
+          titulo: `📩 Nueva petición: ${nombre_comic.trim()}`,
+          detalle: editorial.trim() ? `Editorial: ${editorial.trim()}` : null,
+          link: `/admin/peticiones?key=${process.env.ADMIN_KEY}`,
+          metadata: { peticion_id: data.id },
+        })
+      } catch {
+        // silencio
+      }
+    })()
+
     return NextResponse.json({ success: true, id: data.id }, { status: 201 })
   } catch (err) {
     console.error('[api/peticiones] POST error:', err)

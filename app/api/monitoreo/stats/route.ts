@@ -148,6 +148,62 @@ export async function GET(request: Request) {
       // Silencioso por si no existe la tabla
     }
 
+    // Notificar IPs sospechosas
+    if (suspiciousIps.length > 0) {
+      ;(async () => {
+        try {
+          const admin = getSupabaseAdmin()
+          const { data: recientes } = await admin
+            .from('admin_notificaciones')
+            .select('id')
+            .eq('tipo', 'monitoreo')
+            .eq('leida', false)
+            .gte('fecha_creacion', fifteenMinutesAgo)
+
+          if (!recientes || recientes.length === 0) {
+            const topIp = suspiciousIps[0]
+            await admin.from('admin_notificaciones').insert({
+              tipo: 'monitoreo',
+              titulo: `🚨 IP sospechosa: ${topIp.ip}`,
+              detalle: `${topIp.count} peticiones en 15 minutos (${topIp.pathsCount} rutas distintas)`,
+              link: `/admin/monitoreo?key=${process.env.ADMIN_KEY}`,
+              metadata: { ips: suspiciousIps.map((i: any) => i.ip) },
+            })
+          }
+        } catch {
+          // silencio
+        }
+      })()
+    }
+
+    // Notificar pico de 404s
+    if (errors404Today > 50) {
+      ;(async () => {
+        try {
+          const admin = getSupabaseAdmin()
+          const { data: recientes } = await admin
+            .from('admin_notificaciones')
+            .select('id')
+            .eq('tipo', 'monitoreo')
+            .eq('leida', false)
+            .gte('fecha_creacion', startOfToday)
+            .textSearch('detalle', '404', { config: 'spanish' })
+
+          if (!recientes || recientes.length === 0) {
+            await admin.from('admin_notificaciones').insert({
+              tipo: 'monitoreo',
+              titulo: `⚠️ Pico de errores 404`,
+              detalle: `${errors404Today} errores 404 hoy`,
+              link: `/admin/monitoreo?key=${process.env.ADMIN_KEY}`,
+              metadata: { errors404Today },
+            })
+          }
+        } catch {
+          // silencio
+        }
+      })()
+    }
+
     return NextResponse.json({
       online,
       visitsToday,
