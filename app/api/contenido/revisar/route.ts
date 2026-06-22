@@ -75,13 +75,33 @@ export async function GET(request: NextRequest) {
       headPromises.push(async () => {
         try {
           const url = post.url_portada!
+          const isWebp = url.endsWith('.webp')
 
-          // WebP files from old pipeline are corrupt even if HTTP 200
-          if (url.endsWith('.webp')) {
-            portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
+          // For WebP: fetch first 24 bytes and check for UTF-8 corruption (EF BF BD in VP8 data)
+          if (isWebp) {
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 4000)
+            const res = await fetch(url, {
+              headers: { Range: 'bytes=0-23' },
+              signal: controller.signal,
+            })
+            clearTimeout(timeout)
+            if (res.ok) {
+              const buf = await res.arrayBuffer()
+              const bytes = new Uint8Array(buf)
+              // VP8 chunk starts at byte 12, VP8 data at byte 20+
+              // Corrupt files have EF BF BD (UTF-8 replacement) at byte 20+
+              const isCorrupt = bytes[20] === 0xef && bytes[21] === 0xbf && bytes[22] === 0xbd
+              if (isCorrupt) {
+                portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
+              }
+            } else {
+              portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
+            }
             return
           }
 
+          // Non-WebP: HEAD check
           const controller = new AbortController()
           const timeout = setTimeout(() => controller.abort(), 3000)
           const res = await fetch(url, { method: 'HEAD', signal: controller.signal })
