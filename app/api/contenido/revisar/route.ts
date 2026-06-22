@@ -76,38 +76,26 @@ export async function GET(request: NextRequest) {
         try {
           const url = post.url_portada!
           const isWebp = url.endsWith('.webp')
+          const range = isWebp ? 'bytes=0-23' : 'bytes=0-0'
 
-          // For WebP: fetch first 24 bytes and check for UTF-8 corruption (EF BF BD in VP8 data)
-          if (isWebp) {
-            const controller = new AbortController()
-            const timeout = setTimeout(() => controller.abort(), 4000)
-            const res = await fetch(url, {
-              headers: { Range: 'bytes=0-23' },
-              signal: controller.signal,
-            })
-            clearTimeout(timeout)
-            if (res.ok) {
-              const buf = await res.arrayBuffer()
-              const bytes = new Uint8Array(buf)
-              // VP8 chunk starts at byte 12, VP8 data at byte 20+
-              // Corrupt files have EF BF BD (UTF-8 replacement) at byte 20+
-              const isCorrupt = bytes[20] === 0xef && bytes[21] === 0xbf && bytes[22] === 0xbd
-              if (isCorrupt) {
-                portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
-              }
-            } else {
-              portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
-            }
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 4000)
+          const res = await fetch(url, { headers: { Range: range }, signal: controller.signal })
+          clearTimeout(timeout)
+
+          if (!res.ok || !res.headers.get('content-type')?.startsWith('image/')) {
+            portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
             return
           }
 
-          // Non-WebP: HEAD check
-          const controller = new AbortController()
-          const timeout = setTimeout(() => controller.abort(), 3000)
-          const res = await fetch(url, { method: 'HEAD', signal: controller.signal })
-          clearTimeout(timeout)
-          if (!res.ok || !res.headers.get('content-type')?.startsWith('image/')) {
-            portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
+          if (isWebp) {
+            const buf = await res.arrayBuffer()
+            const bytes = new Uint8Array(buf)
+            // Corrupt WebP have UTF-8 replacement EF BF BD at VP8 data start (byte 20+)
+            const isCorrupt = bytes[20] === 0xef && bytes[21] === 0xbf && bytes[22] === 0xbd
+            if (isCorrupt) {
+              portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
+            }
           }
         } catch {
           portadaRota.push({ ...post, campos_vacios: ['url_portada'], portada_valida: false })
