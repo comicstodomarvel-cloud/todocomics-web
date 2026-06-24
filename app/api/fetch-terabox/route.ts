@@ -21,15 +21,10 @@ const SHORTENER_PATTERN = /bit\.ly|shorturl|tinyurl|ow\.ly|is\.gd|shorte\.st|sho
 async function resolveUrl(url: string): Promise<string> {
   if (!SHORTENER_PATTERN.test(url)) return url
   try {
-    const res = await fetch(url, { method: "HEAD", redirect: "manual" })
-    return res.headers.get("location") || res.url || url
+    const res = await fetch(url, { method: "GET", redirect: "follow" })
+    return res.url
   } catch {
-    try {
-      const res = await fetch(url, { method: "GET", redirect: "follow" })
-      return res.url
-    } catch {
-      return url
-    }
+    return url
   }
 }
 
@@ -96,11 +91,16 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.XAPIVERSE_KEY
     if (!apiKey) {
+      console.error("[fetch-terabox] XAPIVERSE_KEY no configurada")
       return NextResponse.json(
         { error: "API key no configurada" },
         { status: 500 }
       )
     }
+
+    console.log("[fetch-terabox] URL recibida:", url.trim())
+    console.log("[fetch-terabox] URL resuelta:", resolvedUrl)
+    console.log("[fetch-terabox] API key presente:", !!apiKey)
 
     const response = await fetch("https://xapiverse.com/api/terabox-pro", {
       method: "POST",
@@ -111,15 +111,40 @@ export async function POST(request: Request) {
       body: JSON.stringify({ url: resolvedUrl }),
     })
 
+    const xapiStatus = response.status
+    const xapiBody = await response.text()
+
+    console.log("[fetch-terabox] XAPIverse status:", xapiStatus)
+    console.log("[fetch-terabox] XAPIverse body:", xapiBody)
+
     if (!response.ok) {
-      const errorText = await response.text()
+      // Try to parse as JSON for rich error info
+      let errorPayload
+      try {
+        errorPayload = JSON.parse(xapiBody)
+      } catch {
+        errorPayload = { message: xapiBody || response.statusText }
+      }
       return NextResponse.json(
-        { error: errorText || response.statusText },
+        {
+          error: errorPayload.message || errorPayload.error || xapiBody || response.statusText,
+          code: errorPayload.code,
+          details: errorPayload.details,
+        },
         { status: 502 }
       )
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = JSON.parse(xapiBody)
+    } catch {
+      console.error("[fetch-terabox] XAPIverse response no es JSON:", xapiBody)
+      return NextResponse.json(
+        { error: "Respuesta inválida del servidor externo" },
+        { status: 502 }
+      )
+    }
 
     CACHE.set(cacheKey, { data, cachedAt: Date.now() })
 
