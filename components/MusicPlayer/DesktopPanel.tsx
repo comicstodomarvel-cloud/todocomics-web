@@ -54,7 +54,7 @@ export default function DesktopPanel() {
         </div>
 
         {/* Playlist */}
-        <div className="flex-1 min-h-0 border-t border-zinc-800/50 pt-0">
+        <div className="flex-1 min-h-0 border-t border-zinc-800/50 pt-0 flex flex-col">
           <PlaylistView />
         </div>
       </div>
