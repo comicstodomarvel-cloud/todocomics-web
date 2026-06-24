@@ -26,21 +26,14 @@ export async function POST(request: Request) {
 
     const supabase = getSupabaseAdmin()
 
-    const { count } = await supabase
-      .from("terabox_verificaciones")
-      .select("id", { count: "exact", head: true })
-      .eq("ip", ip)
-      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+    const { error } = await supabase.from("terabox_verificaciones").insert({
+      ip,
+      user_agent: userAgent,
+      token_hash: hash,
+    })
 
-    if (!count || count === 0) {
-      const { error } = await supabase.from("terabox_verificaciones").insert({
-        ip,
-        user_agent: userAgent,
-        token_hash: hash,
-      })
-      if (error) {
-        console.error("Error guardando verificación:", error)
-      }
+    if (error) {
+      console.error("Error guardando verificación:", error)
     }
 
     return NextResponse.json({ token, expiresIn: 7 * 24 * 60 * 60 * 1000 })
