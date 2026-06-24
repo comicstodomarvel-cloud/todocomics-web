@@ -176,7 +176,7 @@ export default async function HomePage({
         }}
       />
       {/* Hero Section */}
-      <section className="relative min-h-[50vh] md:h-[70vh] w-full overflow-hidden">
+      <section className="relative h-40 md:h-[70vh] w-full overflow-hidden">
         {/* Imagen de fondo con gradiente */}
         <div className="absolute inset-0">
           <ImageWithFallback
@@ -192,7 +192,7 @@ export default async function HomePage({
         </div>
 
         {/* Contenido del Hero */}
-        <div className="relative h-full flex items-end pb-16 px-8 md:px-16">
+        <div className="relative h-full hidden sm:flex items-end pb-16 px-8 md:px-16">
           <div className="max-w-2xl">
             {/* Badge de categoría */}
             <span className="inline-block bg-amber-500 text-black text-xs font-bold px-3 py-1 rounded mb-4">
