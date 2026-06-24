@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createHash } from "crypto"
+import { getSupabaseAdmin } from "@/lib/supabase-admin"
 
 const CACHE = new Map<string, { data: unknown; cachedAt: number }>()
 const CACHE_TTL = 24 * 60 * 60 * 1000
@@ -47,11 +48,33 @@ export async function POST(request: Request) {
     }
 
     const cacheKey = url.trim().toLowerCase()
+
+    // 1. In-memory cache hit (misma instancia)
     const cached = CACHE.get(cacheKey)
     if (cached && Date.now() - cached.cachedAt < CACHE_TTL) {
       return NextResponse.json(cached.data)
     }
 
+    // 2. Supabase persistent cache hit (entre instancias)
+    const urlHash = createHash("sha256").update(cacheKey).digest("hex")
+    const supabase = getSupabaseAdmin()
+
+    const { data: cachedRow } = await supabase
+      .from("terabox_cache")
+      .select("response_json, created_at")
+      .eq("url_hash", urlHash)
+      .single()
+
+    if (cachedRow) {
+      const age = Date.now() - new Date(cachedRow.created_at).getTime()
+      if (age < CACHE_TTL) {
+        CACHE.set(cacheKey, { data: cachedRow.response_json, cachedAt: Date.now() })
+        return NextResponse.json(cachedRow.response_json)
+      }
+      await supabase.from("terabox_cache").delete().eq("url_hash", urlHash)
+    }
+
+    // 3. Miss total — llamar a xapiverse
     const apiKey = process.env.XAPIVERSE_KEY
     if (!apiKey) {
       return NextResponse.json({ error: "API key no configurada" }, { status: 500 })
@@ -77,7 +100,17 @@ export async function POST(request: Request) {
 
     const data = await response.json()
 
+    // 4. Guardar en ambas caches
     CACHE.set(cacheKey, { data, cachedAt: Date.now() })
+
+    await supabase.from("terabox_cache").upsert(
+      {
+        url_hash: urlHash,
+        url: cacheKey,
+        response_json: data,
+      },
+      { onConflict: "url_hash" }
+    ).maybeSingle()
 
     return NextResponse.json(data)
   } catch (err) {
