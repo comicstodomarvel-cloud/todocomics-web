@@ -62,16 +62,55 @@ function normalizeUrl(url: string): string {
   }
 }
 
+const BROWSER_HEADERS = {
+  "Origin": "https://xapiverse.com",
+  "Referer": "https://xapiverse.com/apis/terabox-pro",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+}
+
+const XAPI_ENDPOINTS = [
+  "https://xapiverse.com/api/terabox",
+  "https://xapiverse.com/api/terabox-pro",
+]
+
+async function callXapi(
+  url: string,
+  apiKey: string
+): Promise<{ ok: boolean; status: number; body: string }> {
+  for (const endpoint of XAPI_ENDPOINTS) {
+    console.log("[fetch-terabox] Intentando endpoint:", endpoint)
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "xAPIverse-Key": apiKey,
+          ...BROWSER_HEADERS,
+        },
+        body: JSON.stringify({ url }),
+      })
+      const body = await res.text()
+      console.log(`[fetch-terabox] Endpoint ${endpoint}: status=${res.status}`)
+      if (res.ok) {
+        console.log(`[fetch-terabox] Exito con endpoint ${endpoint}`)
+        return { ok: true, status: res.status, body }
+      }
+      console.log(`[fetch-terabox] Fallo ${endpoint}: status=${res.status}`)
+    } catch (err) {
+      console.error(`[fetch-terabox] Error llamando ${endpoint}:`, err)
+    }
+  }
+  return { ok: false, status: 502, body: "{\"error\":\"Todos los endpoints fallaron\"}" }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { url } = body
 
     if (!url || typeof url !== "string") {
-      return NextResponse.json(
-        { error: "URL requerida" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "URL requerida" }, { status: 400 })
     }
 
     const resolvedUrl = await resolveUrl(url.trim())
@@ -82,10 +121,7 @@ export async function POST(request: Request) {
 
     if (!isTeraboxUrl(normalizedUrl)) {
       return NextResponse.json(
-        {
-          error:
-            "Este extractor solo admite enlaces oficiales de TeraBox.",
-        },
+        { error: "Este extractor solo admite enlaces oficiales de TeraBox." },
         { status: 400 }
       )
     }
@@ -121,42 +157,29 @@ export async function POST(request: Request) {
     const apiKey = process.env.XAPIVERSE_KEY
     if (!apiKey) {
       console.error("[fetch-terabox] XAPIVERSE_KEY no configurada")
-      return NextResponse.json(
-        { error: "API key no configurada" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "API key no configurada" }, { status: 500 })
     }
 
     console.log("[fetch-terabox] URL recibida:", url.trim())
-    console.log("[fetch-terabox] URL normalizada (enviada a XAPIverse):", normalizedUrl)
+    console.log("[fetch-terabox] URL normalizada (enviada):", normalizedUrl)
     console.log("[fetch-terabox] API key presente:", !!apiKey)
 
-    const response = await fetch("https://xapiverse.com/api/terabox-pro", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "xAPIverse-Key": apiKey,
-      },
-      body: JSON.stringify({ url: normalizedUrl }),
-    })
+    const xapiResult = await callXapi(normalizedUrl, apiKey)
+    const xapiBody = xapiResult.body
 
-    const xapiStatus = response.status
-    const xapiBody = await response.text()
-
-    console.log("[fetch-terabox] XAPIverse status:", xapiStatus)
+    console.log("[fetch-terabox] XAPIverse status:", xapiResult.status)
     console.log("[fetch-terabox] XAPIverse body:", xapiBody)
 
-    if (!response.ok) {
-      // Try to parse as JSON for rich error info
+    if (!xapiResult.ok) {
       let errorPayload
       try {
         errorPayload = JSON.parse(xapiBody)
       } catch {
-        errorPayload = { message: xapiBody || response.statusText }
+        errorPayload = { message: xapiBody || "Error desconocido" }
       }
       return NextResponse.json(
         {
-          error: errorPayload.message || errorPayload.error || xapiBody || response.statusText,
+          error: errorPayload.message || errorPayload.error || xapiBody,
           code: errorPayload.code,
           details: errorPayload.details,
         },
