@@ -1,0 +1,46 @@
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+
+<!-- BEGIN:project-state -->
+# Estado del proyecto — TodoComics Web
+
+## Último commit: `c2983f0` — `main` (~22 Jun 2026)
+
+### Feature completo: Monitoreo + Seguridad
+
+**Nuevos archivos creados:**
+- `app/admin/monitoreo/page.tsx` — Dashboard con KPIs (online, visitas, 404s, reportes), gráfico barras 7 días, top contenido, detección IPs sospechosas, últimos 404s. Muestra setup SQL si falta tabla request_logs.
+- `app/api/monitoreo/stats/route.ts` — Endpoint protegido (x-admin-key) que consolida stats desde presencia, visitas, reportes_links, request_logs. Detecta scraping agrupando IPs con >25 reqs/15min.
+- `app/api/monitoreo/report-404/route.ts` — POST endpoint para loguear 404s a request_logs (service_role).
+- `middleware.ts` — Bloquea bots maliciosos (ahrefsbot, semrushbot, etc.) + headers de seguridad.
+- `app/dmca/page.tsx` — Página DMCA completa con 7 secciones, agente designado vía Discord.
+
+**Archivos modificados:**
+- `app/not-found.tsx` → convertido a 'use client', reporta 404 automáticamente a /api/monitoreo/report-404
+- `app/api/contenido/route.ts` → loguea cada request a request_logs (fire-and-forget, silent catch)
+- `app/admin/monitoreo/page.tsx` → UI reactiva: si requestLogsActive=true muestra datos en vivo, si no muestra SQL setup
+- `app/admin/page.tsx` → tarjeta "Monitoreo 📊" agregada al grid
+- `app/page.tsx` → footer con enlaces DMCA, FAQ, Solicitar Cómic
+
+**Infraestructura SQL (ya ejecutada en Supabase):**
+```sql
+CREATE TABLE request_logs (id BIGSERIAL PK, ip TEXT, path TEXT, method TEXT, user_agent TEXT, status INT, created_at TIMESTAMPTZ DEFAULT NOW());
+CREATE INDEX idx_request_logs_ip, idx_request_logs_created;
+ALTER TABLE request_logs ENABLE ROW LEVEL SECURITY;
+```
+
+### Features anteriores completados:
+- DesktopToolbar premium con tooltips, OnlineCounter, FavoriteBadge, TopWeekly
+- WebP conversion en upload-image.ts (sharp, quality 85)
+- Página DMCA enlazada en footer
+- MobileActionBar debajo de Recomendación del Día
+- Grid unificado SSR+cliente en LoadMoreButton (fix salto visual)
+
+### Pendiente / Ideas para próxima sesión:
+- Rate limiting con logging primero (no implementado)
+- `/api/redirect/[id]` para ofuscar links de descarga (planeado)
+- Bloqueo por Referer o User-Agent en middleware (pendiente de ajuste fino)
+<!-- END:project-state -->
