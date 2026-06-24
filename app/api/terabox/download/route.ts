@@ -10,10 +10,8 @@ const SHARE_PATTERN = /\/(s\/|sharing\/link\?surl=)([^/?#&]+)/
 async function resolveUrl(url: string): Promise<string> {
   if (!/bit\.ly/i.test(url)) return url
   try {
-    const res = await fetch(url, { method: "HEAD", redirect: "manual" })
-    if (res.status >= 300 && res.status < 400) {
-      return res.headers.get("location") || url
-    }
+    const res = await fetch(url, { method: "HEAD" })
+    return res.url
   } catch {}
   return url
 }
