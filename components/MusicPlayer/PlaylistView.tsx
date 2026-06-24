@@ -19,7 +19,7 @@ export default function PlaylistView() {
   const isEmpty = displayTracks.length === 0
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="flex border-b border-zinc-800 px-4">
         <button
           onClick={() => setActiveTab("playlist")}
