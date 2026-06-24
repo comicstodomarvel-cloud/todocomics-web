@@ -37,6 +37,10 @@ function isTeraboxUrl(url: string): boolean {
   }
 }
 
+const DOMAIN_MAP: Record<string, string> = {
+  "1024tera.com": "1024terabox.com",
+}
+
 function normalizeUrl(url: string): string {
   try {
     const parsed = new URL(url)
@@ -44,9 +48,13 @@ function normalizeUrl(url: string): string {
     if (surl) {
       parsed.pathname = "/s/" + surl
       parsed.search = ""
-      return parsed.toString()
     }
-    return url
+    const hostname = parsed.hostname.replace(/^www\./, "")
+    const mapped = DOMAIN_MAP[hostname]
+    if (mapped) {
+      parsed.hostname = mapped
+    }
+    return parsed.toString()
   } catch {
     return url
   }
