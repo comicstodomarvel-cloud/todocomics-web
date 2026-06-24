@@ -70,9 +70,10 @@ const BROWSER_HEADERS = {
 }
 
 const XAPI_ENDPOINTS = [
-  "https://xapiverse.com/api/terabox",
   "https://xapiverse.com/api/terabox-pro",
 ]
+
+let lastErrorBody = ""
 
 async function callXapi(
   url: string,
@@ -96,12 +97,13 @@ async function callXapi(
         console.log(`[fetch-terabox] Exito con endpoint ${endpoint}`)
         return { ok: true, status: res.status, body }
       }
+      lastErrorBody = body
       console.log(`[fetch-terabox] Fallo ${endpoint}: status=${res.status}`)
     } catch (err) {
       console.error(`[fetch-terabox] Error llamando ${endpoint}:`, err)
     }
   }
-  return { ok: false, status: 502, body: "{\"error\":\"Todos los endpoints fallaron\"}" }
+  return { ok: false, status: 502, body: lastErrorBody }
 }
 
 export async function POST(request: Request) {
