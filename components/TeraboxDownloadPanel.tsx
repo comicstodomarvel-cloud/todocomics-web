@@ -33,44 +33,40 @@ interface DownloadResult {
   thumbnail?: string
 }
 
+async function getOrRefreshToken(): Promise<string> {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  if (stored) {
+    try {
+      const data = JSON.parse(stored)
+      if (data.token && Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
+        return data.token
+      }
+    } catch { /* ignore */ }
+  }
+  try {
+    const res = await fetch("/api/terabox/verify", { method: "POST" })
+    if (res.ok) {
+      const data = await res.json()
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ token: data.token, timestamp: Date.now() })
+      )
+      return data.token
+    }
+  } catch { /* ignore */ }
+  return ""
+}
+
 export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void }) {
   const [link, setLink] = useState("")
   const [detectedType, setDetectedType] = useState<{ label: string; valid: boolean } | null>(null)
-  const [ready, setReady] = useState(false)
-  const [initializing, setInitializing] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [results, setResults] = useState<DownloadResult[] | null>(null)
   const [error, setError] = useState("")
   const [faqOpen, setFaqOpen] = useState(true)
 
   useEffect(() => {
-    async function init() {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY)
-        if (stored) {
-          const data = JSON.parse(stored)
-          if (data.token && Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
-            setReady(true)
-            setInitializing(false)
-            return
-          }
-        }
-        const res = await fetch("/api/terabox/verify", { method: "POST" })
-        if (res.ok) {
-          const data = await res.json()
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({ token: data.token, timestamp: Date.now() })
-          )
-          setReady(true)
-        }
-      } catch {
-        // Offline or server error — user can retry
-      } finally {
-        setInitializing(false)
-      }
-    }
-    init()
+    getOrRefreshToken()
   }, [])
 
   function handleLinkChange(value: string) {
@@ -85,33 +81,15 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
   }
 
   async function handleDownload() {
-    if (!link.trim() || !ready) return
+    if (!link.trim()) return
     setDownloading(true)
     setError("")
     setResults(null)
 
-    const stored = localStorage.getItem(STORAGE_KEY)
-    let token = ""
-    if (stored) {
-      try { token = JSON.parse(stored).token } catch {}
-    }
+    const token = await getOrRefreshToken()
 
     if (!token) {
-      try {
-        const res = await fetch("/api/terabox/verify", { method: "POST" })
-        if (res.ok) {
-          const data = await res.json()
-          token = data.token
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({ token, timestamp: Date.now() })
-          )
-        }
-      } catch {}
-    }
-
-    if (!token) {
-      setError("No se pudo inicializar. Revisá tu conexión e intentá de nuevo.")
+      setError("No se pudo preparar la descarga. Revisá tu conexión e intentá de nuevo.")
       setDownloading(false)
       return
     }
@@ -228,21 +206,19 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
         {detectedType?.valid && (
           <button
             onClick={handleDownload}
-            disabled={downloading || !ready || !link.trim()}
+            disabled={downloading || !link.trim()}
             className={`w-full flex items-center justify-center gap-2 font-bold py-3 rounded-lg text-sm transition-all ${
-              downloading || !ready
+              downloading
                 ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
                 : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black hover:scale-[1.02] active:scale-95"
             }`}
           >
             {downloading ? (
               <Loader size={18} className="animate-spin" />
-            ) : !ready ? (
-              <Loader size={18} className="animate-spin" />
             ) : (
               <Download size={18} />
             )}
-            {!ready ? "Preparando..." : "DESCARGAR SIN LÍMITE DE VELOCIDAD"}
+            DESCARGAR SIN LÍMITE DE VELOCIDAD
           </button>
         )}
 
