@@ -12,7 +12,8 @@ function generateToken(ip: string, userAgent: string): { token: string; hash: st
 export async function POST(request: Request) {
   try {
     const origin = request.headers.get("origin") || request.headers.get("referer") || ""
-    if (!origin.includes("todocomics.com") && !origin.includes("localhost")) {
+    const host = request.headers.get("host") || ""
+    if (origin && !origin.includes(host) && !origin.includes("localhost")) {
       return NextResponse.json({ error: "Acceso no permitido" }, { status: 403 })
     }
 
