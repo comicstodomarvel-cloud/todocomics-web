@@ -13,6 +13,7 @@ const TERABOX_DOMAINS = [
   "teraboxurl.com",
   "teraboxshare.com",
   "1024tera.com",
+  "terabox.app",
   "neva.ly",
 ]
 
@@ -39,6 +40,7 @@ function isTeraboxUrl(url: string): boolean {
 
 const DOMAIN_MAP: Record<string, string> = {
   "1024tera.com": "1024terabox.com",
+  "terabox.app": "1024terabox.com",
 }
 
 function normalizeUrl(url: string): string {
