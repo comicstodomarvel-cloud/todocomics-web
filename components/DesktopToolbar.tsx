@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from 'react'
 import HashtagFilter from './HashtagFilter'
 import UpdatesDropdownButton from './updates/UpdatesDropdownButton'
 import OnlineCounter from './OnlineCounter'
+import CerebroButton from './CerebroButton'
 import { Search, X, Gift, HelpCircle, Pencil } from 'lucide-react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -93,6 +94,8 @@ export default function DesktopToolbar({ children }: { children?: ReactNode }) {
 
         <div className="flex items-center gap-3 shrink-0">
           <OnlineCounter variant="toolbar" />
+
+          <CerebroButton variant="toolbar" />
 
           <Suspense fallback={null}>
             <HashtagFilter variant="toolbar" />

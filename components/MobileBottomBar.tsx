@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { usePlayer } from '@/lib/playerStore'
-import { Search, Filter, MessageCircle, Music, X } from 'lucide-react'
+import { Search, Filter, Brain, MessageCircle, Music, X } from 'lucide-react'
 import HashtagFilterPanel from './HashtagFilterPanel'
+import CerebroDropdown from './CerebroDropdown'
 
 const DISCORD_INVITE = 'https://discord.gg/nKTnYSTRHE'
 
@@ -48,6 +49,7 @@ export default function MobileBottomBar() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchValue, setSearchValue] = useState(searchParams.get('busqueda') ?? '')
   const [showFilters, setShowFilters] = useState(false)
+  const [showCerebro, setShowCerebro] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -86,6 +88,7 @@ export default function MobileBottomBar() {
 
   function closeAll() {
     setShowFilters(false)
+    setShowCerebro(false)
     setSearchOpen(false)
   }
 
@@ -107,11 +110,18 @@ export default function MobileBottomBar() {
   return (
     <>
       {/* Backdrops for dropdowns */}
-      {showFilters && (
+      {(showFilters || showCerebro) && (
         <div
           className="fixed inset-0 z-40 lg:hidden"
           onClick={closeAll}
         />
+      )}
+
+      {/* Cerebro dropdown above bar */}
+      {showCerebro && (
+        <div className="fixed left-4 right-4 bottom-20 z-50 lg:hidden">
+          <CerebroDropdown onClose={() => setShowCerebro(false)} />
+        </div>
       )}
 
       {/* Filters dropdown above bar */}
@@ -168,7 +178,7 @@ export default function MobileBottomBar() {
 
             {/* Filters */}
             <button
-              onClick={() => setShowFilters(true)}
+              onClick={() => { setShowFilters(true); setShowCerebro(false) }}
               className={`flex flex-col items-center gap-0.5 transition-colors flex-1 min-w-0 py-1 ${
                 showFilters ? 'text-amber-500' : 'text-zinc-400 hover:text-zinc-100'
               }`}
@@ -176,6 +186,18 @@ export default function MobileBottomBar() {
             >
               <Filter size={20} />
               <span className="text-[10px] leading-none">Filtros</span>
+            </button>
+
+            {/* Cerebro */}
+            <button
+              onClick={() => { setShowCerebro(true); setShowFilters(false) }}
+              className={`flex flex-col items-center gap-0.5 transition-colors flex-1 min-w-0 py-1 ${
+                showCerebro ? 'text-amber-500' : 'text-zinc-400 hover:text-zinc-100'
+              }`}
+              aria-label="Descargar de Terabox"
+            >
+              <Brain size={20} />
+              <span className="text-[10px] leading-none">Cerebro</span>
             </button>
 
             {/* Discord */}
