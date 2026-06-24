@@ -12,6 +12,7 @@ import FavoriteBadge from '@/components/FavoriteBadge';
 import ReadLaterSection from '@/components/ReadLaterSection';
 import TopWeekly from '@/components/TopWeekly';
 import MobileActionBar from '@/components/MobileActionBar';
+import HeroLogo from '@/components/HeroLogo';
 import CatalogStats from '@/components/CatalogStats';
 
 import type { Metadata } from 'next';
@@ -176,7 +177,7 @@ export default async function HomePage({
         }}
       />
       {/* Hero Section */}
-      <section className="relative h-40 md:h-[70vh] w-full overflow-hidden">
+      <section className="relative h-56 md:h-[70vh] w-full overflow-hidden">
         {/* Imagen de fondo con gradiente */}
         <div className="absolute inset-0">
           <ImageWithFallback
@@ -190,6 +191,8 @@ export default async function HomePage({
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 via-[35%] to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
         </div>
+
+        <HeroLogo imageUrl={heroItem.url_portada} />
 
         {/* Contenido del Hero */}
         <div className="relative h-full hidden sm:flex items-end pb-16 px-8 md:px-16">
