@@ -34,15 +34,6 @@ interface DownloadResult {
 }
 
 async function getOrRefreshToken(): Promise<string> {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored) {
-    try {
-      const data = JSON.parse(stored)
-      if (data.token && Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
-        return data.token
-      }
-    } catch { /* ignore */ }
-  }
   const res = await fetch("/api/terabox/verify", { method: "POST" })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
@@ -65,7 +56,8 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
   const [faqOpen, setFaqOpen] = useState(true)
 
   useEffect(() => {
-    getOrRefreshToken()
+    localStorage.removeItem(STORAGE_KEY)
+    getOrRefreshToken().catch(() => {})
   }, [])
 
   function handleLinkChange(value: string) {
