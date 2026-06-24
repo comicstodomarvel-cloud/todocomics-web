@@ -43,18 +43,17 @@ async function getOrRefreshToken(): Promise<string> {
       }
     } catch { /* ignore */ }
   }
-  try {
-    const res = await fetch("/api/terabox/verify", { method: "POST" })
-    if (res.ok) {
-      const data = await res.json()
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ token: data.token, timestamp: Date.now() })
-      )
-      return data.token
-    }
-  } catch { /* ignore */ }
-  return ""
+  const res = await fetch("/api/terabox/verify", { method: "POST" })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || `Error del servidor (${res.status})`)
+  }
+  const data = await res.json()
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ token: data.token, timestamp: Date.now() })
+  )
+  return data.token
 }
 
 export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void }) {
@@ -86,15 +85,9 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
     setError("")
     setResults(null)
 
-    const token = await getOrRefreshToken()
-
-    if (!token) {
-      setError("No se pudo preparar la descarga. Revisá tu conexión e intentá de nuevo.")
-      setDownloading(false)
-      return
-    }
-
     try {
+      const token = await getOrRefreshToken()
+
       const res = await fetch("/api/terabox/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,8 +105,8 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
       } else {
         setError("No se encontraron archivos en ese enlace")
       }
-    } catch {
-      setError("Error de conexión")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error de conexión")
     } finally {
       setDownloading(false)
     }
