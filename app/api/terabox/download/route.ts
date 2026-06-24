@@ -5,32 +5,28 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin"
 const CACHE = new Map<string, { data: unknown; cachedAt: number }>()
 const CACHE_TTL = 24 * 60 * 60 * 1000
 
-const SHARE_PATTERN = /\/(s\/|sharing\/link\?surl=)([^/?#&]+)/
+const TERABOX_DOMAINS = [
+  "terabox.com", "1024terabox.com", "freeterabox.com",
+  "teraboxapp.com", "teraboxurl.com", "teraboxshare.com",
+  "1024tera.com",
+]
 
 async function resolveUrl(url: string): Promise<string> {
   if (!/bit\.ly/i.test(url)) return url
   try {
-    const res = await fetch(url, { method: "HEAD" })
+    const res = await fetch(url, { method: "GET" })
     return res.url
   } catch {}
   return url
 }
 
-function extractSurl(url: string): string | null {
+function isTeraboxUrl(url: string): boolean {
   try {
-    const parsed = new URL(url)
-    const m = parsed.pathname.match(/^\/s\/([^/?#]+)/)
-    if (m) return m[1]
-    const surl = parsed.searchParams.get("surl")
-    if (surl) return surl
-  } catch {}
-  return null
-}
-
-function normalizeUrl(url: string): string {
-  const surl = extractSurl(url)
-  if (surl) return `https://www.1024tera.com/spanish/sharing/link?surl=${surl}`
-  return url
+    const host = new URL(url).hostname.replace(/^www\./, "")
+    return TERABOX_DOMAINS.some(d => host === d || host.endsWith("." + d))
+  } catch {
+    return false
+  }
 }
 
 function verifyToken(token: string, ip: string, userAgent: string): boolean {
@@ -77,8 +73,15 @@ export async function POST(request: Request) {
     }
 
     const resolvedUrl = await resolveUrl(url.trim())
-    const normalizedUrl = normalizeUrl(resolvedUrl)
-    const cacheKey = normalizedUrl.toLowerCase()
+
+    if (!isTeraboxUrl(resolvedUrl)) {
+      return NextResponse.json(
+        { error: "Este link no pertenece a Terabox. Solo se aceptan links de terabox.com y sus dominios." },
+        { status: 400 }
+      )
+    }
+
+    const cacheKey = resolvedUrl.toLowerCase()
 
     // 1. In-memory cache hit (misma instancia)
     const cached = CACHE.get(cacheKey)
@@ -111,20 +114,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "API key no configurada" }, { status: 500 })
     }
 
-    const response = await fetch("https://xapiverse.com/api/terabox", {
+    const response = await fetch("https://xapiverse.com/api/terabox-pro", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "xAPIverse-Key": apiKey,
       },
-      body: JSON.stringify({ url: normalizedUrl }),
+      body: JSON.stringify({ url: resolvedUrl }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
       console.error("xapiverse error:", response.status, errorText)
       return NextResponse.json(
-        { error: `Error del servicio externo: ${response.status}` },
+        { error: `xapiverse: ${errorText || response.statusText}` },
         { status: 502 }
       )
     }
