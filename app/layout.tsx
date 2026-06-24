@@ -4,7 +4,6 @@ import "./globals.css";
 import JsonLd from "@/components/JsonLd";
 import RegisterSW from "@/components/RegisterSW";
 import HeartbeatPing from "@/components/HeartbeatPing";
-import TeraboxNotification from "@/components/TeraboxNotification";
 import DesktopToolbar from "@/components/DesktopToolbar";
 import FavoriteBadge from "@/components/FavoriteBadge";
 
@@ -108,7 +107,6 @@ export default async function RootLayout({
           }}
         />
         <HeartbeatPing />
-        <TeraboxNotification />
         <RegisterSW />
         <PlayerProvider playlist={playlist}>
           <DesktopToolbar>
