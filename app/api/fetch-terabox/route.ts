@@ -51,15 +51,24 @@ function normalizeUrl(url: string): string {
       parsed.pathname = "/s/" + surl
       parsed.search = ""
     }
-    const hostname = parsed.hostname.replace(/^www\./, "")
-    const mapped = DOMAIN_MAP[hostname]
-    if (mapped) {
-      parsed.hostname = mapped
-    }
     return parsed.toString()
   } catch {
     return url
   }
+}
+
+function buildUrlVariants(normalizedUrl: string): string[] {
+  const variants = [normalizedUrl]
+  try {
+    const parsed = new URL(normalizedUrl)
+    const hostname = parsed.hostname.replace(/^www\./, "")
+    const mapped = DOMAIN_MAP[hostname]
+    if (mapped && mapped !== hostname) {
+      parsed.hostname = mapped
+      variants.push(parsed.toString())
+    }
+  } catch {}
+  return variants
 }
 
 const BROWSER_HEADERS = {
@@ -79,28 +88,32 @@ async function callXapi(
   url: string,
   apiKey: string
 ): Promise<{ ok: boolean; status: number; body: string }> {
-  for (const endpoint of XAPI_ENDPOINTS) {
-    console.log("[fetch-terabox] Intentando endpoint:", endpoint)
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xAPIverse-Key": apiKey,
-          ...BROWSER_HEADERS,
-        },
-        body: JSON.stringify({ url }),
-      })
-      const body = await res.text()
-      console.log(`[fetch-terabox] Endpoint ${endpoint}: status=${res.status}`)
-      if (res.ok) {
-        console.log(`[fetch-terabox] Exito con endpoint ${endpoint}`)
-        return { ok: true, status: res.status, body }
+  const variants = buildUrlVariants(url)
+  for (const variant of variants) {
+    for (const endpoint of XAPI_ENDPOINTS) {
+      const logLabel = `${endpoint} (url: ${variant})`
+      console.log("[fetch-terabox] Intentando:", logLabel)
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "xAPIverse-Key": apiKey,
+            ...BROWSER_HEADERS,
+          },
+          body: JSON.stringify({ url: variant }),
+        })
+        const body = await res.text()
+        console.log(`[fetch-terabox] ${logLabel}: status=${res.status}`)
+        if (res.ok) {
+          console.log(`[fetch-terabox] Exito con ${logLabel}`)
+          return { ok: true, status: res.status, body }
+        }
+        lastErrorBody = body
+        console.log(`[fetch-terabox] Fallo ${logLabel}: status=${res.status}`)
+      } catch (err) {
+        console.error(`[fetch-terabox] Error en ${logLabel}:`, err)
       }
-      lastErrorBody = body
-      console.log(`[fetch-terabox] Fallo ${endpoint}: status=${res.status}`)
-    } catch (err) {
-      console.error(`[fetch-terabox] Error llamando ${endpoint}:`, err)
     }
   }
   return { ok: false, status: 502, body: lastErrorBody }
