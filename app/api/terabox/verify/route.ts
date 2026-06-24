@@ -25,15 +25,22 @@ export async function POST(request: Request) {
     const { token, hash } = generateToken(ip, userAgent)
 
     const supabase = getSupabaseAdmin()
-    const { error } = await supabase.from("terabox_verificaciones").insert({
-      ip,
-      user_agent: userAgent,
-      token_hash: hash,
-    })
 
-    if (error) {
-      console.error("Error guardando verificación:", error)
-      return NextResponse.json({ error: "Error al verificar" }, { status: 500 })
+    const { count } = await supabase
+      .from("terabox_verificaciones")
+      .select("id", { count: "exact", head: true })
+      .eq("ip", ip)
+      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+
+    if (!count || count === 0) {
+      const { error } = await supabase.from("terabox_verificaciones").insert({
+        ip,
+        user_agent: userAgent,
+        token_hash: hash,
+      })
+      if (error) {
+        console.error("Error guardando verificación:", error)
+      }
     }
 
     return NextResponse.json({ token, expiresIn: 7 * 24 * 60 * 60 * 1000 })

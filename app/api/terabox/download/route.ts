@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createHash } from "crypto"
-import { getSupabaseAdmin } from "@/lib/supabase-admin"
 
 const CACHE = new Map<string, { data: unknown; cachedAt: number }>()
 const CACHE_TTL = 24 * 60 * 60 * 1000

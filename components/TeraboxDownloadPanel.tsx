@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
-import { X, Download, ExternalLink, Check, Loader, AlertTriangle, Brain } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X, Download, Check, Loader, AlertTriangle, Brain, ChevronDown, Coffee } from "lucide-react"
 
-const TERABOX_REFERRAL = "https://www.terabox.com/referral/4401765338615"
 const STORAGE_KEY = "tc-terabox-verified"
-const VERIFY_DELAY = 15000
 
 const LINK_PATTERNS = [
   { label: "Terabox share", regex: /^(https?:\/\/)?(www\.)?(1024terabox|terabox)\.com\/s\//i },
@@ -38,36 +36,41 @@ interface DownloadResult {
 export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void }) {
   const [link, setLink] = useState("")
   const [detectedType, setDetectedType] = useState<{ label: string; valid: boolean } | null>(null)
-  const [verified, setVerified] = useState(false)
-  const [verifying, setVerifying] = useState(false)
-  const [countdown, setCountdown] = useState(VERIFY_DELAY / 1000)
-  const [teraboxOpened, setTeraboxOpened] = useState(false)
+  const [ready, setReady] = useState(false)
+  const [initializing, setInitializing] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [results, setResults] = useState<DownloadResult[] | null>(null)
   const [error, setError] = useState("")
-  const teraboxRef = useRef<Window | null>(null)
-  const countdownRef = useRef<ReturnType<typeof setInterval>>(undefined)
+  const [faqOpen, setFaqOpen] = useState(true)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
+    async function init() {
       try {
-        const data = JSON.parse(stored)
-        if (data.token && Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
-          setVerified(true)
-        } else {
-          localStorage.removeItem(STORAGE_KEY)
+        const stored = localStorage.getItem(STORAGE_KEY)
+        if (stored) {
+          const data = JSON.parse(stored)
+          if (data.token && Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
+            setReady(true)
+            setInitializing(false)
+            return
+          }
+        }
+        const res = await fetch("/api/terabox/verify", { method: "POST" })
+        if (res.ok) {
+          const data = await res.json()
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({ token: data.token, timestamp: Date.now() })
+          )
+          setReady(true)
         }
       } catch {
-        localStorage.removeItem(STORAGE_KEY)
+        // Offline or server error — user can retry
+      } finally {
+        setInitializing(false)
       }
     }
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (countdownRef.current) clearInterval(countdownRef.current)
-    }
+    init()
   }, [])
 
   function handleLinkChange(value: string) {
@@ -81,47 +84,8 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
     }
   }
 
-  function handleOpenTerabox() {
-    teraboxRef.current = window.open(TERABOX_REFERRAL, "_blank", "noopener,noreferrer")
-    if (teraboxRef.current) {
-      setTeraboxOpened(true)
-    }
-
-    countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          if (countdownRef.current) clearInterval(countdownRef.current)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
-
-  async function handleConfirmLogin() {
-    setVerifying(true)
-    try {
-      const res = await fetch("/api/terabox/verify", { method: "POST" })
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || "Error al verificar")
-        return
-      }
-      const data = await res.json()
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ token: data.token, timestamp: Date.now() })
-      )
-      setVerified(true)
-    } catch {
-      setError("Error de conexión al verificar")
-    } finally {
-      setVerifying(false)
-    }
-  }
-
   async function handleDownload() {
-    if (!link.trim() || !verified) return
+    if (!link.trim() || !ready) return
     setDownloading(true)
     setError("")
     setResults(null)
@@ -130,6 +94,26 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
     let token = ""
     if (stored) {
       try { token = JSON.parse(stored).token } catch {}
+    }
+
+    if (!token) {
+      try {
+        const res = await fetch("/api/terabox/verify", { method: "POST" })
+        if (res.ok) {
+          const data = await res.json()
+          token = data.token
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({ token, timestamp: Date.now() })
+          )
+        }
+      } catch {}
+    }
+
+    if (!token) {
+      setError("No se pudo inicializar. Revisá tu conexión e intentá de nuevo.")
+      setDownloading(false)
+      return
     }
 
     try {
@@ -142,10 +126,6 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
 
       if (!res.ok) {
         setError(data.error || "Error al descargar")
-        if (res.status === 401) {
-          localStorage.removeItem(STORAGE_KEY)
-          setVerified(false)
-        }
         return
       }
 
@@ -160,8 +140,6 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
       setDownloading(false)
     }
   }
-
-  const canConfirm = teraboxOpened && countdown === 0 && !verifying
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
@@ -200,81 +178,72 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
           )}
         </div>
 
-        {detectedType?.valid && !verified && (
-          <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 space-y-3">
-            <h4 className="text-sm font-semibold text-zinc-100">
-              Necesitás una cuenta de Terabox
-            </h4>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Para poder iniciar la descarga sin límites de velocidad, primero debés{" "}
-              <strong className="text-zinc-200">iniciar sesión</strong> en tu cuenta de
-              Terabox o <strong className="text-zinc-200">registrarte</strong> si aún no
-              tenés una. Es gratis y rápido.
-            </p>
-            {!teraboxOpened ? (
-              <button
-                onClick={handleOpenTerabox}
-                className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition-colors"
-              >
-                <ExternalLink size={16} />
-                Registrarse / Iniciar Sesión en Terabox
-              </button>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <Check size={14} className="text-emerald-400" />
-                  Pestaña de Terabox abierta
-                </div>
-                {countdown > 0 ? (
-                  <div className="text-xs text-zinc-500 text-center">
-                    Podés confirmar en{" "}
-                    <span className="text-amber-400 font-bold">{countdown}s</span>
-                  </div>
-                ) : null}
-                <button
-                  onClick={handleConfirmLogin}
-                  disabled={!canConfirm}
-                  className={`w-full flex items-center justify-center gap-2 font-bold py-2.5 rounded-lg text-sm transition-colors ${
-                    canConfirm
-                      ? "bg-emerald-600 hover:bg-emerald-500 text-white"
-                      : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-                  }`}
-                >
-                  {verifying ? (
-                    <Loader size={16} className="animate-spin" />
-                  ) : (
-                    <Check size={16} />
-                  )}
-                  Ya inicié sesión / Ya me registré
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {detectedType?.valid && verified && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
-              <Check size={14} />
-              Cuenta verificada — descarga disponible
-            </div>
-            <button
-              onClick={handleDownload}
-              disabled={downloading || !link.trim()}
-              className={`w-full flex items-center justify-center gap-2 font-bold py-3 rounded-lg text-sm transition-all ${
-                downloading
-                  ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black hover:scale-[1.02] active:scale-95"
+        {/* Donation info — FAQ style */}
+        <div className="bg-[#121212] rounded-xl border border-zinc-800 overflow-hidden">
+          <button
+            onClick={() => setFaqOpen((prev) => !prev)}
+            className="w-full flex items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-zinc-800/30"
+          >
+            <span className="font-semibold text-zinc-100 text-sm">
+              ⚡ ¿Cómo funciona Cerebro?
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 text-zinc-500 shrink-0 transition-transform duration-300 ${
+                faqOpen ? "rotate-180" : ""
               }`}
-            >
-              {downloading ? (
-                <Loader size={18} className="animate-spin" />
-              ) : (
-                <Download size={18} />
-              )}
-              DESCARGAR SIN LÍMITE DE VELOCIDAD
-            </button>
+            />
+          </button>
+          <div
+            className={`overflow-y-auto transition-all duration-300 ${
+              faqOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="px-4 pb-4 text-zinc-400 text-xs sm:text-sm leading-relaxed space-y-2">
+              <p>
+                Cerebro usa <strong className="text-[#ff8c00]">tokens de API</strong> para
+                convertir enlaces de Terabox en descargas directas sin límite de velocidad.
+                Estos tokens tienen un <strong className="text-[#ff8c00]">costo en USD</strong>{" "}
+                y se agotan con cada uso.
+              </p>
+              <p>
+                Si querés que la herramienta{" "}
+                <strong className="text-[#ff8c00]">siga funcionando sin límites</strong> y los
+                tokens no se agoten, podés colaborar con un aporte voluntario. Dependemos de tu
+                ayuda para mantener esto activo indefinidamente.
+              </p>
+              <a
+                href="https://ko-fi.com/todocomics"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#ff8c00] hover:bg-[#e67e00] text-black font-bold px-4 py-2.5 rounded-lg text-sm transition-all hover:scale-105"
+              >
+                <Coffee size={16} />
+                Donar en Ko-Fi
+              </a>
+            </div>
           </div>
+        </div>
+
+        {/* Download */}
+        {detectedType?.valid && (
+          <button
+            onClick={handleDownload}
+            disabled={downloading || !ready || !link.trim()}
+            className={`w-full flex items-center justify-center gap-2 font-bold py-3 rounded-lg text-sm transition-all ${
+              downloading || !ready
+                ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black hover:scale-[1.02] active:scale-95"
+            }`}
+          >
+            {downloading ? (
+              <Loader size={18} className="animate-spin" />
+            ) : !ready ? (
+              <Loader size={18} className="animate-spin" />
+            ) : (
+              <Download size={18} />
+            )}
+            {!ready ? "Preparando..." : "DESCARGAR SIN LÍMITE DE VELOCIDAD"}
+          </button>
         )}
 
         {error && (
