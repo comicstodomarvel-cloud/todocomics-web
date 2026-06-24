@@ -37,6 +37,21 @@ function isTeraboxUrl(url: string): boolean {
   }
 }
 
+function normalizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url)
+    const surl = parsed.searchParams.get("surl")
+    if (surl) {
+      parsed.pathname = "/s/" + surl
+      parsed.search = ""
+      return parsed.toString()
+    }
+    return url
+  } catch {
+    return url
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -50,8 +65,12 @@ export async function POST(request: Request) {
     }
 
     const resolvedUrl = await resolveUrl(url.trim())
+    const normalizedUrl = normalizeUrl(resolvedUrl)
 
-    if (!isTeraboxUrl(resolvedUrl)) {
+    console.log("[fetch-terabox] URL resuelta:", resolvedUrl)
+    console.log("[fetch-terabox] URL normalizada:", normalizedUrl)
+
+    if (!isTeraboxUrl(normalizedUrl)) {
       return NextResponse.json(
         {
           error:
@@ -61,7 +80,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const cacheKey = resolvedUrl.toLowerCase()
+    const cacheKey = normalizedUrl.toLowerCase()
     const cached = CACHE.get(cacheKey)
     if (cached && Date.now() - cached.cachedAt < CACHE_TTL) {
       return NextResponse.json({ ...(cached.data as object), fromCache: true })
@@ -99,7 +118,7 @@ export async function POST(request: Request) {
     }
 
     console.log("[fetch-terabox] URL recibida:", url.trim())
-    console.log("[fetch-terabox] URL resuelta:", resolvedUrl)
+    console.log("[fetch-terabox] URL normalizada (enviada a XAPIverse):", normalizedUrl)
     console.log("[fetch-terabox] API key presente:", !!apiKey)
 
     const response = await fetch("https://xapiverse.com/api/terabox-pro", {
@@ -108,7 +127,7 @@ export async function POST(request: Request) {
         "Content-Type": "application/json",
         "xAPIverse-Key": apiKey,
       },
-      body: JSON.stringify({ url: resolvedUrl }),
+      body: JSON.stringify({ url: normalizedUrl }),
     })
 
     const xapiStatus = response.status
