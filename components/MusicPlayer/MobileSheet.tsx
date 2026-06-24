@@ -25,18 +25,23 @@ export default function MobileSheet() {
     [closeSheet]
   )
 
+  const handlePopState = useCallback(() => closeSheet(), [closeSheet])
+
   useEffect(() => {
     if (isSheetOpen) {
       document.addEventListener("keydown", handleKeyDown)
       document.body.style.overflow = "hidden"
+      window.history.pushState(null, "")
+      window.addEventListener("popstate", handlePopState)
     } else {
       document.body.style.overflow = ""
     }
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
       document.body.style.overflow = ""
+      window.removeEventListener("popstate", handlePopState)
     }
-  }, [isSheetOpen, handleKeyDown])
+  }, [isSheetOpen, handleKeyDown, handlePopState])
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length !== 1) return
