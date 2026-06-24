@@ -5,6 +5,36 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin"
 const CACHE = new Map<string, { data: unknown; cachedAt: number }>()
 const CACHE_TTL = 24 * 60 * 60 * 1000
 
+const SHARE_PATTERN = /\/(s\/|sharing\/link\?surl=)([^/?#&]+)/
+
+async function resolveUrl(url: string): Promise<string> {
+  if (!/bit\.ly/i.test(url)) return url
+  try {
+    const res = await fetch(url, { method: "HEAD", redirect: "manual" })
+    if (res.status >= 300 && res.status < 400) {
+      return res.headers.get("location") || url
+    }
+  } catch {}
+  return url
+}
+
+function extractSurl(url: string): string | null {
+  try {
+    const parsed = new URL(url)
+    const m = parsed.pathname.match(/^\/s\/([^/?#]+)/)
+    if (m) return m[1]
+    const surl = parsed.searchParams.get("surl")
+    if (surl) return surl
+  } catch {}
+  return null
+}
+
+function normalizeUrl(url: string): string {
+  const surl = extractSurl(url)
+  if (surl) return `https://www.1024tera.com/spanish/sharing/link?surl=${surl}`
+  return url
+}
+
 function verifyToken(token: string, ip: string, userAgent: string): boolean {
   try {
     const parts = token.split(".")
@@ -48,7 +78,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Token inválido o expirado" }, { status: 401 })
     }
 
-    const cacheKey = url.trim().toLowerCase()
+    const resolvedUrl = await resolveUrl(url.trim())
+    const normalizedUrl = normalizeUrl(resolvedUrl)
+    const cacheKey = normalizedUrl.toLowerCase()
 
     // 1. In-memory cache hit (misma instancia)
     const cached = CACHE.get(cacheKey)
@@ -64,7 +96,7 @@ export async function POST(request: Request) {
       .from("terabox_cache")
       .select("response_json, created_at")
       .eq("url_hash", urlHash)
-      .single()
+      .maybeSingle()
 
     if (cachedRow) {
       const age = Date.now() - new Date(cachedRow.created_at).getTime()
@@ -81,13 +113,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "API key no configurada" }, { status: 500 })
     }
 
-    const response = await fetch("https://xapiverse.com/api/terabox-pro", {
+    const response = await fetch("https://xapiverse.com/api/terabox", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "xAPIverse-Key": apiKey,
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url: normalizedUrl }),
     })
 
     if (!response.ok) {

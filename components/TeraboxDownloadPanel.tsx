@@ -6,8 +6,7 @@ import { X, Download, Check, Loader, AlertTriangle, Brain, ChevronDown, Coffee }
 const STORAGE_KEY = "tc-terabox-verified"
 
 const LINK_PATTERNS = [
-  { label: "Terabox share", regex: /^(https?:\/\/)?(www\.)?(1024terabox|terabox)\.com\/s\//i },
-  { label: "Terabox share alt", regex: /^(https?:\/\/)?(www\.)?teraboxshare\.com\//i },
+  { label: "Terabox share", regex: /^(https?:\/\/)?(www\.)?(1024terabox|terabox|freeterabox|teraboxapp|teraboxurl|teraboxshare)\.com\/(s\/|spanish\/sharing\/link\?surl=)/i },
   { label: "Bitly", regex: /^(https?:\/\/)?(www\.)?bit\.ly\//i },
 ]
 
@@ -19,8 +18,8 @@ function detectLinkType(url: string): { label: string; valid: boolean } | null {
       return { label: pattern.label, valid: true }
     }
   }
-  if (/^(https?:\/\/)?(.+)$/i.test(trimmed)) {
-    return { label: "Link no soportado", valid: false }
+  if (/^https?:\/\/.+/i.test(trimmed)) {
+    return { label: "Link detectado", valid: true }
   }
   return null
 }
@@ -227,7 +226,7 @@ export default function TeraboxDownloadPanel({ onClose }: { onClose: () => void 
                 {file.thumbnail && (
                   <img
                     src={file.thumbnail}
-                    alt=""
+                    alt="thumbnail"
                     className="w-12 h-12 rounded-lg object-cover bg-zinc-700"
                   />
                 )}
