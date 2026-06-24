@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { usePlayer } from '@/lib/playerStore'
-import { Search, Filter, Bell, MessageCircle, Music, X } from 'lucide-react'
+import { Search, Filter, Brain, MessageCircle, Music, X } from 'lucide-react'
 import HashtagFilterPanel from './HashtagFilterPanel'
-import UpdatesDropdownPanel from './UpdatesDropdownPanel'
+import TeraboxDownloadPanel from './TeraboxDownloadPanel'
 
 const DISCORD_INVITE = 'https://discord.gg/nKTnYSTRHE'
 
@@ -49,7 +49,7 @@ export default function MobileBottomBar() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchValue, setSearchValue] = useState(searchParams.get('busqueda') ?? '')
   const [showFilters, setShowFilters] = useState(false)
-  const [showUpdates, setShowUpdates] = useState(false)
+  const [showCerebro, setShowCerebro] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -88,7 +88,7 @@ export default function MobileBottomBar() {
 
   function closeAll() {
     setShowFilters(false)
-    setShowUpdates(false)
+    setShowCerebro(false)
     setSearchOpen(false)
   }
 
@@ -110,7 +110,7 @@ export default function MobileBottomBar() {
   return (
     <>
       {/* Backdrops for dropdowns */}
-      {(showFilters || showUpdates) && (
+      {(showFilters || showCerebro) && (
         <div
           className="fixed inset-0 z-40 lg:hidden"
           onClick={closeAll}
@@ -128,10 +128,10 @@ export default function MobileBottomBar() {
         </div>
       )}
 
-      {/* Updates dropdown above bar */}
-      {showUpdates && (
+      {/* Cerebro dropdown above bar */}
+      {showCerebro && (
         <div className="fixed left-4 right-4 bottom-20 z-50 lg:hidden">
-          <UpdatesDropdownPanel onClose={() => setShowUpdates(false)} />
+          <TeraboxDownloadPanel onClose={() => setShowCerebro(false)} />
         </div>
       )}
 
@@ -178,7 +178,7 @@ export default function MobileBottomBar() {
 
             {/* Filters */}
             <button
-              onClick={() => { setShowFilters(true); setShowUpdates(false) }}
+              onClick={() => { setShowFilters(true); setShowCerebro(false) }}
               className={`flex flex-col items-center gap-0.5 transition-colors flex-1 min-w-0 py-1 ${
                 showFilters ? 'text-amber-500' : 'text-zinc-400 hover:text-zinc-100'
               }`}
@@ -188,16 +188,16 @@ export default function MobileBottomBar() {
               <span className="text-[10px] leading-none">Filtros</span>
             </button>
 
-            {/* Updates */}
+            {/* Cerebro */}
             <button
-              onClick={() => { setShowUpdates(true); setShowFilters(false) }}
+              onClick={() => { setShowCerebro(true); setShowFilters(false) }}
               className={`flex flex-col items-center gap-0.5 transition-colors flex-1 min-w-0 py-1 ${
-                showUpdates ? 'text-amber-500' : 'text-zinc-400 hover:text-zinc-100'
+                showCerebro ? 'text-amber-500' : 'text-zinc-400 hover:text-zinc-100'
               }`}
-              aria-label="Actualizaciones"
+              aria-label="Descargar de Terabox"
             >
-              <Bell size={20} />
-              <span className="text-[10px] leading-none">Updates</span>
+              <Brain size={20} />
+              <span className="text-[10px] leading-none">Cerebro</span>
             </button>
 
             {/* Discord */}
