@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import AdminHeader from '@/components/admin/AdminHeader'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { jwtVerify } from 'jose'
@@ -37,6 +37,14 @@ async function getAuthUser(): Promise<AdminUser | null> {
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers()
+  const pathname = headersList.get('x-next-pathname') || headersList.get('x-invoke-path') || ''
+
+  // Permitir /admin/setup y /admin/login sin auth
+  if (pathname === '/admin/setup' || pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
   const admin = getSupabaseAdmin()
   const { count } = await admin.from('admins').select('*', { count: 'exact', head: true })
 
