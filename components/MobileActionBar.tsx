@@ -5,7 +5,7 @@ import Link from 'next/link'
 import OnlineCounter from './OnlineCounter'
 import UpdatesDropdownButton from './updates/UpdatesDropdownButton'
 
-const TERABOX_URL = 'https://www.terabox.com/referral/4401765338615'
+const TERABOX_URL = 'https://www.terabox.com/referral/4399853474173'
 
 export default function MobileActionBar() {
   return (

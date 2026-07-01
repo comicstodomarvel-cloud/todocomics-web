@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, type ReactNode } from 'react'
+import Link from 'next/link'
 import HashtagFilter from './HashtagFilter'
 import UpdatesDropdownButton from './updates/UpdatesDropdownButton'
 import OnlineCounter from './OnlineCounter'
@@ -74,7 +75,7 @@ export default function DesktopToolbar({ children }: { children?: ReactNode }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-black/75 backdrop-blur-md border-b border-zinc-900 hidden lg:block safe-top safe-left safe-right">
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-6">
-        <a href="/" className="flex items-center gap-2.5 shrink-0">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <img
             src="https://axfugtisjsjbkqlkixla.supabase.co/storage/v1/object/public/portadas/MTC.png"
             alt="TodoComics"
@@ -83,7 +84,7 @@ export default function DesktopToolbar({ children }: { children?: ReactNode }) {
           <span className="text-lg font-bold tracking-tight">
             <span className="text-amber-500">TODO</span><span className="text-red-500">COMICS</span>
           </span>
-        </a>
+        </Link>
 
         <div className="flex-1 max-w-lg mx-auto">
           <Suspense fallback={null}>
@@ -99,7 +100,7 @@ export default function DesktopToolbar({ children }: { children?: ReactNode }) {
           </Suspense>
           <UpdatesDropdownButton variant="toolbar" />
 
-          <a
+          <Link
             href="/faq"
             className="group relative flex justify-center w-10 h-10 rounded-full items-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:-translate-y-0.5 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/40 transition-all duration-200"
           >
@@ -107,9 +108,9 @@ export default function DesktopToolbar({ children }: { children?: ReactNode }) {
             <span className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 animate-fade-in bg-zinc-900 border border-zinc-800 text-zinc-200 text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
               Preguntas Frecuentes
             </span>
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/peticiones"
             className="group relative flex justify-center w-10 h-10 rounded-full items-center text-zinc-400 hover:text-[#ff8c00] hover:scale-110 hover:-translate-y-0.5 hover:shadow-[0_0_10px_rgba(255,140,0,0.4)] hover:bg-zinc-800/40 transition-all duration-200"
           >
@@ -117,7 +118,7 @@ export default function DesktopToolbar({ children }: { children?: ReactNode }) {
             <span className="absolute top-full mt-2 hidden group-hover:flex flex-col items-center z-50 animate-fade-in bg-zinc-900 border border-zinc-800 text-zinc-200 text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
               Solicitar un Cómic
             </span>
-          </a>
+          </Link>
 
           {children}
 
@@ -136,7 +137,7 @@ export default function DesktopToolbar({ children }: { children?: ReactNode }) {
           </a>
 
           <a
-            href="https://www.terabox.com/referral/4401765338615"
+            href="https://www.terabox.com/referral/4399853474173"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold px-3 py-1.5 rounded-full text-xs transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-amber-500/30 shrink-0 ml-2"
