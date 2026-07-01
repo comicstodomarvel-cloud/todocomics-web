@@ -29,33 +29,15 @@ type Stats = {
 const MAX_BAR = 100
 
 export default function MonitoreoPage() {
-  const [adminKey, setAdminKey] = useState('')
-  const [keyInput, setKeyInput] = useState('')
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const key = params.get('key') || ''
-    if (key) setAdminKey(key)
-  }, [])
-
-  function handleKeySubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!keyInput.trim()) return
-    setAdminKey(keyInput)
-    window.history.replaceState(null, '', `/admin/monitoreo?key=${keyInput}`)
-  }
-
   const fetchStats = useCallback(async () => {
-    if (!adminKey) return
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/monitoreo/stats', {
-        headers: { 'x-admin-key': adminKey },
-      })
+      const res = await fetch('/api/monitoreo/stats', { credentials: 'include' })
       if (!res.ok) throw new Error('Error al cargar estadísticas')
       const data = await res.json()
       setStats(data)
@@ -65,36 +47,13 @@ export default function MonitoreoPage() {
     } finally {
       setLoading(false)
     }
-  }, [adminKey])
+  }, [])
 
   useEffect(() => {
-    if (adminKey) fetchStats()
-  }, [adminKey, fetchStats])
+    fetchStats()
+  }, [fetchStats])
 
   const maxCount = stats ? Math.max(...stats.visitsWeek.map((d) => d.count), 1) : 1
-
-  if (!adminKey) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-8">
-        <form onSubmit={handleKeySubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-xl font-bold text-white">Monitoreo</h1>
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            placeholder="Clave de administrador"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-amber-500"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400"
-          >
-            Ingresar
-          </button>
-        </form>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 md:p-8">
@@ -103,7 +62,7 @@ export default function MonitoreoPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Link
-              href={`/admin?key=${adminKey}`}
+              href="/admin"
               className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
             >
               ← Admin
@@ -214,7 +173,7 @@ export default function MonitoreoPage() {
                     {stats.topContent.map((item, i) => (
                       <Link
                         key={item.id}
-                        href={`/admin/editar?key=${adminKey}&id=${item.id}`}
+                        href={`/admin/editar?id=${item.id}`}
                         className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors group"
                       >
                         <span className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-500 shrink-0">
@@ -250,7 +209,7 @@ export default function MonitoreoPage() {
                     Reportes pendientes
                   </h2>
                   <Link
-                    href={`/admin/reportes?key=${adminKey}`}
+                    href="/admin/reportes"
                     className="text-[10px] text-amber-500 hover:text-amber-400 transition-colors"
                   >
                     Gestionar →
@@ -264,7 +223,7 @@ export default function MonitoreoPage() {
                       <div key={r.contenido_id + (r.creado_en || '')} className="flex items-center gap-2 text-xs text-zinc-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                         <Link
-                          href={`/admin/editar?key=${adminKey}&id=${r.contenido_id}`}
+                           href={`/admin/editar?id=${r.contenido_id}`}
                           className="text-zinc-300 hover:text-amber-400 truncate transition-colors"
                         >
                           {r.titulo}
@@ -403,7 +362,7 @@ ALTER TABLE request_logs ENABLE ROW LEVEL SECURITY;`)
                 {stats.recentContent.map((c) => (
                   <Link
                     key={c.id}
-                    href={`/admin/editar?key=${adminKey}&id=${c.id}`}
+                    href={`/admin/editar?id=${c.id}`}
                     className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-1 rounded-full transition-colors truncate max-w-[200px]"
                   >
                     {c.titulo}

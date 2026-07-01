@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
 
 function getSessionId(request: NextRequest): string | null {
   return request.headers.get('x-session-id')
@@ -9,9 +10,11 @@ function getSessionId(request: NextRequest): string | null {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const adminKey = searchParams.get('key')
+  const hasAuthCookie = request.headers.get('cookie')?.includes('admin_token=')
 
-  if (adminKey) {
-    if (adminKey !== process.env.ADMIN_KEY) {
+  if (adminKey || hasAuthCookie) {
+    const user = await checkAdminFromRequest(request)
+    if (!requireAdminRole(user)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -83,8 +86,8 @@ export async function POST(request: NextRequest) {
 
     // Admin update
     if (action === 'admin_update') {
-      const adminKey = request.headers.get('x-admin-key')
-      if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+      const user = await checkAdminFromRequest(request)
+      if (!requireAdminRole(user)) {
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
       }
 

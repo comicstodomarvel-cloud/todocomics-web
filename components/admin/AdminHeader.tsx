@@ -1,13 +1,34 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Bell, Shield } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Bell, Shield, LogOut, Import, FileEdit, Trash2, SearchCheck, HelpCircle, MessageSquare, Flag, BarChart3 } from 'lucide-react'
 import NotificationDropdown from './NotificationDropdown'
+import type { AdminUser } from '@/lib/admin-auth'
 
-export default function AdminHeader({ children }: { children: React.ReactNode }) {
-  const searchParams = useSearchParams()
-  const adminKey = searchParams.get('key') ?? ''
+interface Props {
+  user: AdminUser
+  children: React.ReactNode
+}
+
+const navItems = {
+  admin: [
+    { href: '/admin/importar', label: 'Importar Post', icon: Import },
+    { href: '/admin/editar', label: 'Editar Post', icon: FileEdit },
+    { href: '/admin/eliminar', label: 'Eliminar Post', icon: Trash2 },
+    { href: '/admin/revisar', label: 'Revisar Contenido', icon: SearchCheck },
+    { href: '/admin/faq', label: 'Gestionar FAQ', icon: HelpCircle },
+    { href: '/admin/peticiones', label: 'Peticiones', icon: MessageSquare },
+    { href: '/admin/reportes', label: 'Reportes', icon: Flag },
+    { href: '/admin/monitoreo', label: 'Monitoreo', icon: BarChart3 },
+  ],
+  editor: [
+    { href: '/admin/importar', label: 'Importar Post', icon: Import },
+  ],
+}
+
+export default function AdminHeader({ user, children }: Props) {
+  const router = useRouter()
   const [unreadCount, setUnreadCount] = useState(0)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const bellRef = useRef<HTMLButtonElement>(null)
@@ -15,25 +36,20 @@ export default function AdminHeader({ children }: { children: React.ReactNode })
   const lastCountRef = useRef(0)
 
   const fetchUnreadCount = useCallback(async () => {
-    if (!adminKey) return
     try {
       const res = await fetch('/api/admin/notificaciones?unread=true&limit=1', {
-        headers: { 'x-admin-key': adminKey },
+        credentials: 'include',
       })
       if (res.ok) {
         const data = await res.json()
         const total = data.total ?? 0
         setUnreadCount(total)
-        // Si hay nuevas notificaciones y el dropdown no está abierto, vibrar badge
-        if (total > lastCountRef.current && !dropdownOpen) {
-          // El badge ya se actualiza visualmente con el número
-        }
         lastCountRef.current = total
       }
     } catch {
       // silencio
     }
-  }, [adminKey, dropdownOpen])
+  }, [])
 
   useEffect(() => {
     fetchUnreadCount()
@@ -43,7 +59,6 @@ export default function AdminHeader({ children }: { children: React.ReactNode })
     }
   }, [fetchUnreadCount])
 
-  // Cerrar dropdown al hacer click fuera (excepto dentro del dropdown)
   useEffect(() => {
     if (!dropdownOpen) return
     function handleClick(e: MouseEvent) {
@@ -57,15 +72,41 @@ export default function AdminHeader({ children }: { children: React.ReactNode })
     return () => document.removeEventListener('mousedown', handleClick)
   }, [dropdownOpen])
 
+  async function handleLogout() {
+    await fetch('/api/admin/logout', { method: 'POST' })
+    router.push('/admin/login')
+  }
+
+  const items = navItems[user.role] || navItems.editor
+
   return (
     <div className="min-h-screen bg-zinc-950">
-      {adminKey && (
-        <header className="sticky top-0 z-40 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-2.5">
-            <div className="flex items-center gap-2">
-              <Shield size={18} className="text-amber-500" />
-              <span className="text-sm font-bold text-zinc-100">Admin Panel</span>
-            </div>
+      <header className="sticky top-0 z-40 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5">
+          <div className="flex items-center gap-3">
+            <Shield size={18} className="text-amber-500 shrink-0" />
+            <span className="text-sm font-bold text-zinc-100 hidden sm:inline">
+              {user.display_name}
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded">
+              {user.role === 'admin' ? 'Admin' : 'Editor'}
+            </span>
+          </div>
+
+          <nav className="flex items-center gap-1 overflow-x-auto max-w-[60%] scrollbar-none">
+            {items.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors whitespace-nowrap"
+              >
+                <item.icon size={14} />
+                <span className="hidden sm:inline">{item.label}</span>
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
             <div className="relative">
               <button
                 ref={bellRef}
@@ -81,12 +122,21 @@ export default function AdminHeader({ children }: { children: React.ReactNode })
                 )}
               </button>
               {dropdownOpen && (
-                <NotificationDropdown adminKey={adminKey} onClose={() => setDropdownOpen(false)} />
+                <NotificationDropdown onClose={() => setDropdownOpen(false)} />
               )}
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+              aria-label="Cerrar sesión"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
-        </header>
-      )}
+        </div>
+      </header>
+
       {children}
     </div>
   )

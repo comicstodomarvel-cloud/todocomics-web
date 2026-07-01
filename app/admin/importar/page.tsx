@@ -1,12 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 export default function AdminImportarPage() {
-  const [adminKey, setAdminKey] = useState('')
-  const [keyInput, setKeyInput] = useState('')
-
   const [textoPost, setTextoPost] = useState('')
   const [hashtag, setHashtag] = useState('')
   const [linkDescarga, setLinkDescarga] = useState('')
@@ -74,19 +71,6 @@ export default function AdminImportarPage() {
       })
   }, [])
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const key = params.get('key') || ''
-    if (key) setAdminKey(key)
-  }, [])
-
-  function handleKeySubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!keyInput.trim()) return
-    setAdminKey(keyInput)
-    window.history.replaceState(null, '', `/admin/importar?key=${keyInput}`)
-  }
-
   async function enviarImportacion() {
     setLoading(true)
     setResultado(null)
@@ -94,10 +78,8 @@ export default function AdminImportarPage() {
     try {
       const res = await fetch('/api/importar', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           titulo: tituloParseado,
           descripcion: descripcionParseada,
@@ -147,33 +129,12 @@ export default function AdminImportarPage() {
     enviarImportacion()
   }
 
-  if (!adminKey) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-8">
-        <form onSubmit={handleKeySubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-xl font-bold text-white">Admin — Importar</h1>
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            placeholder="Clave de administrador"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-amber-500"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400"
-          >
-            Ingresar
-          </button>
-        </form>
-      </div>
-    )
-  }
+
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
       <div className="flex items-center gap-4 mb-8">
-        <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
+        <Link href="/admin" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
         <h1 className="text-2xl font-bold text-white">Importar post manualmente</h1>
       </div>
 

@@ -55,8 +55,6 @@ const EMPTY_IMG =
   )
 
 export default function AdminRevisarPage() {
-  const [adminKey, setAdminKey] = useState('')
-  const [keyInput, setKeyInput] = useState('')
   const [data, setData] = useState<RevisionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -67,27 +65,11 @@ export default function AdminRevisarPage() {
   const [resultados, setResultados] = useState<Record<string, { ok: boolean; msg: string }>>({})
   const [imgsFallback, setImgsFallback] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const key = params.get('key') || ''
-    if (key) setAdminKey(key)
-  }, [])
-
-  function handleKeySubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!keyInput.trim()) return
-    setAdminKey(keyInput)
-    window.history.replaceState(null, '', `/admin/revisar?key=${keyInput}`)
-  }
-
   const fetchData = useCallback(async () => {
-    if (!adminKey) return
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/contenido/revisar', {
-        headers: { 'x-admin-key': adminKey },
-      })
+      const res = await fetch('/api/contenido/revisar', { credentials: 'include' })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error || `Error ${res.status}`)
@@ -98,11 +80,11 @@ export default function AdminRevisarPage() {
     } finally {
       setLoading(false)
     }
-  }, [adminKey])
+  }, [])
 
   useEffect(() => {
-    if (adminKey) fetchData()
-  }, [adminKey, fetchData])
+    fetchData()
+  }, [fetchData])
 
   const postsFiltrados = data
     ? filtro === 'todos'
@@ -143,10 +125,8 @@ export default function AdminRevisarPage() {
     try {
       const res = await fetch(`/api/contenido/${postId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(body),
       })
       const dataRes = await res.json()
@@ -184,35 +164,12 @@ export default function AdminRevisarPage() {
     return data?.todos.find((p) => p.id === postId)?.campos_vacios.includes(campo) ?? false
   }
 
-  if (!adminKey) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-8">
-        <form onSubmit={handleKeySubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-xl font-bold text-white">Admin — Revisar contenido</h1>
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            placeholder="Clave de administrador"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-amber-500"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400"
-          >
-            Ingresar
-          </button>
-        </form>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Link
-            href={`/admin?key=${adminKey}`}
+            href="/admin"
             className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0"
           >
             ← Admin
@@ -462,7 +419,7 @@ export default function AdminRevisarPage() {
                                   ✏️ Corregir
                                 </button>
                                 <Link
-                                  href={`/admin/editar?key=${adminKey}&id=${post.id}`}
+                                  href={`/admin/editar?id=${post.id}`}
                                   className="rounded-md bg-zinc-800 px-3 py-1 text-[10px] text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
                                 >
                                   Editar completo →

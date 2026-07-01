@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import ImageWithFallback from '@/components/ImageWithFallback'
 
@@ -16,9 +16,6 @@ interface PostData {
 }
 
 export default function AdminEditarPage() {
-  const [adminKey, setAdminKey] = useState('')
-  const [keyInput, setKeyInput] = useState('')
-
   const [postUrl, setPostUrl] = useState('')
   const [cargando, setCargando] = useState(false)
   const [postData, setPostData] = useState<PostData | null>(null)
@@ -33,19 +30,6 @@ export default function AdminEditarPage() {
 
   const [guardando, setGuardando] = useState(false)
   const [resultado, setResultado] = useState<{ ok: boolean; msg: string } | null>(null)
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const key = params.get('key') || ''
-    if (key) setAdminKey(key)
-  }, [])
-
-  function handleKeySubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!keyInput.trim()) return
-    setAdminKey(keyInput)
-    window.history.replaceState(null, '', `/admin/editar?key=${keyInput}`)
-  }
 
   function extraerId(input: string): string | null {
     const trimmed = input.trim()
@@ -121,10 +105,8 @@ export default function AdminEditarPage() {
 
       const res = await fetch(`/api/contenido/${postData.id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(body),
       })
 
@@ -157,33 +139,12 @@ export default function AdminEditarPage() {
     )
   }
 
-  if (!adminKey) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-8">
-        <form onSubmit={handleKeySubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-xl font-bold text-white">Admin — Editar post</h1>
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            placeholder="Clave de administrador"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-amber-500"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400"
-          >
-            Ingresar
-          </button>
-        </form>
-      </div>
-    )
-  }
+
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
       <div className="flex items-center gap-4 mb-8">
-        <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
+        <Link href="/admin" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
         <h1 className="text-2xl font-bold text-white">Editar post existente</h1>
       </div>
 

@@ -24,17 +24,15 @@ export default function AdminReportesPage() {
   const [items, setItems] = useState<ReporteItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [adminKey, setAdminKey] = useState('')
-  const [keyInput, setKeyInput] = useState('')
   const [updating, setUpdating] = useState<string | null>(null)
   const [actionError, setActionError] = useState('')
   const [actionSuccess, setActionSuccess] = useState('')
 
-  const fetchItems = useCallback(async (key: string) => {
+  const fetchItems = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/api/reportes?key=${key}`)
+      const res = await fetch('/api/reportes', { credentials: 'include' })
       if (!res.ok) {
         setError('No autorizado — clave inválida')
         return
@@ -48,20 +46,8 @@ export default function AdminReportesPage() {
   }, [])
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const key = params.get('key') || ''
-    setAdminKey(key)
-    if (key) fetchItems(key)
-    else setLoading(false)
+    fetchItems()
   }, [fetchItems])
-
-  function handleKeySubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!keyInput.trim()) return
-    setAdminKey(keyInput)
-    window.history.replaceState(null, '', `/admin/reportes?key=${keyInput}`)
-    fetchItems(keyInput)
-  }
 
   async function updateEstado(contenidoId: string, estado: string) {
     setUpdating(contenidoId)
@@ -70,10 +56,8 @@ export default function AdminReportesPage() {
     try {
       const res = await fetch('/api/reportes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ contenidoId, estado, action: 'admin_update' }),
       })
       const data = await res.json()
@@ -100,33 +84,10 @@ export default function AdminReportesPage() {
     }
   }
 
-  if (!adminKey) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-8">
-        <form onSubmit={handleKeySubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-xl font-bold text-white">Admin — Reportes</h1>
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            placeholder="Clave de administrador"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-amber-500"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400"
-          >
-            Ingresar
-          </button>
-        </form>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
       <div className="flex items-center gap-4 mb-8">
-        <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
+        <Link href="/admin" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">← Volver al panel</Link>
         <h1 className="text-2xl font-bold">📋 Reportes de Links Caídos</h1>
       </div>
 

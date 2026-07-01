@@ -19,8 +19,6 @@ interface Peticion {
 const ESTADOS = ['pendiente', 'publicado', 'no_disponible'] as const
 
 export default function AdminPeticionesPage() {
-  const [adminKey, setAdminKey] = useState('')
-  const [keyInput, setKeyInput] = useState('')
   const [peticiones, setPeticiones] = useState<Peticion[]>([])
   const [loading, setLoading] = useState(true)
   const [editando, setEditando] = useState<string | null>(null)
@@ -31,18 +29,11 @@ export default function AdminPeticionesPage() {
   const [success, setSuccess] = useState('')
   const [activeTab, setActiveTab] = useState<'pendientes' | 'resueltas'>('pendientes')
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const key = params.get('key') || ''
-    if (key) setAdminKey(key)
-  }, [])
-
   const fetchAll = useCallback(async () => {
-    if (!adminKey) return
     setLoading(true)
     try {
       const res = await fetch('/api/peticiones', {
-        headers: { 'x-admin-key': adminKey },
+        credentials: 'include',
       })
       if (res.ok) {
         setPeticiones(await res.json())
@@ -52,11 +43,11 @@ export default function AdminPeticionesPage() {
     } finally {
       setLoading(false)
     }
-  }, [adminKey])
+  }, [])
 
   useEffect(() => {
-    if (adminKey) fetchAll()
-  }, [adminKey, fetchAll])
+    fetchAll()
+  }, [fetchAll])
 
   async function startEdit(p: Peticion) {
     setEditando(p.id)
@@ -74,10 +65,8 @@ export default function AdminPeticionesPage() {
     try {
       const res = await fetch(`/api/peticiones/${editando}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           estado: editEstado,
           respuesta_admin: editRespuesta.trim() || null,
@@ -98,31 +87,13 @@ export default function AdminPeticionesPage() {
     }
   }
 
-  if (!adminKey) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-8">
-        <form onSubmit={(e) => { e.preventDefault(); if (keyInput.trim()) { setAdminKey(keyInput); window.history.replaceState(null, '', `/admin/peticiones?key=${keyInput}`) } }} className="w-full max-w-sm space-y-4">
-          <h1 className="text-xl font-bold text-white">Admin - Peticiones</h1>
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            placeholder="Clave de administrador"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-amber-500"
-          />
-          <button type="submit" className="w-full rounded-md bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400">
-            Ingresar
-          </button>
-        </form>
-      </div>
-    )
-  }
+
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link href={`/admin?key=${adminKey}`} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">
+          <Link href="/admin" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors shrink-0">
             ← Volver al panel
           </Link>
           <div className="flex rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden">

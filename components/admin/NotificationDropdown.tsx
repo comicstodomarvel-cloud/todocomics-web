@@ -33,11 +33,10 @@ function tiempoRelativo(iso: string): string {
 }
 
 interface NotificationDropdownProps {
-  adminKey: string
   onClose: () => void
 }
 
-export default function NotificationDropdown({ adminKey, onClose }: NotificationDropdownProps) {
+export default function NotificationDropdown({ onClose }: NotificationDropdownProps) {
   const [items, setItems] = useState<Notificacion[]>([])
   const [loading, setLoading] = useState(true)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -46,7 +45,7 @@ export default function NotificationDropdown({ adminKey, onClose }: Notification
     async function fetchNotifs() {
       try {
         const res = await fetch('/api/admin/notificaciones?unread=true&limit=10', {
-          headers: { 'x-admin-key': adminKey },
+          credentials: 'include',
         })
         if (res.ok) {
           const data = await res.json()
@@ -59,16 +58,14 @@ export default function NotificationDropdown({ adminKey, onClose }: Notification
       }
     }
     fetchNotifs()
-  }, [adminKey])
+  }, [])
 
   async function marcarLeida(id: string) {
     try {
       const res = await fetch(`/api/admin/notificaciones/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ leida: true }),
       })
       if (!res.ok) {

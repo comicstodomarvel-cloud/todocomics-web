@@ -4,12 +4,13 @@ import { getClient } from '@/lib/telegram-client'
 import { uploadImageBytesToSupabase } from '@/lib/upload-image'
 import { Api } from 'telegram'
 import bigInt from 'big-integer'
+import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
 
 const CHAT_ID = '-1001406494973'
-const ADMIN_KEY = process.env.ADMIN_KEY || ''
 
 export async function POST(request: Request) {
-  if (request.headers.get('x-admin-key') !== ADMIN_KEY) {
+  const user = await checkAdminFromRequest(request)
+  if (!requireAdminRole(user)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 

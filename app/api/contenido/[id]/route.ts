@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { HASHTAG_CATEGORIA } from '@/lib/hashtags'
+import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
 
 export async function GET(
   _request: NextRequest,
@@ -37,8 +38,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adminKey = request.headers.get('x-admin-key')
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+    const user = await checkAdminFromRequest(request)
+    if (!requireAdminRole(user)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
@@ -133,8 +134,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adminKey = request.headers.get('x-admin-key')
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+    const user = await checkAdminFromRequest(request)
+    if (!requireAdminRole(user)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 

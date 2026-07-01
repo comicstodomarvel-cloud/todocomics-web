@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
 
 interface PostItem {
   id: string
@@ -26,8 +27,8 @@ interface PostIssue {
 }
 
 export async function GET(request: NextRequest) {
-  const adminKey = request.headers.get('x-admin-key')
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+  const user = await checkAdminFromRequest(request)
+  if (!requireAdminRole(user)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 

@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
-    // 🔐 Verificar clave de administrador para seguridad
-    const adminKey = request.headers.get('x-admin-key')
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
+    const user = await checkAdminFromRequest(request)
+    if (!requireAdminRole(user)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
