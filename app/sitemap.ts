@@ -17,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     })) ?? []
 
-  const categories = ['Comic', 'Manga', 'Pelicula', 'Serie', 'Libro']
+  const categories = ['Comic', 'Manga', 'Pelicula', 'Serie', 'Anime', 'Libro']
   const categoryUrls = categories.map((cat) => ({
     url: `${siteUrl}/?categoria=${encodeURIComponent(cat)}`,
     changeFrequency: 'weekly' as const,

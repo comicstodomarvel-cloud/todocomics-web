@@ -1,13 +1,18 @@
-export const CATEGORIAS = ['Comic', 'Manga', 'Pelicula', 'Serie', 'Libro'] as const
+export const CATEGORIAS = ['Comic', 'Manga', 'Pelicula', 'Serie', 'Anime', 'Libro'] as const
 
 export const HASHTAG_CATEGORIA: Record<string, (typeof CATEGORIAS)[number]> = {
   COMIC: 'Comic',
+  COMICS: 'Comic',
   MANGA: 'Manga',
+  MANGAS: 'Manga',
   PELICULA: 'Pelicula',
+  PELICULAS: 'Pelicula',
   SERIE: 'Serie',
   SERIES: 'Serie',
-  ANIME: 'Serie',
+  ANIME: 'Anime',
+  ANIMES: 'Anime',
   LIBRO: 'Libro',
+  LIBROS: 'Libro',
 }
 
 const CATEGORIA_HASHTAGS = new Set(Object.keys(HASHTAG_CATEGORIA).map((k) => k.toLowerCase()))

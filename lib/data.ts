@@ -6,7 +6,7 @@ export interface ContentItem {
   titulo: string
   descripcion: string
   url_portada: string
-  categoria: 'Comic' | 'Manga' | 'Pelicula' | 'Serie' | 'Libro'
+  categoria: 'Comic' | 'Manga' | 'Pelicula' | 'Serie' | 'Anime' | 'Libro'
   hashtags: string[]
   link_descarga: string
   fecha_creacion: string

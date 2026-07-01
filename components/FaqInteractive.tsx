@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Search, Sparkles, AlertTriangle, Users } from 'lucide-react'
 import FaqSection from '@/components/FaqSection'
 
@@ -9,10 +10,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   Manga: 'Mangas',
   Pelicula: 'Pel&iacute;culas',
   Serie: 'Series',
+  Anime: 'Animes',
   Libro: 'Libros',
 }
 
-const CATEGORY_ORDER = ['Comic', 'Serie', 'Pelicula', 'Manga', 'Libro']
+const CATEGORY_ORDER = ['Comic', 'Serie', 'Pelicula', 'Manga', 'Anime', 'Libro']
 
 export default function FaqInteractive({
   stats,
@@ -102,7 +104,7 @@ export default function FaqInteractive({
             </span>
           </a>
 
-          <a
+          <Link
             href="/updates"
             className="group block bg-[#1a1a1a] rounded-xl border border-zinc-800 p-5 transition-all duration-300 hover:border-[#ff8c00] hover:shadow-lg hover:shadow-[#ff8c00]/5 hover:-translate-y-0.5"
           >
@@ -116,9 +118,9 @@ export default function FaqInteractive({
             <span className="text-[#ff8c00] text-xs font-semibold group-hover:underline decoration-[#ff8c00] underline-offset-2">
               Ver novedades &rarr;
             </span>
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/"
             className="group block bg-[#1a1a1a] rounded-xl border border-zinc-800 p-5 transition-all duration-300 hover:border-[#ff8c00] hover:shadow-lg hover:shadow-[#ff8c00]/5 hover:-translate-y-0.5"
           >
@@ -132,7 +134,7 @@ export default function FaqInteractive({
             <span className="text-[#ff8c00] text-xs font-semibold group-hover:underline decoration-[#ff8c00] underline-offset-2">
               C&oacute;mo reportar &rarr;
             </span>
-          </a>
+          </Link>
         </div>
       </section>
 

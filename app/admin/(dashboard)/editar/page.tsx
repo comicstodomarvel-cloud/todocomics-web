@@ -241,7 +241,7 @@ export default function AdminEditarPage() {
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm outline-none focus:border-amber-500 text-zinc-100 placeholder-zinc-500"
               />
               <p className="text-[11px] text-zinc-500 mt-1">
-                La categoría se actualiza automáticamente según el hashtag
+                La categoría (Comic/Manga/Pelicula/Serie/Anime/Libro) se actualiza automáticamente según el hashtag
               </p>
             </div>
 

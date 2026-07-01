@@ -5,6 +5,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   Manga: 'Mangas',
   Pelicula: 'Películas',
   Serie: 'Series',
+  Anime: 'Animes',
   Libro: 'Libros',
 }
 
