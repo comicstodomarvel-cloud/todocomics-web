@@ -82,12 +82,10 @@ export async function batchImport(
           date: msg.date,
         }
 
-        let parsed
-        try {
-          parsed = await parseTelegramContent(telegramMsg as any)
-        } catch (parseErr) {
+        let parsed = await parseTelegramContent(telegramMsg as any)
+        if (!parsed) {
           result.errores++
-          result.detalles.push(`[${msg.id}] Error al parsear: ${parseErr instanceof Error ? parseErr.message : 'Unknown'}`)
+          result.detalles.push(`[${msg.id}] El mensaje no contiene texto`)
           continue
         }
 

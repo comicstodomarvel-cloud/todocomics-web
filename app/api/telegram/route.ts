@@ -312,12 +312,13 @@ function esLineaRuido(linea: string, linkDescarga: string): boolean {
  */
 export async function parseTelegramContent(
   msg: TelegramMessage
-): Promise<ParsedContent> {
+): Promise<ParsedContent | null> {
   const texto = extraerTexto(msg)
   console.log('[Telegram Webhook] Texto recibido:', texto.slice(0, 500))
 
   if (!texto) {
-    throw new Error('El mensaje no contiene texto')
+    console.log('[Telegram Webhook] Mensaje ignorado: no contiene texto')
+    return null
   }
 
   const lineas = texto.split('\n').map((l) => l.trim())
@@ -660,6 +661,11 @@ async function handleImportCommandPrivate(msg: TelegramMessage, command: string,
 
     const parsed = await parseTelegramContent(forwardedMsg)
 
+    if (!parsed) {
+      await updateMsg('❌ El mensaje no contiene texto. No se puede importar.')
+      return NextResponse.json({ ok: true })
+    }
+
     const admin = getSupabaseAdmin()
 
     const { data: existing } = await admin
@@ -809,6 +815,10 @@ export async function POST(request: Request) {
     }
 
     const parsed = await parseTelegramContent(msg)
+
+    if (!parsed) {
+      return NextResponse.json({ ok: true, action: 'ignored_no_text' }, { status: 200 })
+    }
 
     if (!parsed.titulo || parsed.titulo === 'Sin título') {
       return NextResponse.json(
