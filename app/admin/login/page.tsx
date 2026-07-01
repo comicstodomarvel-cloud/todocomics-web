@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
         return
       }
 
-      router.push('/admin/importar')
+      router.push('/admin')
     } catch {
       setError('Error de conexión')
     } finally {

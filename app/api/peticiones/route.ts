@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
+import { checkAdminFromRequest, hasPermission } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
   // Admin: devolver todas las peticiones
   if (!sessionId) {
     const user = adminKey ? await checkAdminFromRequest(request) : null
-    if (!requireAdminRole(user)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!hasPermission(user, 'peticiones')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     const admin = getSupabaseAdmin()

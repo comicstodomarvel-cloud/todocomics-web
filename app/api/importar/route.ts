@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { HASHTAG_CATEGORIA } from '@/lib/hashtags'
-import { checkAdminFromRequest, requireEditorOrAdmin } from '@/lib/admin-auth'
+import { checkAdminFromRequest, hasPermission } from '@/lib/admin-auth'
 
 export async function POST(request: NextRequest) {
   try {
     const user = await checkAdminFromRequest(request)
-    if (!requireEditorOrAdmin(user)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!hasPermission(user, 'importar')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     const body = await request.json()

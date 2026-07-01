@@ -7,33 +7,34 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await checkAdminFromRequest(request)
-  if (!hasPermission(user, 'faq')) {
+  if (!hasPermission(user, 'usuarios')) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
   const { id } = await params
   const body = await request.json()
-  const { pregunta, respuesta, orden } = body
 
   const admin = getSupabaseAdmin()
   const updates: Record<string, unknown> = {}
 
-  if (pregunta?.trim()) updates.pregunta = pregunta.trim()
-  if (respuesta?.trim()) updates.respuesta = respuesta.trim()
-  if (orden !== undefined) updates.orden = orden
+  if (body.display_name?.trim()) {
+    updates.display_name = body.display_name.trim()
+  }
+
+  if (body.permissions && typeof body.permissions === 'object') {
+    updates.permissions = body.permissions
+  }
 
   if (Object.keys(updates).length === 0) {
-    return NextResponse.json(
-      { error: 'No hay campos para actualizar' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'No hay campos para actualizar' }, { status: 400 })
   }
 
   const { data, error } = await admin
-    .from('faq')
+    .from('admins')
     .update(updates)
     .eq('id', id)
-    .select()
+    .eq('role', 'editor')
+    .select('id, username, display_name, role, permissions, created_at')
     .single()
 
   if (error) {
@@ -48,14 +49,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await checkAdminFromRequest(request)
-  if (!hasPermission(user, 'faq')) {
+  if (!hasPermission(user, 'usuarios')) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
   const { id } = await params
 
   const admin = getSupabaseAdmin()
-  const { error } = await admin.from('faq').delete().eq('id', id)
+  const { error } = await admin
+    .from('admins')
+    .delete()
+    .eq('id', id)
+    .eq('role', 'editor')
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

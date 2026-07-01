@@ -103,6 +103,17 @@ export default function AdminPage() {
             Estadísticas en vivo, visitas, online, reportes y detección de amenazas
           </p>
         </Link>
+
+        <Link
+          href="/admin/usuarios"
+          className="rounded-[12px] border border-zinc-800 bg-zinc-900/50 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#a855f7]/20 hover:border-[#a855f7] group"
+        >
+          <div className="text-3xl mb-3 transition-transform duration-300 group-hover:scale-110">👥</div>
+          <h2 className="text-lg font-semibold text-white mb-1">Usuarios</h2>
+          <p className="text-sm text-[#94a3b8]">
+            Gestionar editores, permisos y crear nuevas cuentas
+          </p>
+        </Link>
       </div>
     </div>
   )

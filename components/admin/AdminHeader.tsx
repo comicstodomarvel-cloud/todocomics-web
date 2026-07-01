@@ -2,29 +2,38 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, Shield, LogOut, Import, FileEdit, Trash2, SearchCheck, HelpCircle, MessageSquare, Flag, BarChart3 } from 'lucide-react'
+import { Bell, Shield, LogOut, Import, FileEdit, Trash2, SearchCheck, HelpCircle, MessageSquare, Flag, BarChart3, Users } from 'lucide-react'
 import NotificationDropdown from './NotificationDropdown'
-import type { AdminUser } from '@/lib/admin-auth'
+import { ALL_SECTIONS, hasPermission } from '@/lib/admin-permissions'
+import type { AdminUser } from '@/lib/admin-permissions'
 
 interface Props {
   user: AdminUser
   children: React.ReactNode
 }
 
-const navItems = {
-  admin: [
-    { href: '/admin/importar', label: 'Importar Post', icon: Import },
-    { href: '/admin/editar', label: 'Editar Post', icon: FileEdit },
-    { href: '/admin/eliminar', label: 'Eliminar Post', icon: Trash2 },
-    { href: '/admin/revisar', label: 'Revisar Contenido', icon: SearchCheck },
-    { href: '/admin/faq', label: 'Gestionar FAQ', icon: HelpCircle },
-    { href: '/admin/peticiones', label: 'Peticiones', icon: MessageSquare },
-    { href: '/admin/reportes', label: 'Reportes', icon: Flag },
-    { href: '/admin/monitoreo', label: 'Monitoreo', icon: BarChart3 },
-  ],
-  editor: [
-    { href: '/admin/importar', label: 'Importar Post', icon: Import },
-  ],
+const SECTION_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
+  importar: Import,
+  editar: FileEdit,
+  eliminar: Trash2,
+  revisar: SearchCheck,
+  faq: HelpCircle,
+  peticiones: MessageSquare,
+  reportes: Flag,
+  monitoreo: BarChart3,
+  usuarios: Users,
+}
+
+const ROUTE_TO_SECTION: Record<string, string> = {
+  '/admin/importar': 'importar',
+  '/admin/editar': 'editar',
+  '/admin/eliminar': 'eliminar',
+  '/admin/revisar': 'revisar',
+  '/admin/faq': 'faq',
+  '/admin/peticiones': 'peticiones',
+  '/admin/reportes': 'reportes',
+  '/admin/monitoreo': 'monitoreo',
+  '/admin/usuarios': 'usuarios',
 }
 
 export default function AdminHeader({ user, children }: Props) {
@@ -77,7 +86,13 @@ export default function AdminHeader({ user, children }: Props) {
     router.push('/admin/login')
   }
 
-  const items = navItems[user.role] || navItems.editor
+  const items = Object.entries(ROUTE_TO_SECTION)
+    .filter(([href, section]) => hasPermission(user, section) || user.role === 'admin')
+    .map(([href, section]) => ({
+      href,
+      label: ALL_SECTIONS[section as keyof typeof ALL_SECTIONS],
+      icon: SECTION_ICONS[section] || Shield,
+    }))
 
   return (
     <div className="min-h-screen bg-zinc-950">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { HASHTAG_CATEGORIA } from '@/lib/hashtags'
-import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
+import { checkAdminFromRequest, hasPermission } from '@/lib/admin-auth'
 
 export async function GET(
   _request: NextRequest,
@@ -39,8 +39,8 @@ export async function PATCH(
 ) {
   try {
     const user = await checkAdminFromRequest(request)
-    if (!requireAdminRole(user)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!hasPermission(user, 'editar')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     const { id } = await params
@@ -135,8 +135,8 @@ export async function DELETE(
 ) {
   try {
     const user = await checkAdminFromRequest(request)
-    if (!requireAdminRole(user)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!hasPermission(user, 'eliminar')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     const { id } = await params

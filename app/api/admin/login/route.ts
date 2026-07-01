@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const admin = getSupabaseAdmin()
     const { data: user, error } = await admin
       .from('admins')
-      .select('id, username, password_hash, role, display_name')
+      .select('id, username, password_hash, role, display_name, permissions')
       .eq('username', username.toLowerCase().trim())
       .maybeSingle()
 
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       username: user.username,
       role: user.role as 'admin' | 'editor',
       display_name: user.display_name,
+      permissions: (user.permissions as { sections: string[] }) || { sections: [] },
     })
 
     const response = NextResponse.json({

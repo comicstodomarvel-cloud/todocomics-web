@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
+import { checkAdminFromRequest, hasPermission } from '@/lib/admin-auth'
 
 interface PostItem {
   id: string
@@ -28,8 +28,8 @@ interface PostIssue {
 
 export async function GET(request: NextRequest) {
   const user = await checkAdminFromRequest(request)
-  if (!requireAdminRole(user)) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  if (!hasPermission(user, 'revisar')) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
 
   try {

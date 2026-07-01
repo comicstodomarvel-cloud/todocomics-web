@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
+import { checkAdminFromRequest, hasPermission } from '@/lib/admin-auth'
 
 function getSessionId(request: NextRequest): string | null {
   return request.headers.get('x-session-id')
@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
 
   if (adminKey || hasAuthCookie) {
     const user = await checkAdminFromRequest(request)
-    if (!requireAdminRole(user)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!hasPermission(user, 'reportes')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     const { data: reportes, error } = await supabase
@@ -87,8 +87,8 @@ export async function POST(request: NextRequest) {
     // Admin update
     if (action === 'admin_update') {
       const user = await checkAdminFromRequest(request)
-      if (!requireAdminRole(user)) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      if (!hasPermission(user, 'reportes')) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
       }
 
       if (!['pendiente', 'verificado', 'resuelto', 'falso'].includes(estado)) {

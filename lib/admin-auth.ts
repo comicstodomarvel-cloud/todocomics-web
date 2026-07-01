@@ -2,21 +2,19 @@ import { cookies } from 'next/headers'
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose'
 import bcrypt from 'bcryptjs'
 import { getSupabaseAdmin } from './supabase-admin'
+import { ALL_SECTIONS, hasPermission } from './admin-permissions'
+import type { AdminUser } from './admin-permissions'
+export { ALL_SECTIONS, hasPermission, type SectionKey } from './admin-permissions'
+export type { AdminUser }
 
 const SALT_ROUNDS = 10
-
-export interface AdminUser {
-  id: string
-  username: string
-  role: 'admin' | 'editor'
-  display_name: string
-}
 
 interface AdminTokenPayload extends JWTPayload {
   id: string
   username: string
   role: 'admin' | 'editor'
   display_name: string
+  permissions: { sections: string[] }
 }
 
 function getJwtSecret(): Uint8Array {
@@ -39,6 +37,7 @@ export async function createToken(user: AdminUser): Promise<string> {
     username: user.username,
     role: user.role,
     display_name: user.display_name,
+    permissions: user.permissions,
   } as AdminTokenPayload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -46,6 +45,28 @@ export async function createToken(user: AdminUser): Promise<string> {
     .sign(getJwtSecret())
 
   return token
+}
+
+export async function getAdminUserFromDB(id: string): Promise<AdminUser | null> {
+  try {
+    const admin = getSupabaseAdmin()
+    const { data } = await admin
+      .from('admins')
+      .select('id, username, role, display_name, permissions')
+      .eq('id', id)
+      .single()
+
+    if (!data) return null
+    return {
+      id: data.id,
+      username: data.username,
+      role: data.role as 'admin' | 'editor',
+      display_name: data.display_name,
+      permissions: data.permissions as { sections: string[] },
+    }
+  } catch {
+    return null
+  }
 }
 
 export async function getAdminUserFromRequest(request: Request): Promise<AdminUser | null> {
@@ -68,6 +89,7 @@ export async function getAdminUserFromRequest(request: Request): Promise<AdminUs
       username: payload.username,
       role: payload.role,
       display_name: payload.display_name || payload.username,
+      permissions: payload.permissions || { sections: [] },
     }
   } catch {
     return null
@@ -90,6 +112,7 @@ export async function getAdminUserFromCookies(): Promise<AdminUser | null> {
       username: payload.username,
       role: payload.role,
       display_name: payload.display_name || payload.username,
+      permissions: payload.permissions || { sections: [] },
     }
   } catch {
     return null
@@ -116,7 +139,7 @@ export async function checkAdminFromRequest(request: Request): Promise<AdminUser
 
   const headerKey = request.headers.get('x-admin-key')
   if (headerKey && headerKey === process.env.ADMIN_KEY) {
-    return { id: '', username: 'admin', role: 'admin', display_name: 'Admin' }
+    return { id: '', username: 'admin', role: 'admin', display_name: 'Admin', permissions: { sections: Object.keys(ALL_SECTIONS) } }
   }
 
   return null

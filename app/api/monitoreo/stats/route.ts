@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { checkAdminFromRequest, requireAdminRole } from '@/lib/admin-auth'
+import { checkAdminFromRequest, hasPermission } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
     const user = await checkAdminFromRequest(request)
-    if (!requireAdminRole(user)) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!hasPermission(user, 'monitoreo')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     const now = new Date()
