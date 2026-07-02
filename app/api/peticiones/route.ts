@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   // Admin: devolver todas las peticiones
   if (!sessionId) {
-    const user = adminKey ? await checkAdminFromRequest(request) : null
+    const user = await checkAdminFromRequest(request)
     if (!hasPermission(user, 'peticiones')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }

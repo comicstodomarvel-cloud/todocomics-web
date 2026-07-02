@@ -35,9 +35,11 @@ export default function AdminPeticionesPage() {
       const res = await fetch('/api/peticiones', {
         credentials: 'include',
       })
-      if (res.ok) {
-        setPeticiones(await res.json())
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Error al cargar')
       }
+      setPeticiones(await res.json())
     } catch {
       setError('Error al cargar')
     } finally {
